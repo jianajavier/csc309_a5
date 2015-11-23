@@ -1,0 +1,61 @@
+(i) Project Idea:
+
+Art-sharing platform
+- Swap artistic work with other users
+- Randomized swap
+
+(ii)
+IMMEDIATE TODOS:
+- Picture upload functionality (store in database/filesystem)
+- Bootstrap (replace existing css)
+
+FUNCTIONALITY:
+- Profiling
+  - Upload and delete art
+  - Securing password
+  - PROFILE IMAGE!!
+  - Ratings and reviews
+- Listing pages
+  - Contains specific listing information
+  - Request button (both on profile and listing page)
+  - Message box
+  - Upload functionality for trade item
+- User Authentication and Authorization
+  - 3rd party authentication (Google)
+  - Authorization for admins
+- Social Network
+  - Reviews posted on profile
+  - Messages functionality (top bar)
+- Rating and Commenting
+  - Rate person overall
+  - Rating/Review/Comment on listing page (for items that can be reused)
+- Search and Recommendation System
+  - Search by usernames and tagged users, and tagged art
+    (Include option to choose each)
+  - Recommendation based on the tags of people you message
+    ...Maybe search
+- Admin
+  - Mostly have this already
+
+AFTER FUNCTIONING PRODUCT:
+- Test cases
+- Security Vulnerability
+- Performance measure and improvement
+- README
+- Report PDF
+  - Description section
+  - Detailed design section
+  - Security section
+  - Performance improvement section
+  - Youtube link section
+  - Other
+- Host on a server
+
+Architecture: 3-tier/MVC (?)
+COMMENT AS YOU GO!
+MAKE NOTE OF DESIGN DECISIONS.
+Take layout/ideas from Airbnb.com
+
+INFORMATION:
+To run:
+> node server.js
