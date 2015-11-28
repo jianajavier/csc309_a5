@@ -64,7 +64,7 @@ var UserSchemas = new Schema({
 	posts: [PostSchemas]
 });
 
-var PostSchemas = new Schema({
+var PostSchemas = new Schema({  //posts are posted to a group or user
 	user: UserSchemas, 
 	message: String,
 	dateCreated: Date,
@@ -80,6 +80,15 @@ var CommentSchemas = new Schema({
 	dateCreated: Date,
 	likes: [UserSchemas],
 	links: [String],
+	replies: [ReplySchemas]
+});
+
+var ReplySchemas = new Schema({
+	user: UserSchemas, 
+	message: String,
+	dateCreated: Date,
+	likes: [UserSchemas],
+	links: [String]
 });
 
 var ReviewSchemas = new Schema({
@@ -90,33 +99,34 @@ var ReviewSchemas = new Schema({
 	likes: [UserSchemas],
 	links: [String],
 	shares: [UserSchemas], 
-	posts: [PostSchemas]
+	comments: [CommentSchemas]
 });
 
 var UserModel = mongoose.model('UserSchema', UserSchemas);
 var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
+var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
 
-function createPost(var currentUser, var newMessage, var target) {
+function createComment(var currentUser, var newMessage, var target) {
 	/* 
 	currentUser refers to the authenticated user. 
-	target is either a user, review, or artwork 
+	target is either a post, review, or artwork 
 	*/
-	var post = new PostModel({
+	var comment = new CommentModel({
 		user: currentUser,
 		message: newMessage,
 		dateCreated: Date.now();
 	});	
-	var Links = /(https?:\/\/[^\s]+)/g.exec(post.message);
+	var Links = /(https?:\/\/[^\s]+)/g.exec(comment.message);
 	for (i = 0; i < Links.length; i++) {
-		post.links.push(Links[i]);
+		comment.links.push(Links[i]);
 	}
-	target.posts.push(post);
+	target.comments.push(comment);
 }
 
-function replyToPost(var currentUser, var newMessage, var post) {
-	var reply = new CommentModel({
+function replyToComment(var currentUser, var newMessage, var comment) {
+	var reply = new ReplyModel({
 		user: currentUser,
 		message: newMessage,
 		dateCreated: Date.now();
@@ -125,7 +135,7 @@ function replyToPost(var currentUser, var newMessage, var post) {
 	for (i = 0; i < Links.length; i++) {
 		reply.links.push(Links[i]);
 	}
-	post.comments.push(reply);
+	comment.replies.push(reply);
 }
 
 function likesCount(var comment) {
