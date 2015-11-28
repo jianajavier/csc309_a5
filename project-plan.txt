@@ -28,7 +28,7 @@ FUNCTIONALITY: (HAVE FUNCTIONALITY DONE BY DECEMBER 1ST.. MEETING AT 4PM?)
 - Rating and Commenting (Bhaskar)
   - Reviews posted on profile
   - Rate person overall
-  - Rating/Review/Comment on listing page (for items that can be reused)
+  - //Rating/Review/Comment on listing page (for items that can be reused)
 - Search and Recommendation System (Bronwynne)
   - Search by usernames and tagged users, and tagged art
     (Include option to choose each)
@@ -61,4 +61,4 @@ To run:
 > node server.js
 
 PLANNING TO HAVE GROUP MEETING
-THURSDAY AFTER 3PM OR FRIDAY AFTER 7PM
+MONDAY AND WEDNESDAY (Time not planned yet)
