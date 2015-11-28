@@ -284,29 +284,33 @@ $(document).ready(function(){
 function readFile(input) {
       if (input.files && input.files[0]) {
           var reader = new FileReader();
-          var formData = new FormData($('form'));
-
-          formData.append('file', input.files[0]);
-
+          var formData = new FormData();
+          // NOT WORKING
           reader.onload = function (e) {
-            // update picture in database
-          //   $.ajax({
-          //     url: '/uploadimage',  //Server script to process data
-          //     type: 'POST',
-          //     data: formData,
-          //     cache: false,
-          //     contentType: false,
-          //     processData: false,
-          //     //$('form').serialize(),
-          //     success: function(response) {
-          //
-          //     }
-          // });
+            formData.append('file', input.files[0]);
+
             $('#editprofilepicture').attr('src', e.target.result);
             // Also change their own thumbnail
             $('#miniprofilepicture').attr('src', e.target.result);
+            updatePic();
           }
           reader.readAsDataURL(input.files[0]);
+          //updatePic();
+          // update picture in database
+          function updatePic() {
+            $.ajax({
+              url: '/uploadimage',  //Server script to process data
+              type: 'POST',
+              data: formData,
+              cache: false,
+              contentType: false,
+              processData: false,
+              //$('form').serialize(),
+              success: function(response) {
+
+              }
+            });
+          }
       }
   }
 
