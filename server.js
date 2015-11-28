@@ -90,10 +90,43 @@ var ReviewSchemas = new Schema({
 	likes: [UserSchemas],
 	links: [String],
 	shares: [UserSchemas], 
-	comments: [PostSchemas]
+	posts: [PostSchemas]
 });
 
 var UserModel = mongoose.model('UserSchema', UserSchemas);
+var PostModel = mongoose.model('PostSchema', PostSchemas);
+var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
+var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
+
+function createPost(var currentUser, var newMessage, var target) {
+	/* 
+	currentUser refers to the authenticated user. 
+	target is either a user, review, or artwork 
+	*/
+	var post = new PostModel({
+		user: currentUser,
+		message: newMessage,
+		dateCreated: Date.now();
+	});	
+	var Links = /(https?:\/\/[^\s]+)/g.exec(post.message);
+	for (i = 0; i < Links.length; i++) {
+		post.links.push(Links[i]);
+	}
+	target.posts.push(post);
+}
+
+function replyToPost(var currentUser, var newMessage, var post) {
+	var reply = new CommentModel({
+		user: currentUser,
+		message: newMessage,
+		dateCreated: Date.now();
+	});	
+	var Links = /(https?:\/\/[^\s]+)/g.exec(reply.message);
+	for (i = 0; i < Links.length; i++) {
+		reply.links.push(Links[i]);
+	}
+	post.comments.push(reply);
+}
 
 /* CURD requests */
 
