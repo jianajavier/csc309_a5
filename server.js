@@ -128,6 +128,14 @@ function replyToPost(var currentUser, var newMessage, var post) {
 	post.comments.push(reply);
 }
 
+function likesCount(var comment) {
+	return comment.likes.lenght;
+}
+
+function sharesCount(var comment) {
+	return comment.shares.lenght;
+}
+
 /* CURD requests */
 
 // GET ALL USERS
