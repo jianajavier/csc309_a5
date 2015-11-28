@@ -23,15 +23,14 @@ function showPosition(position) {
 $(document).ready(function(){
 
   /* Hide things on startup */
-  $("#loginheader, #rectangle, #signupheader, #errormessage").hide();
+  $("#loginheader, #signupheader, #errormessage").hide();
   $("#homepage, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
 
   // LOGIN VIEW
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
-    $("#signupheader").fadeOut();
-    $("#cpasswordinput, #cpasslabel").hide();
-    $("#rectangle, #loginheader").fadeIn();
+    $("#cpasswordinput, #cpasslabel, #signupheader").hide();
+    $("#loginheader").show();
     login = 0;
   });
 
@@ -44,8 +43,8 @@ $(document).ready(function(){
   });
 
   // CLICK GO TO PROCEED
-  $("#go").click(function(){
-
+  $("#loginOrSubmitForm").submit(function(event){
+    event.preventDefault();
     // Check for empty fields
     if (!$("#passwordinput").val() || !$("#emailinput").val()) {
       toggleErrorMessage("Please fill all fields.", 1);
@@ -62,10 +61,10 @@ $(document).ready(function(){
           if (data) {
             if (data.password === $("#passwordinput").val()) {
               currentuser = data;
-              $("#logout").fadeIn();
-              if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                $("#viewbehaviour").fadeIn();
-              }
+              //$("#logout").fadeIn();
+              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
+                //$("#viewbehaviour").fadeIn();
+              //}
 
               moveToWelcome(data);
             } else {
@@ -110,11 +109,11 @@ $(document).ready(function(){
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
               currentuser = user;
-              $("#logout").fadeIn();
+              //$("#logout").fadeIn();
 
-              if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                $("#viewbehaviour").fadeIn();
-              }
+              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
+                //$("#viewbehaviour").fadeIn();
+              //}
 
               moveToWelcome(user);
 
@@ -313,7 +312,7 @@ function readFile(input) {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #profilepage, #userbehaviourpage").fadeOut();
+  $("#editprofilepage, #profilepage, #userbehaviourpage").hide();
 
   if (obj.displayname == "") {
     $("#profilelink").text(obj.email);
@@ -322,8 +321,8 @@ function moveToWelcome(obj) {
   }
 
   //$("#profilelink").text(obj.email);
-  $("#profilelink").fadeIn();
-  $(".thumbnailholder").fadeIn();
+  $("#profilelink").show();
+  $(".thumbnailholder").show();
 
   // Gets all users to display in welcome screen
     $.ajax({
@@ -373,12 +372,13 @@ function moveToWelcome(obj) {
       }
     });
 
-  if (fromlogin) {
+  //if (fromlogin) {
 
-    var div = $("#rectangle, #loginbutton, #signupbutton");
+    //var div = 
+    $("#loginbutton, #signupbutton").hide();
 
     // Moves login out of the way and fades in homepage
-    div.animate({'left': '1500px'}, 1300, function(){
+    //div.animate({'left': '1500px'}, 1300, function(){
 
       var display;
 
@@ -389,21 +389,21 @@ function moveToWelcome(obj) {
         }
 
         setPageTitle("Welcome " + display + "!");
-        $("#homepage").fadeIn();
-    });
-    fromlogin = false;
-  } else {
-    var display;
+        $("#homepage").show();
+    //});
+    //fromlogin = false;
+  //} else {
+    //var display;
 
-      if (obj.displayname == "") {
-        display = obj.email;
-      } else {
-        display = obj.displayname;
-      }
+      //if (obj.displayname == "") {
+        //display = obj.email;
+      //} else {
+        //display = obj.displayname;
+      //}
 
-      setPageTitle("Welcome " + display + "!");
-      $("#homepage").fadeIn();
-    }
+      //setPageTitle("Welcome " + display + "!");
+      //$("#homepage").fadeIn();
+    //}
 
 }
 
