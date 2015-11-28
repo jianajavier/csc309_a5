@@ -60,8 +60,8 @@ var UserSchemas = new Schema({
       updatecount: Number, default:0,
       behaviourcount: Number, default:0,
       sessioninfo: [SessionSchemas]
-    }
-
+    },
+	posts: [PostSchemas]
 });
 
 var PostSchemas = new Schema({
@@ -80,6 +80,17 @@ var CommentSchemas = new Schema({
 	dateCreated: Date,
 	likes: [UserSchemas],
 	links: [String],
+});
+
+var ReviewSchemas = new Schema({
+	user: UserSchemas,
+	content: String,
+	dateCreated: Date,
+	rating: Number, //It is a number in decimals between 0 and 10. Note this is a 100 point system.
+	likes: [UserSchemas],
+	links: [String],
+	shares: [UserSchemas], 
+	comments: [PostSchemas]
 });
 
 var UserModel = mongoose.model('UserSchema', UserSchemas);
