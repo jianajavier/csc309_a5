@@ -64,6 +64,24 @@ var UserSchemas = new Schema({
 
 });
 
+var PostSchemas = new Schema({
+	user: UserSchemas, 
+	message: String,
+	dateCreated: Date,
+	likes: [UserSchemas],
+	links: [String],
+	shares: [UserSchemas], 
+	comments: [CommentSchemas]
+});
+
+var CommentSchemas = new Schema({
+	user: UserSchemas, 
+	message: String,
+	dateCreated: Date,
+	likes: [UserSchemas],
+	links: [String],
+});
+
 var UserModel = mongoose.model('UserSchema', UserSchemas);
 
 /* CURD requests */
