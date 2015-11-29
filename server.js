@@ -146,6 +146,25 @@ function sharesCount(var comment) {
 	return comment.shares.lenght;
 }
 
+function sortComments(var condition, var target) {
+	var newArray = [];
+	for (i = 0; i < target.comments){
+		newArray.push(target.comments[i]);
+	}
+	if (condition == "Newest") {
+		return newArray;
+	}
+	else if (condition == "Oldest") {
+		return newArray.reverse();
+	}
+	else if (condition == "Best") {
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)});
+	}
+	else { //condition == "Worst"
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)}).reverse();
+	}
+}
+
 /* CURD requests */
 
 // GET ALL USERS
