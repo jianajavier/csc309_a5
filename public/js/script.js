@@ -23,29 +23,28 @@ function showPosition(position) {
 $(document).ready(function(){
 
   /* Hide things on startup */
-  $("#loginheader, #rectangle, #signupheader, #errormessage").hide();
+  $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
   $("#homepage, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
 
   // LOGIN VIEW
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
-    $("#signupheader").fadeOut();
-    $("#cpasswordinput, #cpasslabel").hide();
-    $("#rectangle, #loginheader").fadeIn();
+    $("#cpasswordinput, #cpasslabel, #signupheader").hide();
+    $("#loginheader").show();
     login = 0;
   });
 
   // SIGN-UP VIEW
   $("#signupbutton").click(function(){
     toggleErrorMessage("", 0);
-    $("#loginheader").fadeOut();
-    $("#cpasswordinput, #cpasslabel, #rectangle, #signupheader").fadeIn();
+    $("#loginheader").hide();
+    $("#cpasswordinput, #cpasslabel, #rectangle, #signupheader").show();
     login = 1;
   });
 
   // CLICK GO TO PROCEED
-  $("#go").click(function(){
-
+  $("#loginOrSubmitForm").submit(function(event){
+    event.preventDefault();
     // Check for empty fields
     if (!$("#passwordinput").val() || !$("#emailinput").val()) {
       toggleErrorMessage("Please fill all fields.", 1);
@@ -62,10 +61,11 @@ $(document).ready(function(){
           if (data) {
             if (data.password === $("#passwordinput").val()) {
               currentuser = data;
-              $("#logout").fadeIn();
-              if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                $("#viewbehaviour").fadeIn();
-              }
+              $(".loggedInNav").show();
+              //$("#logout").fadeIn();
+              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
+                //$("#viewbehaviour").fadeIn();
+              //}
 
               moveToWelcome(data);
             } else {
@@ -110,11 +110,12 @@ $(document).ready(function(){
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
               currentuser = user;
-              $("#logout").fadeIn();
+              $(".loggedInNav").show();
+              //$("#logout").fadeIn();
 
-              if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                $("#viewbehaviour").fadeIn();
-              }
+              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
+                //$("#viewbehaviour").fadeIn();
+              //}
 
               moveToWelcome(user);
 
@@ -175,7 +176,8 @@ $(document).ready(function(){
   /**
   CLICKS UPDATE BUTTON TO BRING BACK TO CHANGE INFORMATION
   */
-  $("#updatebutton").click(function () {
+  $("#editProfileForm").submit(function (event) {
+    event.preventDefault();
     $.ajax({
       type: "PUT",
       url: "/users/update/" + viewing.email+ "/"+currentuser.email, // technically viewing should be current if they are looking at their own
@@ -191,14 +193,15 @@ $(document).ready(function(){
     });
   });
 
-  $("#changepassbutton").click(function () {
+  $("#changePasswordForm").submit(function (event) {
+    event.preventDefault();
     //CHECK IF OLD PASSWORD IS correct
     if ($("#oldpass").val() === currentuser.password) {
       if ($("#newpass").val() === $("#confirmpass").val()) {
         // AJAX CALL TO UPDATE PASSWORD
         $.ajax({
           type: "PUT",
-          url: "/users/update/" + currentuser.email,
+          url: "/users/update/" + viewing.email + "/" + currentuser.email,
           data: {
             password : $("#newpass").val(),
           },
@@ -285,35 +288,39 @@ $(document).ready(function(){
 function readFile(input) {
       if (input.files && input.files[0]) {
           var reader = new FileReader();
-          var formData = new FormData($('form'));
-
-          formData.append('file', input.files[0]);
-
+          var formData = new FormData();
+          // NOT WORKING
           reader.onload = function (e) {
-            // update picture in database
-          //   $.ajax({
-          //     url: '/uploadimage',  //Server script to process data
-          //     type: 'POST',
-          //     data: formData,
-          //     cache: false,
-          //     contentType: false,
-          //     processData: false,
-          //     //$('form').serialize(),
-          //     success: function(response) {
-          //
-          //     }
-          // });
+            formData.append('file', input.files[0]);
+
             $('#editprofilepicture').attr('src', e.target.result);
             // Also change their own thumbnail
             $('#miniprofilepicture').attr('src', e.target.result);
+            updatePic();
           }
           reader.readAsDataURL(input.files[0]);
+          //updatePic();
+          // update picture in database
+          function updatePic() {
+            $.ajax({
+              url: '/uploadimage',  //Server script to process data
+              type: 'POST',
+              data: formData,
+              cache: false,
+              contentType: false,
+              processData: false,
+              //$('form').serialize(),
+              success: function(response) {
+
+              }
+            });
+          }
       }
   }
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #profilepage, #userbehaviourpage").fadeOut();
+  $("#editprofilepage, #profilepage, #userbehaviourpage").hide();
 
   if (obj.displayname == "") {
     $("#profilelink").text(obj.email);
@@ -322,8 +329,8 @@ function moveToWelcome(obj) {
   }
 
   //$("#profilelink").text(obj.email);
-  $("#profilelink").fadeIn();
-  $(".thumbnailholder").fadeIn();
+  $("#profilelink").show();
+  $(".thumbnailholder").show();
 
   // Gets all users to display in welcome screen
     $.ajax({
@@ -373,12 +380,13 @@ function moveToWelcome(obj) {
       }
     });
 
-  if (fromlogin) {
+  //if (fromlogin) {
 
-    var div = $("#rectangle, #loginbutton, #signupbutton");
+    //var div = 
+    $("#loginbutton, #signupbutton").hide();
 
     // Moves login out of the way and fades in homepage
-    div.animate({'left': '1500px'}, 1300, function(){
+    //div.animate({'left': '1500px'}, 1300, function(){
 
       var display;
 
@@ -389,21 +397,21 @@ function moveToWelcome(obj) {
         }
 
         setPageTitle("Welcome " + display + "!");
-        $("#homepage").fadeIn();
-    });
-    fromlogin = false;
-  } else {
-    var display;
+        $("#homepage").show();
+    //});
+    //fromlogin = false;
+  //} else {
+    //var display;
 
-      if (obj.displayname == "") {
-        display = obj.email;
-      } else {
-        display = obj.displayname;
-      }
+      //if (obj.displayname == "") {
+        //display = obj.email;
+      //} else {
+        //display = obj.displayname;
+      //}
 
-      setPageTitle("Welcome " + display + "!");
-      $("#homepage").fadeIn();
-    }
+      //setPageTitle("Welcome " + display + "!");
+      //$("#homepage").fadeIn();
+    //}
 
 }
 
