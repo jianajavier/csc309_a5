@@ -23,7 +23,7 @@ function showPosition(position) {
 $(document).ready(function(){
 
   /* Hide things on startup */
-  $("#loginheader, #signupheader, #errormessage").hide();
+  $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
   $("#homepage, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
 
   // LOGIN VIEW
@@ -37,8 +37,8 @@ $(document).ready(function(){
   // SIGN-UP VIEW
   $("#signupbutton").click(function(){
     toggleErrorMessage("", 0);
-    $("#loginheader").fadeOut();
-    $("#cpasswordinput, #cpasslabel, #rectangle, #signupheader").fadeIn();
+    $("#loginheader").hide();
+    $("#cpasswordinput, #cpasslabel, #rectangle, #signupheader").show();
     login = 1;
   });
 
@@ -61,6 +61,7 @@ $(document).ready(function(){
           if (data) {
             if (data.password === $("#passwordinput").val()) {
               currentuser = data;
+              $(".loggedInNav").show();
               //$("#logout").fadeIn();
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
                 //$("#viewbehaviour").fadeIn();
@@ -109,6 +110,7 @@ $(document).ready(function(){
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
               currentuser = user;
+              $(".loggedInNav").show();
               //$("#logout").fadeIn();
 
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
@@ -174,7 +176,8 @@ $(document).ready(function(){
   /**
   CLICKS UPDATE BUTTON TO BRING BACK TO CHANGE INFORMATION
   */
-  $("#updatebutton").click(function () {
+  $("#editProfileForm").submit(function (event) {
+    event.preventDefault();
     $.ajax({
       type: "PUT",
       url: "/users/update/" + viewing.email+ "/"+currentuser.email, // technically viewing should be current if they are looking at their own
@@ -190,14 +193,15 @@ $(document).ready(function(){
     });
   });
 
-  $("#changepassbutton").click(function () {
+  $("#changePasswordForm").submit(function (event) {
+    event.preventDefault();
     //CHECK IF OLD PASSWORD IS correct
     if ($("#oldpass").val() === currentuser.password) {
       if ($("#newpass").val() === $("#confirmpass").val()) {
         // AJAX CALL TO UPDATE PASSWORD
         $.ajax({
           type: "PUT",
-          url: "/users/update/" + currentuser.email,
+          url: "/users/update/" + viewing.email + "/" + currentuser.email,
           data: {
             password : $("#newpass").val(),
           },
