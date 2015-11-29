@@ -5,9 +5,9 @@ var express = require('express');
 var app = express();
 multer = require('multer');
 
-var uploading = multer({
-  dest: __dirname + '/public/uploads/',
-})
+var upload = multer({
+  dest: __dirname + '/public/uploads/'
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -420,12 +420,13 @@ app.delete('/users/:id/:emailaddcount', function (req, res){
 
 
 //upload the file
-// app.post('/uploadimage', uploading.array('pic', 4), function (req, res) {
-//
-//   console.log(req.body);
-//   console.log(req.files);
-//   return res.send("don't know");
-// });
+app.post('/uploadimage', upload.single('imgfile'), function (req, res) {
+
+  console.log(req.body);
+  console.log(req.file);
+  var target_path = __dirname + '/public/uploads/';
+  return res.send("don't know");
+});
 //
 // //  get the file
 // app.get('/uploads/images/:file', function (req, res) {
