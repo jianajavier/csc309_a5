@@ -37,7 +37,14 @@ app.get('/', function(req, res) {
 /* Creating the Schema */
 var Schema = mongoose.Schema;
 
-var SessionSchemas = new Schema({
+var SessionSchemas = new Schema();
+var PostSchemas = new Schema();
+var UserSchemas = new Schema();
+var CommentSchemas = new Schema();
+var ReplySchemas = new Schema();
+var ReviewSchemas = new Schema();
+
+SessionSchemas = new Schema({
   date     : Date,
   ipaddr      : String,
   geolocation      : {lat: Number, lng: Number},
@@ -45,7 +52,17 @@ var SessionSchemas = new Schema({
   viewingdevice: String
 });
 
-var UserSchemas = new Schema({
+PostSchemas = new Schema({  //posts are posted to a group or user
+  user: UserSchemas, 
+  message: String,
+  dateCreated: Date,
+  likes: [UserSchemas],
+  links: [String],
+  shares: [UserSchemas], 
+  comments: [CommentSchemas]
+});
+
+UserSchemas = new Schema({
     email: String,
     password: String,
     description: String, default : "",
@@ -61,20 +78,10 @@ var UserSchemas = new Schema({
       behaviourcount: Number, default:0,
       sessioninfo: [SessionSchemas]
     },
-	posts: [PostSchemas]
+	  posts: [PostSchemas]
 });
 
-var PostSchemas = new Schema({  //posts are posted to a group or user
-	user: UserSchemas, 
-	message: String,
-	dateCreated: Date,
-	likes: [UserSchemas],
-	links: [String],
-	shares: [UserSchemas], 
-	comments: [CommentSchemas]
-});
-
-var CommentSchemas = new Schema({
+CommentSchemas = new Schema({
 	user: UserSchemas, 
 	message: String,
 	dateCreated: Date,
@@ -83,7 +90,7 @@ var CommentSchemas = new Schema({
 	replies: [ReplySchemas]
 });
 
-var ReplySchemas = new Schema({
+ReplySchemas = new Schema({
 	user: UserSchemas, 
 	message: String,
 	dateCreated: Date,
@@ -91,7 +98,7 @@ var ReplySchemas = new Schema({
 	links: [String]
 });
 
-var ReviewSchemas = new Schema({
+ReviewSchemas = new Schema({
 	user: UserSchemas,
 	content: String,
 	dateCreated: Date,
@@ -108,7 +115,7 @@ var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
 
-function createComment(var currentUser, var newMessage, var target) {
+function createComment(currentUser, newMessage, target) {
 	/* 
 	currentUser refers to the authenticated user. 
 	target is either a post, review, or artwork 
@@ -116,7 +123,7 @@ function createComment(var currentUser, var newMessage, var target) {
 	var comment = new CommentModel({
 		user: currentUser,
 		message: newMessage,
-		dateCreated: Date.now();
+		dateCreated: Date.now()
 	});	
 	var Links = /(https?:\/\/[^\s]+)/g.exec(comment.message);
 	for (i = 0; i < Links.length; i++) {
@@ -125,11 +132,11 @@ function createComment(var currentUser, var newMessage, var target) {
 	target.comments.push(comment);
 }
 
-function replyToComment(var currentUser, var newMessage, var comment) {
+function replyToComment(currentUser, newMessage, comment) {
 	var reply = new ReplyModel({
 		user: currentUser,
 		message: newMessage,
-		dateCreated: Date.now();
+		dateCreated: Date.now()
 	});	
 	var Links = /(https?:\/\/[^\s]+)/g.exec(reply.message);
 	for (i = 0; i < Links.length; i++) {
@@ -138,17 +145,17 @@ function replyToComment(var currentUser, var newMessage, var comment) {
 	comment.replies.push(reply);
 }
 
-function likesCount(var comment) {
+function likesCount(comment) {
 	return comment.likes.lenght;
 }
 
-function sharesCount(var comment) {
+function sharesCount(comment) {
 	return comment.shares.lenght;
 }
 
-function sortComments(var condition, var target) {
+function sortComments(condition, target) {
 	var newArray = [];
-	for (i = 0; i < target.comments){
+	for (i = 0; i < target.comments; i++){
 		newArray.push(target.comments[i]);
 	}
 	if (condition == "Newest") {
