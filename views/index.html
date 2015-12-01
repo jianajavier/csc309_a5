@@ -32,9 +32,53 @@
       </nav>
 
       <!--Login or Signup Screen-->
-      <div class="container">
-        <button id="loginbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Login</button>
-        <button id="signupbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Signup</button>
+      <div class="container" id="loginOrSignupScreen">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="jumbotron" style="height:450px">
+              <h1>Welcome to SketchSwap</h1>
+              <p>Create and trade with other artists - Share your art with the world!</p>
+              <p>
+                  <button id="loginbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Login</button>
+                  <button id="signupbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Signup</button>
+              </p>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div id="loginOrSignupPictures" class="carousel slide" data-ride="carousel">
+
+              <ol class="carousel-indicators">
+                <li data-target="#loginOrSignupPictures" data-slide-to="0" class="active"></li>
+                <li data-target="#loginOrSignupPictures" data-slide-to="1"></li>
+                <li data-target="#loginOrSignupPictures" data-slide-to="2"></li>
+              </ol>
+
+              <div class="carousel-inner" role="listbox" style="height:450px">
+                <div class="item active">
+                  <img src="./uploads/lionsSketch.jpg" alt="Sketch" style="height:500px; width:auto">
+                </div>
+
+                <div class="item">
+                  <img src="./uploads/bowlSculpture.jpg" alt="Sculpture" style="height:500px; width:auto">
+                </div>
+
+                <div class="item">
+                  <img src="./uploads/watercolour.jpg" alt="Painting" style="height:500px; width:auto">
+                </div>
+              </div>
+
+              <!-- Left and right controls -->
+              <a class="left carousel-control" href="#loginOrSignupPictures" role="button" data-slide="prev">
+                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+              </a>
+              <a class="right carousel-control" href="#loginOrSignupPictures" role="button" data-slide="next">
+                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+              </a>
+              
+            </div>
+          </div>
+        </div>
       </div>
 
       <!--Login or Signup Window (On button click)-->
@@ -51,19 +95,25 @@
             <div class="modal-body">
               <div id="rectangle" class="container">
                 <form class="form-horizontal" role="form" id="loginOrSubmitForm">
-                  <div class="form-group">
-                    <label class="control-label" for="emailinput">Email:</label>
-                    <input type="email" class="form-control" id="emailinput" placeholder="Email goes here">
+                  <div class="form-group row">
+                    <div class="col-md-6">
+                      <label class="control-label" for="emailinput">Email:</label>
+                      <input type="email" class="form-control" id="emailinput" placeholder="Email goes here">
+                    </div>
                   </div>
 
-                  <div class="form-group">
-                    <label class="control-label" for="passwordinput">Password:</label>
-                    <input type="password" class="form-control" id="passwordinput" placeholder="Password goes here">
+                  <div class="form-group row">
+                    <div class="col-md-6">
+                      <label class="control-label" for="passwordinput">Password:</label>
+                      <input type="password" class="form-control" id="passwordinput" placeholder="Password goes here">
+                    </div>
                   </div>
 
-                  <div class="form-group">
-                    <label class="control-label" for="cpasswordinput" id="cpasslabel">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpasswordinput" placeholder="Retype password">
+                  <div class="form-group row">
+                    <div class="col-md-6">
+                      <label class="control-label" for="cpasswordinput" id="cpasslabel">Confirm Password:</label>
+                      <input type="password" class="form-control" id="cpasswordinput" placeholder="Retype password">
+                    </div>
                   </div>
 
                   <button type="submit" class="btn btn-default">Submit</button>
