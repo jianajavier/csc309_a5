@@ -61,7 +61,10 @@ $(document).ready(function(){
           if (data) {
             if (data.password === $("#passwordinput").val()) {
               currentuser = data;
+              $("#loginOrSignupModal").modal("hide");
+              $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
+              
               //$("#logout").fadeIn();
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
                 //$("#viewbehaviour").fadeIn();
@@ -110,7 +113,10 @@ $(document).ready(function(){
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
               currentuser = user;
+              $("#loginOrSignupModal").modal("hide");
+              $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
+
               //$("#logout").fadeIn();
 
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {

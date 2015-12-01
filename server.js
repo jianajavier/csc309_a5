@@ -53,13 +53,14 @@ SessionSchemas = new Schema({
 });
 
 PostSchemas = new Schema({  //posts are posted to a group or user
-  user: UserSchemas, 
+  //user: UserSchemas, 
   message: String,
   dateCreated: Date,
   likes: [UserSchemas],
   links: [String],
   shares: [UserSchemas], 
-  comments: [CommentSchemas]
+  comments: [CommentSchemas],
+  tags: {}
 });
 
 UserSchemas = new Schema({
@@ -78,11 +79,12 @@ UserSchemas = new Schema({
       behaviourcount: Number, default:0,
       sessioninfo: [SessionSchemas]
     },
+    tags: {},
 	  posts: [PostSchemas]
 });
 
 CommentSchemas = new Schema({
-	user: UserSchemas, 
+	//user: UserSchemas, 
 	message: String,
 	dateCreated: Date,
 	likes: [UserSchemas],
@@ -91,7 +93,7 @@ CommentSchemas = new Schema({
 });
 
 ReplySchemas = new Schema({
-	user: UserSchemas, 
+	//user: UserSchemas, 
 	message: String,
 	dateCreated: Date,
 	likes: [UserSchemas],
@@ -99,7 +101,7 @@ ReplySchemas = new Schema({
 });
 
 ReviewSchemas = new Schema({
-	user: UserSchemas,
+	//user: UserSchemas,
 	content: String,
 	dateCreated: Date,
 	rating: Number, //It is a number in decimals between 0 and 10. Note this is a 100 point system.
@@ -121,7 +123,7 @@ function createComment(currentUser, newMessage, target) {
 	target is either a post, review, or artwork 
 	*/
 	var comment = new CommentModel({
-		user: currentUser,
+		//user: currentUser,
 		message: newMessage,
 		dateCreated: Date.now()
 	});	
@@ -134,7 +136,7 @@ function createComment(currentUser, newMessage, target) {
 
 function replyToComment(currentUser, newMessage, comment) {
 	var reply = new ReplyModel({
-		user: currentUser,
+		//user: currentUser,
 		message: newMessage,
 		dateCreated: Date.now()
 	});	
@@ -146,11 +148,11 @@ function replyToComment(currentUser, newMessage, comment) {
 }
 
 function likesCount(comment) {
-	return comment.likes.lenght;
+	return comment.likes.length;
 }
 
 function sharesCount(comment) {
-	return comment.shares.lenght;
+	return comment.shares.length;
 }
 
 function sortComments(condition, target) {
@@ -171,6 +173,58 @@ function sortComments(condition, target) {
 		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)}).reverse();
 	}
 }
+
+//Add a new tag for searching purposes to a specified user
+function addNewTagToUser(tag, user) {
+  user.tags[tag] = true;
+  user.markModified('tags');
+  console.log(user.tags);
+}
+
+//Add a new tag for searching purposes to a specified user
+function addNewTagToArt(tag, art) {
+  art.tags[tag] = true;
+  art.markModified('tags');
+}
+
+app.post('/test/addtag', function (req, res) {
+  return UserModel.find(function (err, users) {
+    for(var i = 0; i < users.length; i++) {
+      addNewTagToUser("two", users[i]);
+      users[i].save();
+      //for(var j = 0; j < users.length; j++) {
+        //addNewTagToArt(i, users[i].posts[j]);
+      //}
+    }
+    return res.send(users[i-1].tags);
+  });
+});
+
+app.get('/search/:tag', function (req, res) {
+  var results = [];
+  return UserModel.find(function(err, users) {
+    console.log(users.length);
+    for(var i = 0; i < users.length; i++) {
+
+      if(users[i].tags[req.params.tag]) {
+        console.log(users[i].tags);
+        console.log(users[i].tags[req.params.tag]);
+        results.push(users[i]);
+      }
+      //for(var j = 0; j < users[i].posts.length; j++) {
+        //if(users[i].posts[j].tags.tag) {
+          //results.push(users[i].posts[j]);
+        //}
+      //}
+    }
+    if (!err) {
+      console.log(results);
+      return res.send(results);
+    } else {
+      return console.log(err);
+    }
+  });
+});
 
 /* CURD requests */
 
@@ -267,7 +321,8 @@ app.post('/users', function (req, res){
         addcount: 1,
         updatecount: 0,
         behaviourcount: 0
-      }
+      },
+      tags: { na:false }
     });
 
     user.userbehaviour.sessioninfo.push(session);
