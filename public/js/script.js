@@ -23,7 +23,8 @@ function showPosition(position) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
+  $("#homepage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
+
   // LOGIN VIEW
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
@@ -59,7 +60,10 @@ $(document).ready(function(){
           if (data) {
             if (data.password === $("#passwordinput").val()) {
               currentuser = data;
+              $("#loginOrSignupModal").modal("hide");
+              $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
+
               //$("#logout").fadeIn();
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
                 //$("#viewbehaviour").fadeIn();
@@ -108,7 +112,10 @@ $(document).ready(function(){
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
               currentuser = user;
+              $("#loginOrSignupModal").modal("hide");
+              $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
+
               //$("#logout").fadeIn();
 
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
@@ -124,6 +131,53 @@ $(document).ready(function(){
 
       }
     }
+  });
+
+  /**
+  USER PERFORMS A SEARCH IN THE NAV BAR
+  */
+  $("#searchForm").submit(function(event) {
+    event.preventDefault();
+    $("#notSearch").hide();
+    //console.log()
+
+    $.ajax({
+        type: "GET",
+        url: "/search/" + $("#searchinput").val(),
+        success: function(data){
+          if (data) {
+            $("#userSearchResults").html("<h3>Users that match your search:</h3>");
+            for(var i = 0; i < data.length; i++){
+              $("#userSearchResults").append(
+                "<div class='panel panel-primary'>"
+                  + "<div class='panel-heading'>"
+                      + "<h3 class='panel-title'>" + data[i].email +"</h3>"
+                  + "</div>"
+                  + "<div class='panel-body'>"
+                      //+ "<img src='" + data[i].)
+                      + "<p>" + data[i].description + "</p>"
+                  + "</div>"
+                + "</div>");
+            }
+            $("#searchScreen").show();
+          }
+        }
+    });
+  });
+
+  /**
+  USER UPLOADS A NEW PROFILE PICTURE
+  */
+  $("#newProfilePic").submit(function(event) {
+    $.ajax({
+        type: "GET",
+        url: "/"
+        //data: $("#newProfilePic").serialize(),
+        //success: function(data){
+          //if (data) {
+            //console.log(data);
+          //}
+    });
   });
 
   /**
