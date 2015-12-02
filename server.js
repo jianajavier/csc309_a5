@@ -43,6 +43,7 @@ var UserSchemas = new Schema();
 var CommentSchemas = new Schema();
 var ReplySchemas = new Schema();
 var ReviewSchemas = new Schema();
+var MessageSchemas = new Schema();
 
 SessionSchemas = new Schema({
   date     : Date,
@@ -78,7 +79,9 @@ UserSchemas = new Schema({
       behaviourcount: Number, default:0,
       sessioninfo: [SessionSchemas]
     },
-	  posts: [PostSchemas]
+	  posts: [PostSchemas],
+	  inbox: [MessageSchemas],
+	  outbox: [MessageSchemas]
 });
 
 CommentSchemas = new Schema({
@@ -109,11 +112,22 @@ ReviewSchemas = new Schema({
 	comments: [CommentSchemas]
 });
 
+MessageSchemas = new Schema({
+	sender: UserSchemas,
+	receiver: UserSchemas,
+	dateCreated: Date,
+	content: String,
+	request: Boolean,
+	reply: Boolean
+});
+
+
 var UserModel = mongoose.model('UserSchema', UserSchemas);
 var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
+//var MessageModel = mongoose.model('MessageSchema', MessageSchemas);
 
 function createComment(currentUser, newMessage, target) {
 	/* 
@@ -283,6 +297,38 @@ app.post('/users', function (req, res){
 
   });
 
+});
+
+// Create (Send) a message
+app.put('/users/messages', function (req, res) {
+	console.log(req.body);
+	console.log(">>>>>>>>>>>>>>");
+	console.log(req.body.to);
+	console.log(req.body.from);
+	console.log(req.body.content);
+	console.log(">>>>>>>>>>>>>>");
+	//console.log(req.body.from[_id]);
+	var tempMessage = {
+		sender: UserModel.findOne( { _id: req.body.from[_id]} ),
+		receiver: UserModel.findOne( {_id: req.body.to[_id]} ),
+		dateCreated: Date.now,
+		content: req.body.content,
+		request: req.body.request,
+		reply: req.body.reply
+	}
+	req.body.from.outbox.push(tempMessage);
+	req.body.from.save(function (err) {
+		if (err) {
+			console.log("Saving 'from' error: "+ err);
+		}
+	});
+	req.body.to.inbox.push(tempMessage);
+	req.body.to.save(function (err) {
+		if (err) {
+			console.log("Saving 'to' error: "+ err);
+		}
+	});
+	res.send(200);
 });
 
 // VERIFY EMAIL LOGIN
