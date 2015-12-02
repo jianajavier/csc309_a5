@@ -24,7 +24,7 @@ $(document).ready(function(){
 
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
+  $("#homepage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
 
   // LOGIN VIEW
   $("#loginbutton").click(function(){
@@ -132,6 +132,38 @@ $(document).ready(function(){
 
       }
     }
+  });
+
+  /**
+  USER PERFORMS A SEARCH IN THE NAV BAR
+  */
+  $("#searchForm").submit(function(event) {
+    event.preventDefault();
+    $("#notSearch").hide();
+    //console.log()
+
+    $.ajax({
+        type: "GET",
+        url: "/search/" + $("#searchinput").val(),
+        success: function(data){
+          if (data) {
+            $("#userSearchResults").html("<h3>Users that match your search:</h3>");
+            for(var i = 0; i < data.length; i++){
+              $("#userSearchResults").append(
+                "<div class='panel panel-primary'>"
+                  + "<div class='panel-heading'>"
+                      + "<h3 class='panel-title'>" + data[i].email +"</h3>"
+                  + "</div>"
+                  + "<div class='panel-body'>"
+                      //+ "<img src='" + data[i].)
+                      + "<p>" + data[i].description + "</p>"
+                  + "</div>"
+                + "</div>");
+            }
+            $("#searchScreen").show();
+          }
+        }
+    });
   });
 
   /**
