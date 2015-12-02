@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-      
+
       <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/flatly/bootstrap.min.css" rel="stylesheet" integrity="sha256-sHwgyDk4CGNYom267UJX364ewnY4Bh55d53pxP5WDug= sha512-mkkeSf+MM3dyMWg3k9hcAttl7IVHe2BA1o/5xKLl4kBaP0bih7Mzz/DBy4y6cNZCHtE2tPgYBYH/KtEjOQYKxA==" crossorigin="anonymous">
 
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo= sha512-2e8qq0ETcfWRI4HJBzQiA3UoyFk6tbNyG+qSaIBZLyW9Xf3sWZHN/lxe9fTh1U45DpPf07yj94KsUHHWe4Yk1A==" crossorigin="anonymous"></script>
@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      
+
       <div id="homepage" class="container">
         <table id="usertable">
           <tr>
@@ -87,7 +87,21 @@
 
       <div id="profilepage" class="container">
         <h3 id="displayname"></h3>
-        <img src="css/default_profile_large.jpg" id="profilepicture"/>
+         <!--Need to change so that it is in bootstrap, and not hardcoded randomly here-->
+        <style>
+          .profileholder, .imageholder{
+          overflow:hidden;
+          width:300px;
+          height: 300px;
+          }
+          .profileholder img, .imageholder img{
+          width:300px;
+          height:300px;
+          }
+        </style>
+        <div class = "profileholder">
+          <img src="" id="profilepicture"/>
+        </div>
         <p id="description"></p>
         <h3 id ="profileemail"></h3>
         <button id="toggleadmin"></button>
@@ -97,21 +111,22 @@
 
       <div id = "editprofilepage" class="container">
         <div id="dropzone">
-            <form action="" class="dropzone dz-clickable" id="demo-upload">
+            <form action="/uploadimage" class="dropzone dz-clickable" method = "post" enctype = "multipart/form-data" id="demo-upload">
+              <!-- <input id = "image-upload" type = "file" name="file"> -->
+              <input type = "file" name = "file">
                 <div class="dz-message">Drop files here or click to upload.
                     <br> <span class="note">(This is just a demo dropzone. Selected files are <strong>not</strong> actually uploaded.)</span>
-
                 </div>
             </form>
         </div>
         <div class="imageholder">
-          <img src="css/default_profile_large.jpg" id="editprofilepicture"/>
+          <img src="" id="editprofilepicture"/>
         </div>
         <form class="form-horizontal" role="form" id="editProfileForm">
           <div class="form-group">
             <label class="control-label" for="editemail">Email:</label>
             <input type="text" id="editemail" readonly>
-          </div> 
+          </div>
           <div class="form-group">
             <label class="control-label" for="editdisplayname">Display Name:</label>
             <input type="text" id="editdisplayname">

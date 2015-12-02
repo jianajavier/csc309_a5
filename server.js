@@ -53,12 +53,12 @@ SessionSchemas = new Schema({
 });
 
 PostSchemas = new Schema({  //posts are posted to a group or user
-  //user: UserSchemas, 
+  //user: UserSchemas,
   message: String,
   dateCreated: Date,
   likes: [UserSchemas],
   links: [String],
-  shares: [UserSchemas], 
+  shares: [UserSchemas],
   comments: [CommentSchemas],
   tags: {}
 });
@@ -67,7 +67,7 @@ UserSchemas = new Schema({
     email: String,
     password: String,
     description: String, default : "",
-    //profileimage: { data: Buffer, contentType: String },
+    profileimage: String, default : "css/default_profile_large.jpg",
     displayname: String, default: "",
     type: String, default: "",
     userbehaviour:
@@ -84,7 +84,7 @@ UserSchemas = new Schema({
 });
 
 CommentSchemas = new Schema({
-	//user: UserSchemas, 
+	//user: UserSchemas,
 	message: String,
 	dateCreated: Date,
 	likes: [UserSchemas],
@@ -93,7 +93,7 @@ CommentSchemas = new Schema({
 });
 
 ReplySchemas = new Schema({
-	//user: UserSchemas, 
+	//user: UserSchemas,
 	message: String,
 	dateCreated: Date,
 	likes: [UserSchemas],
@@ -107,7 +107,7 @@ ReviewSchemas = new Schema({
 	rating: Number, //It is a number in decimals between 0 and 10. Note this is a 100 point system.
 	likes: [UserSchemas],
 	links: [String],
-	shares: [UserSchemas], 
+	shares: [UserSchemas],
 	comments: [CommentSchemas]
 });
 
@@ -118,15 +118,15 @@ var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
 
 function createComment(currentUser, newMessage, target) {
-	/* 
-	currentUser refers to the authenticated user. 
-	target is either a post, review, or artwork 
+	/*
+	currentUser refers to the authenticated user.
+	target is either a post, review, or artwork
 	*/
 	var comment = new CommentModel({
 		//user: currentUser,
 		message: newMessage,
 		dateCreated: Date.now()
-	});	
+	});
 	var Links = /(https?:\/\/[^\s]+)/g.exec(comment.message);
 	for (i = 0; i < Links.length; i++) {
 		comment.links.push(Links[i]);
@@ -139,7 +139,7 @@ function replyToComment(currentUser, newMessage, comment) {
 		//user: currentUser,
 		message: newMessage,
 		dateCreated: Date.now()
-	});	
+	});
 	var Links = /(https?:\/\/[^\s]+)/g.exec(reply.message);
 	for (i = 0; i < Links.length; i++) {
 		reply.links.push(Links[i]);
@@ -410,8 +410,7 @@ app.get('/users/verify-email/:email/:emailaddcount', function (req, res){
   });
 });
 
-
-// UPDATE USER INFROMATION
+// UPDATE USER INFORMATION
 app.put('/users/update/:email/:emailaddcount', function (req, res){
   return UserModel.findOne({ email: req.params.email }, function (err, user) {
     UserModel.findOne({email: req.params.emailaddcount}, function (err, useradd) {
@@ -482,13 +481,48 @@ app.delete('/users/:id/:emailaddcount', function (req, res){
 
 
 //upload the file
-app.post('/uploadimage', upload.single('imgfile'), function (req, res) {
 
-  console.log(req.body);
-  console.log(req.file);
-  var target_path = __dirname + '/public/uploads/';
-  return res.send("don't know");
+app.post('/uploadimage/:id', function (req, res) {
+  console.log(req.body.name);
+  console.log("yo");
+  //var target_path = __dirname + '/public/uploads/';
+  return UserModel.findOne({ _id: req.params.id }, function (err, user) {
+
+    user.profileimage = req.body.name;
+
+    return user.save(function (err) {
+      if (!err) {
+        console.log("updated profile image");
+      } else {
+        console.log(err);
+      }
+      return res.send(user);
+    });
+  });
+  return res.send("sent");
 });
+
+app.post('/uploadimage', upload.single('file'), function (req, res) {
+  console.log(req.file);
+  //var target_path = __dirname + '/public/uploads/';
+  // return UserModel.findOne({ _id: currentuser._id }, function (err, user) {
+  //
+  //   user.profileimage = req.file.filename;
+  //
+  //   return user.save(function (err) {
+  //     if (!err) {
+  //       console.log("updated profile image");
+  //     } else {
+  //       console.log(err);
+  //     }
+  //     return res.send(user);
+  //   });
+  // });
+
+  return res.send(req.file);
+});
+
+
 //
 // //  get the file
 // app.get('/uploads/images/:file', function (req, res) {

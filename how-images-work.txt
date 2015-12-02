@@ -1,0 +1,13 @@
+Right now we only have profile images:
+
+They are stored using the filename that they go by in the
+public/uploads/ folder.
+So in the database it would look like:
+
+email: jj@gmail.com
+password: pass
+...
+profileimage: 0b06d7d1905f42e1d6389b4728e062d7
+
+They are placed in this folder when dropped or uploaded into
+the Dropzone.

@@ -21,11 +21,9 @@ function showPosition(position) {
 }
 
 $(document).ready(function(){
-
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
   $("#homepage, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
-
   // LOGIN VIEW
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
@@ -151,16 +149,9 @@ $(document).ready(function(){
   });
 
   /**
-  CLICKS THEIR OWN PICTURE IN EDIT PROFILE
-  */
-  $("#editprofilepicture").click(function(){
-      $("#choosepic").click();
-  });
-
-  /**
   AFTER FILE INPUT IS CHOSEN
   */
-  $("#choosepic").change(function () {
+  $("#image-upload").change(function () {
     readFile(this);
   });
 
@@ -283,6 +274,33 @@ $(document).ready(function(){
     moveToUserBehaviourPage();
   });
 
+
+  var uploader = new Dropzone('#demo-upload');
+
+  uploader.on('success', function (file, resp) {
+
+    uploader.processQueue();
+    console.log(file);
+    console.log(resp);
+
+    $.ajax({
+      url: '/uploadimage/'+currentuser._id,  //Server script to process data
+      type: 'POST',
+      data: { name : resp.filename+"" },
+      //$('form').serialize(),
+      success: function(response) {
+        //console.log(JSON.stringify(response));
+        $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+response.profileimage);
+        // Also change their own thumbnail
+        //$('#miniprofilepicture').attr('src', e.target.result);
+
+      }
+    });
+    //$('#editprofilepicture').attr('src', "uploads/"+resp.profileimage);
+
+  });
+
+
 });
 
 function readFile(input) {
@@ -292,10 +310,6 @@ function readFile(input) {
           // NOT WORKING
           reader.onload = function (e) {
             formData.append('file', input.files[0]);
-
-            $('#editprofilepicture').attr('src', e.target.result);
-            // Also change their own thumbnail
-            $('#miniprofilepicture').attr('src', e.target.result);
             updatePic();
           }
           reader.readAsDataURL(input.files[0]);
@@ -303,7 +317,7 @@ function readFile(input) {
           // update picture in database
           function updatePic() {
             $.ajax({
-              url: '/uploadimage',  //Server script to process data
+              url: '/uploadimage/'+currentuser._id,  //Server script to process data
               type: 'POST',
               data: formData,
               cache: false,
@@ -311,6 +325,10 @@ function readFile(input) {
               processData: false,
               //$('form').serialize(),
               success: function(response) {
+                //console.log(JSON.stringify(response));
+                $('#editprofilepicture, #profilepicture').attr('src', "data:image/png;base64,"+btoa(response.profileimage.data));
+                // Also change their own thumbnail
+                //$('#miniprofilepicture').attr('src', e.target.result);
 
               }
             });
@@ -321,6 +339,8 @@ function readFile(input) {
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
   $("#editprofilepage, #profilepage, #userbehaviourpage").hide();
+  $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
+
 
   if (obj.displayname == "") {
     $("#profilelink").text(obj.email);
@@ -382,7 +402,7 @@ function moveToWelcome(obj) {
 
   //if (fromlogin) {
 
-    //var div = 
+    //var div =
     $("#loginbutton, #signupbutton").hide();
 
     // Moves login out of the way and fades in homepage
