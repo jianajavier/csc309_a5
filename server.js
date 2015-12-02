@@ -3,7 +3,10 @@ path = require('path');
 var bodyParser  = require('body-parser');
 var express = require('express');
 var app = express();
-multer = require('multer');
+var formidable = require('formidable');
+var util = require('util');
+var fs = require('fs-extra');
+var multer = require('multer');
 
 var upload = multer({
   dest: __dirname + '/public/uploads/'
@@ -226,6 +229,7 @@ app.get('/search/:tag', function (req, res) {
   });
 });
 
+
 /* CURD requests */
 
 // GET ALL USERS
@@ -338,6 +342,26 @@ app.post('/users', function (req, res){
 
   });
 
+});
+
+app.post('/users/uploadprofile', function(req, res) {
+  var form = new formidable.IncomingForm();
+  form.parse(req, function(err, fields, files) {
+    res.redirect("/");        
+  });
+
+  form.on('end', function(fields, files) {
+    var temp_path = this.openedFiles[0].path;
+    var file_name = this.openedFiles[0].name;
+    var new_location = './uploads/';
+    fs.copy(temp_path, new_location + file_name, function(err) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("success!");
+      }
+    });
+  });
 });
 
 // VERIFY EMAIL LOGIN

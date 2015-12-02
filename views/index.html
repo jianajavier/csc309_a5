@@ -155,14 +155,10 @@
       </div>
 
       <div id = "editprofilepage" class="container">
-        <div id="dropzone">
-            <form action="" class="dropzone dz-clickable" id="demo-upload">
-                <div class="dz-message">Drop files here or click to upload.
-                    <br> <span class="note">(This is just a demo dropzone. Selected files are <strong>not</strong> actually uploaded.)</span>
-
-                </div>
-            </form>
-        </div>
+        <form id="newProfilePic" enctype="multipart/form-data" action="/users/uploadprofile" method="post">
+          <input multiple="multiple" name="upload" type="file">
+          <input type="submit" value="Upload">
+        </form>
         <div class="imageholder">
           <img src="css/default_profile_large.jpg" id="editprofilepicture"/>
         </div>

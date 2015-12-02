@@ -167,6 +167,21 @@ $(document).ready(function(){
   });
 
   /**
+  USER UPLOADS A NEW PROFILE PICTURE
+  */
+  $("#newProfilePic").submit(function(event) {
+    $.ajax({
+        type: "GET",
+        url: "/"
+        //data: $("#newProfilePic").serialize(),
+        //success: function(data){
+          //if (data) {
+            //console.log(data);
+          //}
+    });
+  });
+
+  /**
   CLICKS ON A ROW IN THE USER TABLE
   */
   $('#usertable').on("click", "tr", function(){
