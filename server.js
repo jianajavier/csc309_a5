@@ -41,6 +41,7 @@ app.get('/', function(req, res) {
 var Schema = mongoose.Schema;
 
 var SessionSchemas = new Schema();
+var ListingSchemas = new Schema();
 var PostSchemas = new Schema();
 var UserSchemas = new Schema();
 var CommentSchemas = new Schema();
@@ -54,6 +55,18 @@ SessionSchemas = new Schema({
   useragent: String,
   viewingdevice: String
 });
+
+ListingSchemas = new Schema ({
+  _id: {type: String, required: true},
+  datePosted: Date,
+  description: String,
+  mainPicture: String,
+  morePictures: [String],
+  owner: UserSchemas,
+  title: String,
+  profilepic: Number //1 if it is, 0 if not
+});
+
 
 PostSchemas = new Schema({  //posts are posted to a group or user
   //user: UserSchemas,
@@ -70,7 +83,8 @@ UserSchemas = new Schema({
     email: String,
     password: String,
     description: String, default : "",
-    profileimage: String, default : "css/default_profile_large.jpg",
+    profileimage: String, default : "default_profile_large.jpg",
+    gallery: [ListingSchemas],
     displayname: String, default: "",
     type: String, default: "",
     userbehaviour:
@@ -115,6 +129,7 @@ ReviewSchemas = new Schema({
 });
 
 var UserModel = mongoose.model('UserSchema', UserSchemas);
+var ListingModel = mongoose.model('ListingSchema', ListingSchemas);
 var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
@@ -312,13 +327,14 @@ app.post('/users', function (req, res){
 
     var user;
     console.log("POST: ");
-    console.log(req.body);
+
     user = new UserModel({
       email: req.body.email,
       password: req.body.password,
       description: "",
       displayname: "",
       type: userType,
+      profileimage: "default_profile_large.jpg",
       userbehaviour: { allcount: 0,
         specificcount: 0,
         deletecount: 0,
@@ -347,7 +363,7 @@ app.post('/users', function (req, res){
 app.post('/users/uploadprofile', function(req, res) {
   var form = new formidable.IncomingForm();
   form.parse(req, function(err, fields, files) {
-    res.redirect("/");        
+    res.redirect("/");
   });
 
   form.on('end', function(fields, files) {
@@ -509,6 +525,54 @@ app.delete('/users/:id/:emailaddcount', function (req, res){
 app.post('/uploadimage/:id', function (req, res) {
   console.log(req.body.name);
   console.log("yo");
+
+  //var target_path = __dirname + '/public/uploads/';
+  return UserModel.findOne({ _id: req.params.id }, function (err, user) {
+
+    var listing = {};
+    listing._id = mongoose.Types.ObjectId();
+    listing.datePosted = Date.now();
+    listing.description = "";
+    listing.mainPicture = req.body.name;
+    listing.owner = user;
+    listing.title = "Listing";
+    listing.profilepic = 0;
+
+    user.gallery.push(listing);
+
+    return user.save(function (err) {
+      if (!err) {
+        console.log(listing._id);
+        console.log("added listing");
+        list = new ListingModel({
+          datePosted: listing.datePosted,
+          description: listing.description,
+          mainPicture: listing.mainPicture,
+          owner: listing.owner,
+          title: listing.title,
+          profilepic: listing.profilepic,
+          _id: listing._id
+        });
+        console.log(list._id);
+        list.save(function (err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("created listing");
+          }
+        });
+
+      } else {
+        console.log(err);
+      }
+      return res.send(user);
+    });
+  });
+});
+
+app.post('/uploadprofileimage/:id', function (req, res) {
+  console.log(req.body.name);
+  console.log("yo2");
   //var target_path = __dirname + '/public/uploads/';
   return UserModel.findOne({ _id: req.params.id }, function (err, user) {
 
@@ -527,23 +591,20 @@ app.post('/uploadimage/:id', function (req, res) {
 });
 
 app.post('/uploadimage', upload.single('file'), function (req, res) {
+  console.log("in upload image\n");
   console.log(req.file);
-  //var target_path = __dirname + '/public/uploads/';
-  // return UserModel.findOne({ _id: currentuser._id }, function (err, user) {
-  //
-  //   user.profileimage = req.file.filename;
-  //
-  //   return user.save(function (err) {
-  //     if (!err) {
-  //       console.log("updated profile image");
-  //     } else {
-  //       console.log(err);
-  //     }
-  //     return res.send(user);
-  //   });
-  // });
-
   return res.send(req.file);
+});
+
+//get listing
+app.get('/listing/:id', function (req, res){
+  return ListingModel.findOne({ _id: req.params.id }, function (err, listing) {
+    if (!err) {
+      return res.send(listing);
+    } else {
+      return console.log(err);
+    }
+  });
 });
 
 

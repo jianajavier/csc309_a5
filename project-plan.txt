@@ -5,9 +5,6 @@ Art-sharing platform
 - Randomized swap
 
 (ii)
-IMMEDIATE TODOS:
-- Picture upload functionality (store in database/filesystem) (NEED THIS!!!)
-- Bootstrap (replace existing css) (Bronwynne)
 
 FUNCTIONALITY: (HAVE FUNCTIONALITY DONE BY DECEMBER 1ST.. MEETING AT 4PM?)
 - Profiling (Jiana)
@@ -20,7 +17,7 @@ FUNCTIONALITY: (HAVE FUNCTIONALITY DONE BY DECEMBER 1ST.. MEETING AT 4PM?)
   - Request button (both on profile and listing page)
   - Message box
   - Upload functionality for trade item
-- User Authentication and Authorization (Bhaskar)
+- User Authentication and Authorization (Bronwynne)
   - 3rd party authentication (Google)
   - Authorization for admins
 - Social Network (Alex)
@@ -30,7 +27,7 @@ FUNCTIONALITY: (HAVE FUNCTIONALITY DONE BY DECEMBER 1ST.. MEETING AT 4PM?)
   - Rate person overall
   - Rating/Review/Comment on listing page (for items that can be reused)
   - Replies to comments
-  - Likes on commnents 
+  - Likes on commnents
 - Search and Recommendation System (Bronwynne)
   - Search by usernames and tagged users, and tagged art
     (Include option to choose each)

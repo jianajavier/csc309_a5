@@ -23,7 +23,7 @@ function showPosition(position) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
+  $("#homepage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
 
   // LOGIN VIEW
   $("#loginbutton").click(function(){
@@ -63,6 +63,9 @@ $(document).ready(function(){
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
+
+              // set profile picture
+              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
 
               //$("#logout").fadeIn();
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
@@ -116,6 +119,9 @@ $(document).ready(function(){
               $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
 
+              // set profile picture
+              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
+
               //$("#logout").fadeIn();
 
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
@@ -166,7 +172,7 @@ $(document).ready(function(){
   });
 
   /**
-  USER UPLOADS A NEW PROFILE PICTURE
+  USER UPLOADS A NEW PROFILE PICTURE -- Don't have to do this anymore!! Already done!!
   */
   $("#newProfilePic").submit(function(event) {
     $.ajax({
@@ -306,7 +312,6 @@ $(document).ready(function(){
   });
 
   $("#deleteuser").click(function() {
-
     $.ajax({
       url: "/users/" + viewing._id+"/"+currentuser.email,
       type: 'DELETE',
@@ -328,6 +333,36 @@ $(document).ready(function(){
     moveToUserBehaviourPage();
   });
 
+  $("li.navprofile").on("click",function() {
+    moveToProfile(currentuser);
+  });
+   $("li.naveditprofile").on("click",function() {
+     moveToEditPage(currentuser, true);
+  });
+  $("li.navlogout").on("click",function() {
+    moveToHome();
+  });
+
+  document.getElementById('links').onclick = function (event) {
+    event = event || window.event;
+    var target = event.target || event.srcElement,
+        link = target.src ? target.parentNode : target,
+        options = {index: link, event: event},
+        links = this.querySelectorAll('a.photo');
+
+    if ($(event.target).is("a.listinglink")) {
+      var id = $(event.target).parent().attr('id');
+      //Go to listing page
+      goToListingPage(id);
+
+    } else {
+      blueimp.Gallery(links, options);
+    }
+  };
+
+  $("#clickchangeprofileimg").on("click",function() {
+    $('#image-upload').trigger('click');
+  });
 
   var uploader = new Dropzone('#demo-upload');
 
@@ -341,17 +376,10 @@ $(document).ready(function(){
       url: '/uploadimage/'+currentuser._id,  //Server script to process data
       type: 'POST',
       data: { name : resp.filename+"" },
-      //$('form').serialize(),
       success: function(response) {
-        //console.log(JSON.stringify(response));
-        $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+response.profileimage);
-        // Also change their own thumbnail
-        //$('#miniprofilepicture').attr('src', e.target.result);
-
+        currentuser = response;
       }
     });
-    //$('#editprofilepicture').attr('src', "uploads/"+resp.profileimage);
-
   });
 
 
@@ -359,6 +387,8 @@ $(document).ready(function(){
 
 function readFile(input) {
       if (input.files && input.files[0]) {
+          console.log("hello" +input.files[0]);
+
           var reader = new FileReader();
           var formData = new FormData();
           // NOT WORKING
@@ -371,7 +401,7 @@ function readFile(input) {
           // update picture in database
           function updatePic() {
             $.ajax({
-              url: '/uploadimage/'+currentuser._id,  //Server script to process data
+              url: '/uploadimage',  //Server script to process data
               type: 'POST',
               data: formData,
               cache: false,
@@ -379,10 +409,15 @@ function readFile(input) {
               processData: false,
               //$('form').serialize(),
               success: function(response) {
-                //console.log(JSON.stringify(response));
-                $('#editprofilepicture, #profilepicture').attr('src', "data:image/png;base64,"+btoa(response.profileimage.data));
-                // Also change their own thumbnail
-                //$('#miniprofilepicture').attr('src', e.target.result);
+                $.ajax({
+                  url: '/uploadprofileimage/'+currentuser._id,  //Server script to process data
+                  type: 'POST',
+                  data: { name : response.filename+"" },
+                  //$('form').serialize(),
+                  success: function(resp) {
+                    $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+resp.profileimage);
+                  }
+                });
 
               }
             });
@@ -490,7 +525,7 @@ function moveToWelcome(obj) {
 }
 
 function moveToProfile(user) {
-  $("#edituser").hide();
+  $("#edituser, #editprofilepage, #listingpage").hide();
   $("#deleteuser").hide();
 
   $("#homepage").fadeOut();
@@ -504,6 +539,8 @@ function moveToProfile(user) {
 
   $("#profileemail").text("email: "+user.email);
   $("#description").text(user.description);
+
+  getGallery(user);
 
   viewing = user;
 
@@ -536,7 +573,7 @@ function moveToEditPage(user, own) {
     viewing=currentuser;
   }
 
-  $("#homepage, #profilepage, #userbehaviourpage").fadeOut();
+  $("#homepage, #profilepage, #userbehaviourpage, #listingpage").fadeOut();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
@@ -594,16 +631,24 @@ function editAlertPopup(message) {
 }
 
 function moveToHome() {
+  $("#loginOrSignupScreen, #loginbutton, #signupbutton").show();
+  $(".loggedInNav").hide();
+
   $("#homepage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage").fadeOut();
   $("#rectangle").hide();
   $('#emailinput,#passwordinput,#cpasswordinput').val("");
-  $("#loginbutton, #signupbutton").fadeIn();
-  var div = $("#rectangle, #loginbutton, #signupbutton");
+  // $("#loginbutton, #signupbutton").fadeIn();
+  // var div = $("#rectangle, #loginbutton, #signupbutton");
+  //
+  // // Moves login out of the way and fades in homepage
+  // div.animate({'left': '0%'}, 1300, function(){
+  //   fromlogin = true;
+  // });
 
-  // Moves login out of the way and fades in homepage
-  div.animate({'left': '0%'}, 1300, function(){
-    fromlogin = true;
-  });
+  //WEIRD BUG: WHEN LOGGING OUT AND THEN CLICKING
+  //LOG IN, IT  DOESN'T SHOW FIELDS
+  //BUT THEN WHEN CLICKING SIGN UP FIRST AND THEN
+  //LOG IN IT SHOWS THEM
 
   currentuser = undefined;
   viewing = undefined;
@@ -652,5 +697,45 @@ function moveToUserBehaviourPage() {
         $("#userbehaviourpage").fadeIn();
       }
     });
+
+}
+
+function addListing(listing) {
+  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.Title+"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
+}
+
+function getGallery(user) {
+  //empty gallery first
+  $('#links').empty();
+  //get users gallery photos to display
+  for (var i = 0; i < user.gallery.length; i++) {
+    console.log(user.gallery[i]);
+    addListing(user.gallery[i]);
+  }
+}
+
+function goToListingPage(listingid) {
+  $("#edituser, #editprofilepage, #profilepage").hide();
+  $("#deleteuser").hide();
+
+  $("#homepage").fadeOut();
+  setPageTitle("Listing");
+  //getGallery(user);
+
+  $.ajax({
+      type: "GET",
+      url: "/listing/" + listingid,
+      success: function(data){
+        if (data) {
+            $("#listingtitle").text(data.title);
+            $("#listingdescription").text(data.description);
+
+            $('#mainlistingpic').attr('src', "uploads/"+data.mainPicture);
+
+            $("#listingpage").fadeIn();
+
+        }
+      }
+  });
 
 }
