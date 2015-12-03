@@ -56,7 +56,7 @@ SessionSchemas = new Schema({
 });
 
 PostSchemas = new Schema({  //posts are posted to a group or user
-  //user: UserSchemas,
+  userID: Number,
   message: String,
   dateCreated: Date,
   likes: [UserSchemas],
@@ -87,7 +87,7 @@ UserSchemas = new Schema({
 });
 
 CommentSchemas = new Schema({
-	//user: UserSchemas,
+	userID: Number,
 	message: String,
 	dateCreated: Date,
 	likes: [UserSchemas],
@@ -96,7 +96,7 @@ CommentSchemas = new Schema({
 });
 
 ReplySchemas = new Schema({
-	//user: UserSchemas,
+	userID: Number,
 	message: String,
 	dateCreated: Date,
 	likes: [UserSchemas],
@@ -104,7 +104,7 @@ ReplySchemas = new Schema({
 });
 
 ReviewSchemas = new Schema({
-	//user: UserSchemas,
+	userID: Number,
 	content: String,
 	dateCreated: Date,
 	rating: Number, //It is a number in decimals between 0 and 10. Note this is a 100 point system.
