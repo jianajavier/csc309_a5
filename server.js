@@ -570,11 +570,73 @@ app.post('/uploadimage/:id', function (req, res) {
   });
 });
 
+app.post('/uploadlistingimage/:id', function (req, res) {
+  console.log(req.body.name);
+  console.log("yo");
+
+  //var target_path = __dirname + '/public/uploads/';
+  return ListingModel.findOne({ _id: req.params.id }, function (err, listing) {
+
+    var filelistingname = req.body.name;
+
+    listing.morePictures.push(filelistingname);
+
+    return listing.save(function (err) {
+      if (!err) {
+        console.log(listing._id);
+      } else {
+        console.log(err);
+      }
+      return res.send(listing);
+    });
+  });
+});
+
+app.post('/uploadmainlistingimage/:id', function (req, res) {
+  console.log(req.body.name);
+  console.log("yo2");
+  //var target_path = __dirname + '/public/uploads/';
+  return ListingModel.findOne({ _id: req.params.id }, function (err, listing) {
+
+    listing.mainPicture = req.body.name;
+
+    return listing.save(function (err) {
+      if (!err) {
+        console.log("updated main listing image");
+      } else {
+        console.log(err);
+      }
+      return res.send(listing);
+    });
+  });
+  return res.send("sent");
+});
+
+
 app.post('/uploadprofileimage/:id', function (req, res) {
   console.log(req.body.name);
   console.log("yo2");
   //var target_path = __dirname + '/public/uploads/';
   return UserModel.findOne({ _id: req.params.id }, function (err, user) {
+
+  //it will add to listingmodel without deleting tho
+    list = new ListingModel({
+      datePosted: Date.now(),
+      description: "",
+      mainPicture: req.body.name,
+      owner: user,
+      title: "Listing",
+      profilepic: 1,
+      _id: mongoose.Types.ObjectId()
+    });
+    //console.log(list._id);
+    list.save(function (err) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("created listing");
+      }
+    });
 
     user.profileimage = req.body.name;
 
@@ -607,6 +669,16 @@ app.get('/listing/:id', function (req, res){
   });
 });
 
+//get listing by filename
+app.get('/listingbyname/:name', function (req, res){
+  return ListingModel.findOne({ mainPicture : req.params.name }, function (err, listing) {
+    if (!err) {
+      return res.send(listing);
+    } else {
+      return console.log(err);
+    }
+  });
+});
 
 //
 // //  get the file

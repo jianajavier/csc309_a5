@@ -4,6 +4,7 @@ var fromlogin = true;
 var viewing; //the persons profile being viewed
 var loclat = 0;
 var loclng = 0;
+var listingview; //id of listing being viewed
 
 getLocation();
 
@@ -23,7 +24,7 @@ function showPosition(position) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage").hide();
+  $("#homepage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
 
   // LOGIN VIEW
   $("#loginbutton").click(function(){
@@ -215,6 +216,10 @@ $(document).ready(function(){
     readFile(this);
   });
 
+  $("#listing-image-upload").change(function () {
+    readFile2(this);
+  });
+
   /**
   CLICKS LOGO TO GO BACK TO WELCOME PAGE
   */
@@ -345,9 +350,18 @@ $(document).ready(function(){
 
   document.getElementById('links').onclick = function (event) {
     event = event || window.event;
-    var target = event.target || event.srcElement,
-        link = target.src ? target.parentNode : target,
-        options = {index: link, event: event},
+
+    var target;
+    if ($(event.target).is("h2")) {
+      $(event.target).closest('.hovereffect').find('img').click();
+      return;
+      //target = $(event.target).closest('.hovereffect').find('img').target;
+    } else {
+      target = event.target || event.srcElement;
+    }
+
+    var link = target.src ? target.parentNode : target,
+        options = {index: link, event: event, container : '#blueimp-gallery'},
         links = this.querySelectorAll('a.photo');
 
     if ($(event.target).is("a.listinglink")) {
@@ -360,8 +374,40 @@ $(document).ready(function(){
     }
   };
 
+  document.getElementById('listinglinks').onclick = function (event) {
+    event = event || window.event;
+
+    var target;
+    if ($(event.target).is("h2")) {
+      $(event.target).closest('.hovereffect').find('img').click();
+      return;
+      //target = $(event.target).closest('.hovereffect').find('img').target;
+    } else {
+      target = event.target || event.srcElement;
+    }
+
+    var link = target.src ? target.parentNode : target,
+        options = {index: link, event: event, container : '#blueimp-gallery2'},
+        links = this.querySelectorAll('a.photo');
+
+      blueimp.Gallery(links, options);
+
+  };
+
   $("#clickchangeprofileimg").on("click",function() {
     $('#image-upload').trigger('click');
+  });
+
+  $("#mainlistinglink").on("click",function() {
+    if ($("#mainlistinglink").attr('name') == "") {
+      alert("Upload a profile picture!");
+    } else {
+      goToListingPage($("#mainlistinglink").attr('name'));
+    }
+  });
+
+  $("#editlisting").on("click",function() {
+    goToEditListingPage();
   });
 
   var uploader = new Dropzone('#demo-upload');
@@ -378,6 +424,29 @@ $(document).ready(function(){
       data: { name : resp.filename+"" },
       success: function(response) {
         currentuser = response;
+      }
+    });
+  });
+
+  $("#clickchangemainlistingimg").on("click",function() {
+    $('#listing-image-upload').trigger('click');
+  }); //react to uploadmainlistingimage
+
+  //react to uploadlistingimage
+  var uploader2 = new Dropzone('#listing-upload');
+
+  uploader2.on('success', function (file, resp) {
+
+    uploader2.processQueue();
+    console.log(file);
+    console.log(resp);
+
+    $.ajax({
+      url: '/uploadlistingimage/'+listingview,  //Server script to process data
+      type: 'POST',
+      data: { name : resp.filename+"" },
+      success: function(response) {
+        //listingview = response._id;
       }
     });
   });
@@ -416,6 +485,66 @@ function readFile(input) {
                   //$('form').serialize(),
                   success: function(resp) {
                     $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+resp.profileimage);
+
+                    $.ajax({
+                        type: "GET",
+                        url: "/listingbyname/" + resp.profileimage,
+                        success: function(data){
+                          if (data) {
+                            $('#mainlistinglink').attr('name', data._id);
+                          }
+                        }
+                    });
+                  }
+                });
+
+              }
+            });
+          }
+      }
+  }
+
+function readFile2(input) {
+      if (input.files && input.files[0]) {
+          console.log("hello" +input.files[0]);
+
+          var reader = new FileReader();
+          var formData = new FormData();
+          // NOT WORKING
+          reader.onload = function (e) {
+            formData.append('file', input.files[0]);
+            updatePic();
+          }
+          reader.readAsDataURL(input.files[0]);
+          //updatePic();
+          // update picture in database
+          function updatePic() {
+            $.ajax({
+              url: '/uploadimage',  //Server script to process data
+              type: 'POST',
+              data: formData,
+              cache: false,
+              contentType: false,
+              processData: false,
+              //$('form').serialize(),
+              success: function(response) {
+                $.ajax({
+                  url: '/uploadmainlistingimage/'+listingview,  //Server script to process data
+                  type: 'POST',
+                  data: { name : response.filename+"" },
+                  //$('form').serialize(),
+                  success: function(resp) {
+                    $('#editmainlistingpicture, #mainlistingpic').attr('src', "uploads/"+resp.mainPicture);
+
+                    $.ajax({
+                        type: "GET",
+                        url: "/listingbyname/" + resp.mainPicture,
+                        success: function(data){
+                          if (data) {
+                            $('#mainlistinglink').attr('name', data._id);
+                          }
+                        }
+                    });
                   }
                 });
 
@@ -427,7 +556,7 @@ function readFile(input) {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #profilepage, #userbehaviourpage").hide();
+  $("#editprofilepage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
 
 
@@ -525,10 +654,10 @@ function moveToWelcome(obj) {
 }
 
 function moveToProfile(user) {
-  $("#edituser, #editprofilepage, #listingpage").hide();
+  $("#edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
   $("#deleteuser").hide();
 
-  $("#homepage").fadeOut();
+  $("#homepage").hide();
   setPageTitle("Profile");
 
   if (user.displayname == "") {
@@ -539,6 +668,21 @@ function moveToProfile(user) {
 
   $("#profileemail").text("email: "+user.email);
   $("#description").text(user.description);
+
+  // Get profile image listing id and set its name
+  $.ajax({
+      type: "GET",
+      url: "/listingbyname/" + user.profileimage,
+      success: function(data){
+        if (data) {
+          $('#mainlistinglink').attr('name', data._id);
+        }
+      }
+  });
+
+
+  //$('#mainlistinglink').attr('name', "uploads/"+user.profileimage);
+
 
   getGallery(user);
 
@@ -573,7 +717,7 @@ function moveToEditPage(user, own) {
     viewing=currentuser;
   }
 
-  $("#homepage, #profilepage, #userbehaviourpage, #listingpage").fadeOut();
+  $("#homepage, #profilepage, #userbehaviourpage, #listingpage").hide();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
@@ -634,7 +778,7 @@ function moveToHome() {
   $("#loginOrSignupScreen, #loginbutton, #signupbutton").show();
   $(".loggedInNav").hide();
 
-  $("#homepage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage").fadeOut();
+  $("#homepage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage, #editlistingpage, #listingpage").fadeOut();
   $("#rectangle").hide();
   $('#emailinput,#passwordinput,#cpasswordinput').val("");
   // $("#loginbutton, #signupbutton").fadeIn();
@@ -656,7 +800,7 @@ function moveToHome() {
 
 //  home page is actually welcome page
 function moveToUserBehaviourPage() {
-  $("#homepage, #profilepage, #editprofilepage").fadeOut();
+  $("#homepage, #profilepage, #editprofilepage, #editlistingpage").fadeOut();
   setPageTitle("User Behaviour");
   $('#behaviourtable tbody').remove();
 
@@ -701,12 +845,12 @@ function moveToUserBehaviourPage() {
 }
 
 function addListing(listing) {
-  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.Title+"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
+  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
 }
 
 function getGallery(user) {
   //empty gallery first
-  $('#links').empty();
+  //$('#links').empty();
   //get users gallery photos to display
   for (var i = 0; i < user.gallery.length; i++) {
     console.log(user.gallery[i]);
@@ -715,11 +859,14 @@ function getGallery(user) {
 }
 
 function goToListingPage(listingid) {
-  $("#edituser, #editprofilepage, #profilepage").hide();
+  $("#edituser, #editprofilepage, #profilepage, #editlistingpage").hide();
   $("#deleteuser").hide();
 
   $("#homepage").fadeOut();
   setPageTitle("Listing");
+
+  listingview = listingid;
+
   //getGallery(user);
 
   $.ajax({
@@ -732,7 +879,37 @@ function goToListingPage(listingid) {
 
             $('#mainlistingpic').attr('src', "uploads/"+data.mainPicture);
 
+            //empty gallery first
+            $('#listinglinks').empty();
+            //get users gallery photos to display
+            for (var i = 0; i < data.morePictures.length; i++) {
+              var pic = data.morePictures[i];
+              console.log(pic);
+              $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \"Listing\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\"Listing\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
+            }
+
             $("#listingpage").fadeIn();
+
+        }
+      }
+  });
+
+}
+
+function goToEditListingPage() {
+  $("#edituser, #editprofilepage, #profilepage, #listingpage").hide();
+
+  $.ajax({
+      type: "GET",
+      url: "/listing/" + listingview,
+      success: function(data){
+        if (data) {
+            $("#editlistingtitle").text(data.title);
+            $("#editlistdescription").text(data.description);
+
+            $('#editmainlistingpicture').attr('src', "uploads/"+data.mainPicture);
+
+            $("#editlistingpage").fadeIn();
 
         }
       }

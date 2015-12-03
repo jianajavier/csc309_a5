@@ -157,13 +157,22 @@
       </div>
 
       <div id="profilepage" class="container">
-        <div class = "profileholder">
-          <img src="" class="img-rounded" width="100%" height="500" id="profilepicture"/>
+        <div class="" width= "100%">
+          <div class="hovereffect">
+              <img class="img-responsive img-rounded img-thumbnail" src="" width="100%" height="100%" id="profilepicture">
+          <div class="overlay">
+            <p>
+              <a id="mainlistinglink" name="">Listing Page</a>
+            </p>
+          </div>
         </div>
+      </div>
         <h3 style="margin-bottom:50px;" id="displayname"></h3>
+        <!--
         <button id="toggleadmin"></button>
         <button id="edituser">Edit user</button>
         <button id="deleteuser">Delete user</button>
+        -->
         <p style="margin-top:50px;" id="description"></p>
         <p id ="profileemail"></p>
         <h3 id ="gallery">Gallery</h3>
@@ -177,6 +186,31 @@
             <a class="close">×</a>
             <a class="play-pause"></a>
             <ol class="indicator"></ol>
+
+            <!-- The modal dialog, which will be used to wrap the lightbox content -->
+            <div class="modal fade">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title"></h4>
+                        </div>
+                        <div class="modal-body next"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default pull-left prev">
+                                <i class="glyphicon glyphicon-chevron-left"></i>
+                                Previous
+                            </button>
+                            <button type="button" class="btn btn-primary next">
+                                Next
+                                <i class="glyphicon glyphicon-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
 
         <style>
@@ -271,30 +305,8 @@
             <a href="images/apple.jpg" title="Apple">
                 <img src="images/thumbnails/apple.jpg" alt="Apple">
             </a>
+          -->
 
-              <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-                <div class="hovereffect">
-                  <a class="photo" href="./uploads/2e59ad8f8f53276ad49f6cde3bdb5a05" title="Listing 2">
-                    <img class="img-responsive img-thumbnail" src="./uploads/2e59ad8f8f53276ad49f6cde3bdb5a05" alt="Listing 2" >
-                  </a>
-                  <div class="overlay">
-                      <h2>Click to view larger</h2>
-                      <p>
-                        <a>Listing Page</a>
-                      </p>
-                  </div>
-                  </div>
-              </div>-->
-              <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-                <div class="hovereffect">
-                  <a class="photo" href="./uploads/d48137a696954196cf2b6abcf22b5712" title="Listing 1">
-                    <img class="img-responsive img-thumbnail" src="./uploads/d48137a696954196cf2b6abcf22b5712" alt="Listing 1" >
-                  </a>
-                        <div class="overlay">
-                            <h2>Click to view larger</h2>
-                        </div>
-                  </div>
-              </div>
           </div>
       </div>
 
@@ -372,6 +384,7 @@
           <label id="editmessage"></label>
         </div>
       </div>
+
       <div id="userbehaviourpage" class="container">
         <table id="behaviourtable">
           <tr>
@@ -393,15 +406,39 @@
         <p style="margin-top:50px;" id="listingdescription"></p>
         <h3 id ="listinggallery">Listing Gallery</h3>
 
-        <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
-        <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls">
+        <!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
+        <div id="blueimp-gallery2" class="blueimp-gallery blueimp-gallery-controls">
+            <!-- The container for the modal slides -->
             <div class="slides"></div>
+            <!-- Controls for the borderless lightbox -->
             <h3 class="title"></h3>
             <a class="prev">‹</a>
             <a class="next">›</a>
             <a class="close">×</a>
             <a class="play-pause"></a>
             <ol class="indicator"></ol>
+            <!-- The modal dialog, which will be used to wrap the lightbox content -->
+            <div class="modal fade">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title"></h4>
+                        </div>
+                        <div class="modal-body next"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default pull-left prev">
+                                <i class="glyphicon glyphicon-chevron-left"></i>
+                                Previous
+                            </button>
+                            <button type="button" class="btn btn-primary next">
+                                Next
+                                <i class="glyphicon glyphicon-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <style>
         /*For hovering over pictures in gallery. Move this later.*/
@@ -486,7 +523,55 @@
             transform: translate3d(0,0,0);
           }
         </style>
-        <div id="links"></div> <!--Populated dynamically-->
+        <div id="listinglinks">
+
+        </div> <!--Populated dynamically-->
+      </div>
+
+      <div id = "editlistingpage" class="container">
+        <div class="imageholder">
+          <div class="" width= "100%">
+            <div class="hovereffect">
+                <img style="margin-bottom:50px;" class="img-responsive img-thumbnail" src="" id="editmainlistingpicture" width="100%" height="100%">
+                    <div class="overlay">
+                        <h2>Main Picture</h2>
+                        <p>
+                          <a id="clickchangemainlistingimg">Click to change</a>
+                          <form action="/uploadmainlistingimage" method = "post" enctype = "multipart/form-data" id="image-upload-form">
+                            <input style="display:none;" id = "listing-image-upload"  type = "file" name="file">
+                          </form>
+                        </p>
+                    </div>
+              </div>
+          </div>
+        </div>
+        <form class="form-horizontal" role="form" id="editListingForm">
+          <h1 id="editinfoheader">Edit Information</h1>
+          <div class="form-group">
+            <label class="control-label" for="editlistingtitle">Listing Title:</label>
+            <input type="text" id="editlistingtitle" style="display:block;">
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="editlistdescription" id="deslabel">Description: </label>
+            <textarea maxlength="500" rows="5" cols = "40" wrap="hard" id="editlistdescription" style="display:block;"></textarea>
+          </div>
+          <button type="submit" id="updatebutton">Update Info</button>
+          <button id="cancelbutton">Cancel</button>
+        </form>
+
+          <h1 id="editgalleryheader">Add More Listing Pictures:</h1>
+          <div style="margin-bottom:100px;" id="dropzone">
+              <form action="/uploadimage" class="dropzone dz-clickable" method = "post" enctype = "multipart/form-data" id="listing-upload">
+                <!-- <input id = "image-upload"  type = "file" name="file">
+                <input type = "file" name = "file">-->
+                  <div class="dz-message">Drop files here or click to upload.
+                      <br> <span class="note"></span>
+                  </div>
+              </form>
+          </div>
+        <div id="editalert">
+          <label id="editmessage"></label>
+        </div>
       </div>
 
     </div> <!--The "notSearch div"-->
