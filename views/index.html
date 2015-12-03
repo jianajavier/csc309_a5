@@ -145,6 +145,7 @@
           </div>
         </div>
       </div>
+	  
 
 
       <div id="homepage" class="container">
@@ -171,8 +172,11 @@
         <!--
         <button id="toggleadmin"></button>
         <button id="edituser">Edit user</button>
+		
         <button id="deleteuser">Delete user</button>
         -->
+		
+		<button id="messageuser" type="button" data-toggle="modal" data-target="#messageModal">Message user</button>
         <p style="margin-top:50px;" id="description"></p>
         <p id ="profileemail"></p>
         <h3 id ="gallery">Gallery</h3>
@@ -186,6 +190,29 @@
             <a class="close">×</a>
             <a class="play-pause"></a>
             <ol class="indicator"></ol>
+      </div>
+		
+		<!--Message window-->
+		<div class="modal fade" id="messageModal" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						 <button type="button" class="close" data-dismiss="modal">&times;</button>
+						 <h4 id="messageHeader" class="modal-title">New message</h4>
+					</div>
+					<div class="modal-body">
+						<h5 id="recipient">To:</h5>
+						<form id="messageForm">
+							<div class="form-group">
+								<label class="control-label" for="messageText">Message:</label>
+								<textarea class="form-control" id="messageText"></textarea>
+							</div>
+							<button type="submit" class="btn btn-default">Send</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
 
             <!-- The modal dialog, which will be used to wrap the lightbox content -->
             <div class="modal fade">

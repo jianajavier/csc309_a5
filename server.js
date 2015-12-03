@@ -47,6 +47,7 @@ var UserSchemas = new Schema();
 var CommentSchemas = new Schema();
 var ReplySchemas = new Schema();
 var ReviewSchemas = new Schema();
+var MessageSchemas = new Schema();
 
 SessionSchemas = new Schema({
   date     : Date,
@@ -79,6 +80,16 @@ PostSchemas = new Schema({  //posts are posted to a group or user
   tags: {}
 });
 
+
+MessageSchemas = new Schema({
+	sender: UserSchemas,
+	receiver: UserSchemas,
+	dateCreated: Date,
+	content: String,
+	request: Boolean,
+	reply: Boolean
+});
+
 UserSchemas = new Schema({
     email: String,
     password: String,
@@ -97,7 +108,9 @@ UserSchemas = new Schema({
       sessioninfo: [SessionSchemas]
     },
     tags: {},
-	  posts: [PostSchemas]
+	posts: [PostSchemas],
+	inbox: [MessageSchemas],
+	outbox: [MessageSchemas]
 });
 
 CommentSchemas = new Schema({
@@ -128,12 +141,15 @@ ReviewSchemas = new Schema({
 	comments: [CommentSchemas]
 });
 
+
+
 var UserModel = mongoose.model('UserSchema', UserSchemas);
 var ListingModel = mongoose.model('ListingSchema', ListingSchemas);
 var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
+//var MessageModel = mongoose.model('MessageSchema', MessageSchemas);
 
 function createComment(currentUser, newMessage, target) {
 	/*
@@ -378,6 +394,41 @@ app.post('/users/uploadprofile', function(req, res) {
       }
     });
   });
+});
+
+// Create (Send) a message
+app.put('/users/messages', function (req, res) {
+	console.log(req.body);
+	console.log(">>>>>>>>>>>>>>");
+	
+	//console.log(req.body.from[_id]);
+	UserModel.findOne({ _id: req.body.from}, function (err, senderUser) {
+		UserModel.findOne({ _id: req.body.to}, function (err, receiverUser) {
+			var tempMessage = {
+				sender: senderUser,
+				receiver: receiverUser,
+				dateCreated: new Date(),
+				content: req.body.content,
+				request: req.body.request,
+				reply: req.body.reply
+			}
+			console.log(tempMessage);
+			console.log(">>>>>>>>>>>>>>");
+			senderUser.outbox.push(tempMessage);
+			senderUser.save(function (err) {
+				if (err) {
+					console.log("Saving 'from' error: "+ err);
+				}
+			});
+			receiverUser.inbox.push(tempMessage);
+			receiverUser.save(function (err) {
+				if (err) {
+					console.log("Saving 'to' error: "+ err);
+				}
+			});
+		});
+	});
+	res.sendStatus(200);
 });
 
 // VERIFY EMAIL LOGIN

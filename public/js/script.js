@@ -24,7 +24,8 @@ function showPosition(position) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
+  $("#homepage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
+
 
   // LOGIN VIEW
   $("#loginbutton").click(function(){
@@ -139,6 +140,7 @@ $(document).ready(function(){
       }
     }
   });
+  
 
   /**
   USER PERFORMS A SEARCH IN THE NAV BAR
@@ -249,6 +251,12 @@ $(document).ready(function(){
     });
   });
 
+  $("#messageModal").on("show.bs.modal", function(event) {
+	  var modal = $(this);
+	  modal.find("#recipient").text("To: " + viewing.displayname); 
+	  modal.find("#messageText").val("");
+  });
+  
   $("#changePasswordForm").submit(function (event) {
     event.preventDefault();
     //CHECK IF OLD PASSWORD IS correct
@@ -259,7 +267,7 @@ $(document).ready(function(){
           type: "PUT",
           url: "/users/update/" + viewing.email + "/" + currentuser.email,
           data: {
-            password : $("#newpass").val(),
+            password : $("#newpass").val()
           },
           success: function(data) {
             currentuser = JSON.parse(getUserByEmail(currentuser.email).responseText);
@@ -283,6 +291,27 @@ $(document).ready(function(){
 
   });
 
+  // MESSAGE USER
+  $("#messageForm").submit(function(event) {
+	  event.preventDefault();
+	  $.ajax({
+		type: "PUT",
+		url: "/users/messages",
+		data: { 
+			from: currentuser._id,
+			to: viewing._id,
+			content: $("#messageText").val(),
+			request: false,
+			reply: false
+		}
+	  }).always(function() {
+		  console.log("run");
+		  $("#messageModal").modal("hide");
+	  }).fail(function() {
+		  console.log("Error: message cannot be sent.");
+	  });
+  });
+  
   // TOGGLE ADMIN
   $("#toggleadmin").click(function() {
     var newtype;
@@ -655,7 +684,8 @@ function moveToWelcome(obj) {
 
 function moveToProfile(user) {
   $("#edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
-  $("#deleteuser").hide();
+  $("#messageuser").hide();
+  //$("#deleteuser").hide();
 
   $("#homepage").hide();
   setPageTitle("Profile");
@@ -702,11 +732,14 @@ function moveToProfile(user) {
   // a superadmin or an admin, and not the current user
   if ((currentuser.type === "superadmin" || currentuser.type === "admin") && (currentuser._id != user._id) && (viewing.type === "regular")) {
     $("#edituser").show();
+	$("#messageuser").show();
     $("#deleteuser").show();
   }
 
   if (currentuser.email === viewing.email) {
     $("#edituser").show();
+  } else {
+	  $("#messageuser").show();
   }
 
   $("#profilepage").fadeIn();
