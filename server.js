@@ -63,6 +63,16 @@ PostSchemas = new Schema({  //posts are posted to a group or user
   comments: [CommentSchemas]
 });
 
+
+MessageSchemas = new Schema({
+	sender: UserSchemas,
+	receiver: UserSchemas,
+	dateCreated: Date,
+	content: String,
+	request: Boolean,
+	reply: Boolean
+});
+
 UserSchemas = new Schema({
     email: String,
     password: String,
@@ -112,14 +122,6 @@ ReviewSchemas = new Schema({
 	comments: [CommentSchemas]
 });
 
-MessageSchemas = new Schema({
-	sender: UserSchemas,
-	receiver: UserSchemas,
-	dateCreated: Date,
-	content: String,
-	request: Boolean,
-	reply: Boolean
-});
 
 
 var UserModel = mongoose.model('UserSchema', UserSchemas);
@@ -303,32 +305,35 @@ app.post('/users', function (req, res){
 app.put('/users/messages', function (req, res) {
 	console.log(req.body);
 	console.log(">>>>>>>>>>>>>>");
-	console.log(req.body.to);
-	console.log(req.body.from);
-	console.log(req.body.content);
-	console.log(">>>>>>>>>>>>>>");
+	
 	//console.log(req.body.from[_id]);
-	var tempMessage = {
-		sender: UserModel.findOne( { _id: req.body.from[_id]} ),
-		receiver: UserModel.findOne( {_id: req.body.to[_id]} ),
-		dateCreated: Date.now,
-		content: req.body.content,
-		request: req.body.request,
-		reply: req.body.reply
-	}
-	req.body.from.outbox.push(tempMessage);
-	req.body.from.save(function (err) {
-		if (err) {
-			console.log("Saving 'from' error: "+ err);
-		}
+	UserModel.findOne({ _id: req.body.from}, function (err, senderUser) {
+		UserModel.findOne({ _id: req.body.to}, function (err, receiverUser) {
+			var tempMessage = {
+				sender: senderUser,
+				receiver: receiverUser,
+				dateCreated: new Date(),
+				content: req.body.content,
+				request: req.body.request,
+				reply: req.body.reply
+			}
+			console.log(tempMessage);
+			console.log(">>>>>>>>>>>>>>");
+			senderUser.outbox.push(tempMessage);
+			senderUser.save(function (err) {
+				if (err) {
+					console.log("Saving 'from' error: "+ err);
+				}
+			});
+			receiverUser.inbox.push(tempMessage);
+			receiverUser.save(function (err) {
+				if (err) {
+					console.log("Saving 'to' error: "+ err);
+				}
+			});
+		});
 	});
-	req.body.to.inbox.push(tempMessage);
-	req.body.to.save(function (err) {
-		if (err) {
-			console.log("Saving 'to' error: "+ err);
-		}
-	});
-	res.send(200);
+	res.sendStatus(200);
 });
 
 // VERIFY EMAIL LOGIN

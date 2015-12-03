@@ -240,8 +240,8 @@ $(document).ready(function(){
 		type: "PUT",
 		url: "/users/messages",
 		data: { 
-			from: {currentuser},
-			to: {viewing},
+			from: currentuser._id,
+			to: viewing._id,
 			content: $("#messageText").val(),
 			request: false,
 			reply: false
