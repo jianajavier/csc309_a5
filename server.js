@@ -120,7 +120,7 @@ UserSchemas = new Schema({
 	posts: [PostSchemas],
 	inbox: [MessageSchemas],
 	outbox: [MessageSchemas],
-	newMessage: {type: Number, default: 0}
+	newMsgNum: {type: Number, default: 0}
 });
 
 CommentSchemas = new Schema({
@@ -406,17 +406,6 @@ app.post('/users/uploadprofile', function(req, res) {
   });
 });
 
-// Get a user model by an id
-app.get('/users/:user_id', function(req, res) {
-	UserModel.findOne({ _id: req.params.user_id }, function (err, user) {
-		if (err) {
-			console.log(err);
-			return handleError(err);
-		}
-		res.send(user);
-	});
-});
-
 // Create (Send) a message
 app.put('/users/messages/send', function (req, res) {
 	console.log(req.body);
@@ -461,7 +450,7 @@ app.put('/users/messages/send', function (req, res) {
 				}
 			});
 			receiverUser.inbox.unshift(tempMessage);
-			receiverUser.newMessage += 1;
+			receiverUser.newMsgNum += 1;
 			receiverUser.save(function (err) {
 				if (err) {
 					console.log("Saving 'to' error: "+ err);
@@ -473,6 +462,21 @@ app.put('/users/messages/send', function (req, res) {
 });
 
 app.get('/users/messages/:mailbox/:user_id', function (req, res) {
+	var mailbox = req.params.mailbox;
+	var projection = {};
+	projection[mailbox] = 1;
+	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
+		console.log(data);
+		console.log(mailbox);
+		res.send(data[mailbox]);
+	});
+});
+
+app.get('/users/messages/:user_id', function (req, res) {
 	var mailbox = req.params.mailbox;
 	var projection = {};
 	projection[mailbox] = 1;
@@ -502,6 +506,23 @@ app.put('/users/messages/updateStatus', function (req, res) {
 		});
 	});
 	res.sendStatus(200);
+});
+
+app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
+	UserModel.findOne({_id: req.body.user}, function (err, user) {
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
+		user.newMsgNum = 0;
+		console.log(user);
+		user.save(function (err) {
+			if (err) {
+				console.log("Update message status error.");
+			}
+		});
+		res.send(user);
+	});
 });
 
 // VERIFY EMAIL LOGIN

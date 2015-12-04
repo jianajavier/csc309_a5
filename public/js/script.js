@@ -581,7 +581,7 @@ function openInBoxMessage(msg) {
 		$("#messageHeader").hide();
 		$("#replyHeader").show();
 		$("#recipient").text("To: "+ msg.sender.displayname);
-		$("#messageText").text("");
+		$("#messageText").val("");
 		viewing = msg.sender;
 		re = true;
 	});
@@ -593,6 +593,8 @@ function openInBoxMessage(msg) {
 				user: currentuser._id,
 				message: msg._id
 			}
+		}).fail(function() {
+			console.log("Error: Fail to update message status.");
 		});
 	}
 }
@@ -697,11 +699,20 @@ function readFile2(input) {
       }
   }
 
+function updateMsgBadge() {
+	if (currentuser.newMsgNum == 0) {
+		$("#newMessage").text("");
+	} else {
+		$("#newMessage").text(currentuser.newMsgNum);
+	}
+}
+  
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
   $("#editprofilepage, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
 
+  updateMsgBadge();
 
   if (obj.displayname == "") {
     $("#profilelink").text(obj.email);
@@ -799,6 +810,18 @@ function moveToWelcome(obj) {
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
+	$.ajax({
+		type: "PUT",
+		url: "/users/messages/updateStatus/newMsgNum",
+		data: {
+			user: currentuser._id
+		}
+	}).done(function(data){
+		currentuser = data;
+		updateMsgBadge();
+	}).fail(function() {
+		console.log("Error: Fail to update newMsgNum.");
+	});
 	refreshInbox();
 }
 
