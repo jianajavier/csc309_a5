@@ -82,12 +82,21 @@ PostSchemas = new Schema({  //posts are posted to a group or user
 
 
 MessageSchemas = new Schema({
-	sender: UserSchemas,
-	receiver: UserSchemas,
+	sender: {
+		_id: Schema.Types.ObjectId,
+		displayname: String,
+		email: String 
+		},
+	receiver: {
+		_id: Schema.Types.ObjectId,
+		displayname: String,
+		email: String 
+		},
 	dateCreated: Date,
 	content: String,
 	request: Boolean,
-	reply: Boolean
+	reply: Boolean,
+	unread: Boolean
 });
 
 UserSchemas = new Schema({
@@ -110,7 +119,8 @@ UserSchemas = new Schema({
     tags: {},
 	posts: [PostSchemas],
 	inbox: [MessageSchemas],
-	outbox: [MessageSchemas]
+	outbox: [MessageSchemas],
+	newMsgNum: {type: Number, default: 0}
 });
 
 CommentSchemas = new Schema({
@@ -397,30 +407,50 @@ app.post('/users/uploadprofile', function(req, res) {
 });
 
 // Create (Send) a message
-app.put('/users/messages', function (req, res) {
+app.put('/users/messages/send', function (req, res) {
 	console.log(req.body);
 	console.log(">>>>>>>>>>>>>>");
 
 	//console.log(req.body.from[_id]);
 	UserModel.findOne({ _id: req.body.from}, function (err, senderUser) {
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
 		UserModel.findOne({ _id: req.body.to}, function (err, receiverUser) {
+			if (err) {
+				console.log(err);
+				return handleError(err);
+			}
 			var tempMessage = {
-				sender: senderUser,
-				receiver: receiverUser,
+				sender: {
+					_id: senderUser._id,
+					displayname: senderUser.displayname,
+					email: senderUser.email
+				},
+				receiver: {
+					_id: receiverUser._id,
+					displayname: receiverUser.displayname,
+					email: receiverUser.email
+				},
 				dateCreated: new Date(),
 				content: req.body.content,
 				request: req.body.request,
-				reply: req.body.reply
+				reply: req.body.reply,
+				unread: true
 			}
 			console.log(tempMessage);
+			console.log(senderUser.displayname);
+			console.log(receiverUser.displayname);
 			console.log(">>>>>>>>>>>>>>");
-			senderUser.outbox.push(tempMessage);
+			senderUser.outbox.unshift(tempMessage);
 			senderUser.save(function (err) {
 				if (err) {
 					console.log("Saving 'from' error: "+ err);
 				}
 			});
-			receiverUser.inbox.push(tempMessage);
+			receiverUser.inbox.unshift(tempMessage);
+			receiverUser.newMsgNum += 1;
 			receiverUser.save(function (err) {
 				if (err) {
 					console.log("Saving 'to' error: "+ err);
@@ -429,6 +459,70 @@ app.put('/users/messages', function (req, res) {
 		});
 	});
 	res.sendStatus(200);
+});
+
+app.get('/users/messages/:mailbox/:user_id', function (req, res) {
+	var mailbox = req.params.mailbox;
+	var projection = {};
+	projection[mailbox] = 1;
+	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
+		console.log(data);
+		console.log(mailbox);
+		res.send(data[mailbox]);
+	});
+});
+
+app.get('/users/messages/:user_id', function (req, res) {
+	var mailbox = req.params.mailbox;
+	var projection = {};
+	projection[mailbox] = 1;
+	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
+		console.log(data);
+		console.log(mailbox);
+		res.send(data[mailbox]);
+	});
+});
+
+app.put('/users/messages/updateStatus', function (req, res) {
+	UserModel.findOne({_id: req.body.user}, function (err, user) {
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
+		user.inbox.id(req.body.message).unread = false;
+		console.log(user.inbox);
+		user.save(function (err) {
+			if (err) {
+				console.log("Update message status error.");
+			}
+		});
+	});
+	res.sendStatus(200);
+});
+
+app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
+	UserModel.findOne({_id: req.body.user}, function (err, user) {
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
+		user.newMsgNum = 0;
+		console.log(user);
+		user.save(function (err) {
+			if (err) {
+				console.log("Update message status error.");
+			}
+		});
+		res.send(user);
+	});
 });
 
 // VERIFY EMAIL LOGIN
