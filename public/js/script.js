@@ -140,7 +140,7 @@ $(document).ready(function(){
       }
     }
   });
-  
+
 
   /**
   USER PERFORMS A SEARCH IN THE NAV BAR
@@ -231,6 +231,10 @@ $(document).ready(function(){
     } //will keep them at home page
   });
 
+  $("#cancellistingbutton").click(function(){
+    goToListingPage(listingview);
+  });
+
   /**
   CLICKS UPDATE BUTTON TO BRING BACK TO CHANGE INFORMATION
   */
@@ -253,10 +257,10 @@ $(document).ready(function(){
 
   $("#messageModal").on("show.bs.modal", function(event) {
 	  var modal = $(this);
-	  modal.find("#recipient").text("To: " + viewing.displayname); 
+	  modal.find("#recipient").text("To: " + viewing.displayname);
 	  modal.find("#messageText").val("");
   });
-  
+
   $("#changePasswordForm").submit(function (event) {
     event.preventDefault();
     //CHECK IF OLD PASSWORD IS correct
@@ -297,7 +301,7 @@ $(document).ready(function(){
 	  $.ajax({
 		type: "PUT",
 		url: "/users/messages",
-		data: { 
+		data: {
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
@@ -311,7 +315,7 @@ $(document).ready(function(){
 		  console.log("Error: message cannot be sent.");
 	  });
   });
-  
+
   // TOGGLE ADMIN
   $("#toggleadmin").click(function() {
     var newtype;
@@ -356,6 +360,41 @@ $(document).ready(function(){
 
     $('#'+viewing._id).remove();
   });
+
+  $("#deletelisting").click (function (){
+    $.ajax({
+      url: "/listing/" + listingview + "/"+currentuser._id,
+      type: 'DELETE',
+      success: function () {
+        $.ajax({
+            type: "GET",
+            url: "/users/verify-email/"+currentuser.email+"/none",
+            success: function(data){
+              if (data) {
+                  currentuser = data;
+                  moveToProfile(currentuser);
+              }
+            }
+        });
+      }
+    });
+  });
+
+  $("#editListingForm").submit(function (event) {
+    event.preventDefault();
+    $.ajax({
+      type: "PUT",
+      url: "/listings/update/" + listingview,
+      data: {
+        title : $("#editlistingtitle").val(),
+        description : $("#editlistdescription").val()
+      },
+      success: function(data) {
+        listingview = data._id;
+      }
+    });
+  });
+
 
   $("#logout").click(function(){
     $("#viewbehaviour").fadeOut();
@@ -564,6 +603,7 @@ function readFile2(input) {
                   //$('form').serialize(),
                   success: function(resp) {
                     $('#editmainlistingpicture, #mainlistingpic').attr('src', "uploads/"+resp.mainPicture);
+                    // Set it to the name of this picture in the profile gallery
 
                     $.ajax({
                         type: "GET",
@@ -571,6 +611,7 @@ function readFile2(input) {
                         success: function(data){
                           if (data) {
                             $('#mainlistinglink').attr('name', data._id);
+                            setCurrentUser();
                           }
                         }
                     });
@@ -585,7 +626,7 @@ function readFile2(input) {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
+  $("#editprofilepage, #blueimp-gallery, #profilepage, #userbehaviourpage, #editlistingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
 
 
@@ -683,7 +724,7 @@ function moveToWelcome(obj) {
 }
 
 function moveToProfile(user) {
-  $("#edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
+  $("#edituser, #blueimp-gallery, #editprofilepage, #listingpage, #editlistingpage").hide();
   $("#messageuser").hide();
   //$("#deleteuser").hide();
 
@@ -750,7 +791,7 @@ function moveToEditPage(user, own) {
     viewing=currentuser;
   }
 
-  $("#homepage, #profilepage, #userbehaviourpage, #listingpage").hide();
+  $("#homepage, #blueimp-gallery, #profilepage, #userbehaviourpage, #listingpage").hide();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
@@ -883,7 +924,7 @@ function addListing(listing) {
 
 function getGallery(user) {
   //empty gallery first
-  //$('#links').empty();
+  $('#links').empty();
   //get users gallery photos to display
   for (var i = 0; i < user.gallery.length; i++) {
     console.log(user.gallery[i]);
@@ -892,7 +933,7 @@ function getGallery(user) {
 }
 
 function goToListingPage(listingid) {
-  $("#edituser, #editprofilepage, #profilepage, #editlistingpage").hide();
+  $("#edituser, #blueimp-gallery, #editprofilepage, #profilepage, #editlistingpage").hide();
   $("#deleteuser").hide();
 
   $("#homepage").fadeOut();
@@ -930,13 +971,14 @@ function goToListingPage(listingid) {
 }
 
 function goToEditListingPage() {
-  $("#edituser, #editprofilepage, #profilepage, #listingpage").hide();
+  $("#edituser, #blueimp-gallery, #editprofilepage, #profilepage, #listingpage").hide();
 
   $.ajax({
       type: "GET",
       url: "/listing/" + listingview,
       success: function(data){
         if (data) {
+            listingview = data._id;
             $("#editlistingtitle").text(data.title);
             $("#editlistdescription").text(data.description);
 
@@ -944,6 +986,20 @@ function goToEditListingPage() {
 
             $("#editlistingpage").fadeIn();
 
+        }
+      }
+  });
+
+}
+
+function setCurrentUser() {
+  $.ajax({
+      type: "GET",
+      url: "/users/verify-email/"+currentuser.email+"/none",
+      success: function(data){
+        if (data) {
+          currentuser = data;
+          return data;
         }
       }
   });
