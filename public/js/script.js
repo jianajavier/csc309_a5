@@ -24,7 +24,7 @@ function showPosition(position) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
+  $("#homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
 
 
   // LOGIN VIEW
@@ -296,7 +296,7 @@ $(document).ready(function(){
 	  event.preventDefault();
 	  $.ajax({
 		type: "PUT",
-		url: "/users/messages",
+		url: "/users/messages/send",
 		data: { 
 			from: currentuser._id,
 			to: viewing._id,
@@ -311,6 +311,21 @@ $(document).ready(function(){
 		  console.log("Error: message cannot be sent.");
 	  });
   });
+  
+	$("#inboxTab").click(function() {
+		console.log("as");
+		
+		refreshInbox();
+	});
+	
+	
+	
+	
+	$("#outboxTab").click(function() {
+		console.log("asa");
+	});
+	
+	
   
   // TOGGLE ADMIN
   $("#toggleadmin").click(function() {
@@ -365,6 +380,10 @@ $(document).ready(function(){
 
   $("#viewbehaviour").click(function(){
     moveToUserBehaviourPage();
+  });
+  
+  $("#navMessage").click(function() {
+	 moveToMessagePage(); 
   });
 
   $("li.navprofile").on("click",function() {
@@ -479,9 +498,91 @@ $(document).ready(function(){
       }
     });
   });
-
+	
+	
 
 });
+
+function refreshInbox() {
+	// get all the messages in the currentuser's inbox
+	$.ajax({
+		type: "GET",
+		url: "/users/messages/inbox/"+currentuser._id,
+		success: function(data) {
+			console.log(data);
+			if (data.length == 0) {
+				$("#messageBoxInbox, #inbox table").hide();
+				$("#noMessageInbox").show();
+			} else {
+				$("#messageBoxInbox, #noMessageInbox").hide();
+				$("#inbox table").show();
+				var htmlString = "";
+				$.each(data, function(index, message) {
+					var messageHeader;
+					var temphtmlString = "";
+					
+					if (message.reply) {
+						// if it is a reply message
+						messageHeader = "You got a reply from "+message.sender.displayname;
+					} else {
+						if (message.request) {
+							// if it is a request
+							messageHeader = "New Request from "+message.sender.displayname;
+						} else {
+							messageHeader = "New Message from "+message.sender.displayname;
+						}
+					}
+					
+					if (message.unread) {
+						// if it is unread
+						temphtmlString += "<td><strong>"+message.sender.displayname+
+							"</strong></td><td><strong>"+messageHeader+"</strong></td><td><strong>"+
+							message.dateCreated+"</strong></td>";
+					} else {
+						temphtmlString += "<td>"+message.sender.displayname+
+							"</td><td>"+messageHeader+"</td><td>"+
+							message.dateCreated+"</td>";
+					}
+					
+					if (message.request) {
+						temphtmlString = "<tr class='success'>"+temphtmlString+"</tr>";
+					} else {
+						temphtmlString = "<tr>"+temphtmlString+"</tr>";
+					}
+					htmlString += temphtmlString;
+				});
+				$("#inbox table tbody").html(htmlString);
+				
+				// Attach event handler to the table
+				$('#inbox tbody').on("click", "tr", function(){
+					console.log(this.rowIndex);
+					var i = this.rowIndex;
+					openInBoxMessage(data[i-1]);
+					$("#inbox table").hide();
+					
+				});
+			}
+		}
+	});
+}
+
+function openInBoxMessage(msg) {
+	$("#messageBoxInbox").show();
+	$("#inboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
+	$("#inboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
+	$("#receivedate").text("date: "+msg.dateCreated);
+	$("#inboxContent").text(msg.content);
+	if (msg.unread) {
+		$.ajax({
+			type: "PUT",
+			url: "/users/messages/updateStatus",
+			data: {
+				user: currentuser._id,
+				message: msg._id
+			}
+		});
+	}
+}
 
 function readFile(input) {
       if (input.files && input.files[0]) {
@@ -585,7 +686,7 @@ function readFile2(input) {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
+  $("#editprofilepage, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
 
 
@@ -682,8 +783,14 @@ function moveToWelcome(obj) {
 
 }
 
+function moveToMessagePage() {
+	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
+	$("#messagePage").show();
+	refreshInbox();
+}
+
 function moveToProfile(user) {
-  $("#edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
+  $("#edituser, #messagePage, #editprofilepage, #listingpage, #editlistingpage").hide();
   $("#messageuser").hide();
   //$("#deleteuser").hide();
 
@@ -750,7 +857,7 @@ function moveToEditPage(user, own) {
     viewing=currentuser;
   }
 
-  $("#homepage, #profilepage, #userbehaviourpage, #listingpage").hide();
+  $("#homepage, #messagePage, #profilepage, #userbehaviourpage, #listingpage").hide();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
@@ -811,7 +918,7 @@ function moveToHome() {
   $("#loginOrSignupScreen, #loginbutton, #signupbutton").show();
   $(".loggedInNav").hide();
 
-  $("#homepage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage, #editlistingpage, #listingpage").fadeOut();
+  $("#homepage, #messagePage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage, #editlistingpage, #listingpage").fadeOut();
   $("#rectangle").hide();
   $('#emailinput,#passwordinput,#cpasswordinput').val("");
   // $("#loginbutton, #signupbutton").fadeIn();
@@ -833,7 +940,7 @@ function moveToHome() {
 
 //  home page is actually welcome page
 function moveToUserBehaviourPage() {
-  $("#homepage, #profilepage, #editprofilepage, #editlistingpage").fadeOut();
+  $("#homepage, #messagePage, #profilepage, #editprofilepage, #editlistingpage").fadeOut();
   setPageTitle("User Behaviour");
   $('#behaviourtable tbody').remove();
 
@@ -892,7 +999,7 @@ function getGallery(user) {
 }
 
 function goToListingPage(listingid) {
-  $("#edituser, #editprofilepage, #profilepage, #editlistingpage").hide();
+  $("#edituser, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
   $("#deleteuser").hide();
 
   $("#homepage").fadeOut();
@@ -930,7 +1037,7 @@ function goToListingPage(listingid) {
 }
 
 function goToEditListingPage() {
-  $("#edituser, #editprofilepage, #profilepage, #listingpage").hide();
+  $("#edituser, #editprofilepage, #messagePage, #profilepage, #listingpage").hide();
 
   $.ajax({
       type: "GET",
