@@ -82,8 +82,16 @@ PostSchemas = new Schema({  //posts are posted to a group or user
 
 
 MessageSchemas = new Schema({
-	sender: UserSchemas,
-	receiver: UserSchemas,
+	sender: {
+		_id: Schema.Types.ObjectId,
+		displayname: String,
+		email: String 
+		},
+	receiver: {
+		_id: Schema.Types.ObjectId,
+		displayname: String,
+		email: String 
+		},
 	dateCreated: Date,
 	content: String,
 	request: Boolean,
@@ -398,6 +406,17 @@ app.post('/users/uploadprofile', function(req, res) {
   });
 });
 
+// Get a user model by an id
+app.get('/users/:user_id', function(req, res) {
+	UserModel.findOne({ _id: req.params.user_id }, function (err, user) {
+		if (err) {
+			console.log(err);
+			return handleError(err);
+		}
+		res.send(user);
+	});
+});
+
 // Create (Send) a message
 app.put('/users/messages/send', function (req, res) {
 	console.log(req.body);
@@ -415,8 +434,16 @@ app.put('/users/messages/send', function (req, res) {
 				return handleError(err);
 			}
 			var tempMessage = {
-				sender: senderUser,
-				receiver: receiverUser,
+				sender: {
+					_id: senderUser._id,
+					displayname: senderUser.displayname,
+					email: senderUser.email
+				},
+				receiver: {
+					_id: receiverUser._id,
+					displayname: receiverUser.displayname,
+					email: receiverUser.email
+				},
 				dateCreated: new Date(),
 				content: req.body.content,
 				request: req.body.request,
@@ -427,13 +454,13 @@ app.put('/users/messages/send', function (req, res) {
 			console.log(senderUser.displayname);
 			console.log(receiverUser.displayname);
 			console.log(">>>>>>>>>>>>>>");
-			senderUser.outbox.push(tempMessage);
+			senderUser.outbox.unshift(tempMessage);
 			senderUser.save(function (err) {
 				if (err) {
 					console.log("Saving 'from' error: "+ err);
 				}
 			});
-			receiverUser.inbox.push(tempMessage);
+			receiverUser.inbox.unshift(tempMessage);
 			receiverUser.newMessage += 1;
 			receiverUser.save(function (err) {
 				if (err) {

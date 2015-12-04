@@ -1,6 +1,7 @@
 var login = 0; //0 if logging in, 1 if signing up
 var currentuser;
 var fromlogin = true;
+var re;
 var viewing; //the persons profile being viewed
 var loclat = 0;
 var loclng = 0;
@@ -250,12 +251,17 @@ $(document).ready(function(){
       }
     });
   });
-
-  $("#messageModal").on("show.bs.modal", function(event) {
-	  var modal = $(this);
-	  modal.find("#recipient").text("To: " + viewing.displayname); 
-	  modal.find("#messageText").val("");
+  
+  $("#messageuser").click(function() {
+	  $("#messageHeader").show();
+	  $("#replyHeader").hide();
+	  $("#recipient").text("To: " + viewing.displayname); 
+	  $("#messageText").val("");
+	  re = false;
   });
+  
+  
+
   
   $("#changePasswordForm").submit(function (event) {
     event.preventDefault();
@@ -302,7 +308,7 @@ $(document).ready(function(){
 			to: viewing._id,
 			content: $("#messageText").val(),
 			request: false,
-			reply: false
+			reply: re
 		}
 	  }).always(function() {
 		  console.log("run");
@@ -557,9 +563,8 @@ function refreshInbox() {
 				$('#inbox tbody').on("click", "tr", function(){
 					console.log(this.rowIndex);
 					var i = this.rowIndex;
-					openInBoxMessage(data[i-1]);
 					$("#inbox table").hide();
-					
+					openInBoxMessage(data[i-1]);
 				});
 			}
 		}
@@ -572,6 +577,14 @@ function openInBoxMessage(msg) {
 	$("#inboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#receivedate").text("date: "+msg.dateCreated);
 	$("#inboxContent").text(msg.content);
+	$("#replyInbox").click(function() {
+		$("#messageHeader").hide();
+		$("#replyHeader").show();
+		$("#recipient").text("To: "+ msg.sender.displayname);
+		$("#messageText").text("");
+		viewing = msg.sender;
+		re = true;
+	});
 	if (msg.unread) {
 		$.ajax({
 			type: "PUT",
