@@ -319,8 +319,6 @@ $(document).ready(function(){
   });
   
 	$("#inboxTab").click(function() {
-		console.log("as");
-		
 		refreshInbox();
 	});
 	
@@ -328,7 +326,7 @@ $(document).ready(function(){
 	
 	
 	$("#outboxTab").click(function() {
-		console.log("asa");
+		refreshOutbox();
 	});
 	
 	
@@ -529,13 +527,13 @@ function refreshInbox() {
 					
 					if (message.reply) {
 						// if it is a reply message
-						messageHeader = "You got a reply from "+message.sender.displayname;
+						messageHeader = "You got a reply from "+message.sender.displayname+"!";
 					} else {
 						if (message.request) {
 							// if it is a request
-							messageHeader = "New Request from "+message.sender.displayname;
+							messageHeader = "New Request from "+message.sender.displayname+"!";
 						} else {
-							messageHeader = "New Message from "+message.sender.displayname;
+							messageHeader = "New Message from "+message.sender.displayname+"!";
 						}
 					}
 					
@@ -571,6 +569,63 @@ function refreshInbox() {
 	});
 }
 
+
+function refreshOutbox() {
+	// get all the messages in the currentuser's inbox
+	$.ajax({
+		type: "GET",
+		url: "/users/messages/outbox/"+currentuser._id,
+		success: function(data) {
+			console.log(data);
+			if (data.length == 0) {
+				$("#messageBoxOutbox, #outbox table").hide();
+				$("#noMessageOutbox").show();
+			} else {
+				$("#messageBoxOutbox, #noMessageOutbox").hide();
+				$("#outbox table").show();
+				var htmlString = "";
+				$.each(data, function(index, message) {
+					var messageHeader;
+					var temphtmlString = "";
+					
+					if (message.reply) {
+						// if it is a reply message
+						messageHeader = "You replied to "+message.receiver.displayname+"!";
+					} else {
+						if (message.request) {
+							// if it is a request
+							messageHeader = "You sent a new request to "+message.receiver.displayname+"!";
+						} else {
+							messageHeader = "You sent a new message to "+message.receiver.displayname+"!";
+						}
+					}
+					
+					temphtmlString += "<td>"+message.receiver.displayname+
+						"</td><td>"+messageHeader+"</td><td>"+
+						message.dateCreated+"</td>";
+					
+					if (message.request) {
+						temphtmlString = "<tr class='success'>"+temphtmlString+"</tr>";
+					} else {
+						temphtmlString = "<tr>"+temphtmlString+"</tr>";
+					}
+					htmlString += temphtmlString;
+				});
+				$("#outbox table tbody").html(htmlString);
+				
+				// Attach event handler to the table
+				$('#outbox tbody').on("click", "tr", function(){
+					console.log(this.rowIndex);
+					var i = this.rowIndex;
+					$("#outbox table").hide();
+					openOutBoxMessage(data[i-1]);
+				});
+			}
+		}
+	});
+}
+
+
 function openInBoxMessage(msg) {
 	$("#messageBoxInbox").show();
 	$("#inboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
@@ -597,6 +652,14 @@ function openInBoxMessage(msg) {
 			console.log("Error: Fail to update message status.");
 		});
 	}
+}
+
+function openOutBoxMessage(msg) {
+	$("#messageBoxOutbox").show();
+	$("#outboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
+	$("#outboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
+	$("#sentdate").text("date: "+msg.dateCreated);
+	$("#outboxContent").text(msg.content);
 }
 
 function readFile(input) {
