@@ -1,6 +1,7 @@
 var login = 0; //0 if logging in, 1 if signing up
 var currentuser;
 var fromlogin = true;
+var re;
 var viewing; //the persons profile being viewed
 var loclat = 0;
 var loclng = 0;
@@ -33,7 +34,7 @@ function onSignIn(googleUser) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
+  $("#homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
 
   function onSignIn(googleUser) {
     alert("gothere");
@@ -284,12 +285,15 @@ $(document).ready(function(){
     });
   });
 
-  $("#messageModal").on("show.bs.modal", function(event) {
-	  var modal = $(this);
-	  modal.find("#recipient").text("To: " + viewing.displayname);
-	  modal.find("#messageText").val("");
+  
+  $("#messageuser").click(function() {
+	  $("#messageHeader").show();
+	  $("#replyHeader").hide();
+	  $("#recipient").text("To: " + viewing.displayname); 
+	  $("#messageText").val("");
+	  re = false;
   });
-
+  
   $("#changePasswordForm").submit(function (event) {
     event.preventDefault();
     //CHECK IF OLD PASSWORD IS correct
@@ -329,13 +333,13 @@ $(document).ready(function(){
 	  event.preventDefault();
 	  $.ajax({
 		type: "PUT",
-		url: "/users/messages",
-		data: {
+		url: "/users/messages/send",
+		data: { 
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
 			request: false,
-			reply: false
+			reply: re
 		}
 	  }).always(function() {
 		  console.log("run");
@@ -344,7 +348,16 @@ $(document).ready(function(){
 		  console.log("Error: message cannot be sent.");
 	  });
   });
+  
+	$("#inboxTab").click(function() {
+		refreshInbox();
+	});
+	
+	$("#outboxTab").click(function() {
+		refreshOutbox();
+	});
 
+	
   // TOGGLE ADMIN
   $("#toggleadmin").click(function() {
     var newtype;
@@ -433,6 +446,10 @@ $(document).ready(function(){
 
   $("#viewbehaviour").click(function(){
     moveToUserBehaviourPage();
+  });
+  
+  $("#navMessage").click(function() {
+	 moveToMessagePage(); 
   });
 
   $("li.navprofile").on("click",function() {
@@ -547,9 +564,165 @@ $(document).ready(function(){
       }
     });
   });
-
+	
+	
 
 });
+
+function refreshInbox() {
+	// get all the messages in the currentuser's inbox
+	$.ajax({
+		type: "GET",
+		url: "/users/messages/inbox/"+currentuser._id,
+		success: function(data) {
+			console.log(data);
+			if (data.length == 0) {
+				$("#messageBoxInbox, #inbox table").hide();
+				$("#noMessageInbox").show();
+			} else {
+				$("#messageBoxInbox, #noMessageInbox").hide();
+				$("#inbox table").show();
+				var htmlString = "";
+				$.each(data, function(index, message) {
+					var messageHeader;
+					var temphtmlString = "";
+					
+					if (message.reply) {
+						// if it is a reply message
+						messageHeader = "You got a reply from "+message.sender.displayname+"!";
+					} else {
+						if (message.request) {
+							// if it is a request
+							messageHeader = "New Request from "+message.sender.displayname+"!";
+						} else {
+							messageHeader = "New Message from "+message.sender.displayname+"!";
+						}
+					}
+					
+					if (message.unread) {
+						// if it is unread
+						temphtmlString += "<td><strong>"+message.sender.displayname+
+							"</strong></td><td><strong>"+messageHeader+"</strong></td><td><strong>"+
+							message.dateCreated+"</strong></td>";
+					} else {
+						temphtmlString += "<td>"+message.sender.displayname+
+							"</td><td>"+messageHeader+"</td><td>"+
+							message.dateCreated+"</td>";
+					}
+					
+					if (message.request) {
+						temphtmlString = "<tr class='success'>"+temphtmlString+"</tr>";
+					} else {
+						temphtmlString = "<tr>"+temphtmlString+"</tr>";
+					}
+					htmlString += temphtmlString;
+				});
+				$("#inbox table tbody").html(htmlString);
+				
+				// Attach event handler to the table
+				$('#inbox tbody').on("click", "tr", function(){
+					console.log(this.rowIndex);
+					var i = this.rowIndex;
+					$("#inbox table").hide();
+					openInBoxMessage(data[i-1]);
+				});
+			}
+		}
+	});
+}
+
+
+function refreshOutbox() {
+	// get all the messages in the currentuser's inbox
+	$.ajax({
+		type: "GET",
+		url: "/users/messages/outbox/"+currentuser._id,
+		success: function(data) {
+			console.log(data);
+			if (data.length == 0) {
+				$("#messageBoxOutbox, #outbox table").hide();
+				$("#noMessageOutbox").show();
+			} else {
+				$("#messageBoxOutbox, #noMessageOutbox").hide();
+				$("#outbox table").show();
+				var htmlString = "";
+				$.each(data, function(index, message) {
+					var messageHeader;
+					var temphtmlString = "";
+					
+					if (message.reply) {
+						// if it is a reply message
+						messageHeader = "You replied to "+message.receiver.displayname+"!";
+					} else {
+						if (message.request) {
+							// if it is a request
+							messageHeader = "You sent a new request to "+message.receiver.displayname+"!";
+						} else {
+							messageHeader = "You sent a new message to "+message.receiver.displayname+"!";
+						}
+					}
+					
+					temphtmlString += "<td>"+message.receiver.displayname+
+						"</td><td>"+messageHeader+"</td><td>"+
+						message.dateCreated+"</td>";
+					
+					if (message.request) {
+						temphtmlString = "<tr class='success'>"+temphtmlString+"</tr>";
+					} else {
+						temphtmlString = "<tr>"+temphtmlString+"</tr>";
+					}
+					htmlString += temphtmlString;
+				});
+				$("#outbox table tbody").html(htmlString);
+				
+				// Attach event handler to the table
+				$('#outbox tbody').on("click", "tr", function(){
+					console.log(this.rowIndex);
+					var i = this.rowIndex;
+					$("#outbox table").hide();
+					openOutBoxMessage(data[i-1]);
+				});
+			}
+		}
+	});
+}
+
+
+function openInBoxMessage(msg) {
+	$("#messageBoxInbox").show();
+	$("#inboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
+	$("#inboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
+	$("#receivedate").text("date: "+msg.dateCreated);
+	$("#inboxContent").text(msg.content);
+	$("#replyInbox").click(function() {
+		$("#messageHeader").hide();
+		$("#replyHeader").show();
+		$("#recipient").text("To: "+ msg.sender.displayname);
+		$("#messageText").val("");
+		viewing = msg.sender;
+		re = true;
+	});
+	if (msg.unread) {
+		$.ajax({
+			type: "PUT",
+			url: "/users/messages/updateStatus",
+			data: {
+				user: currentuser._id,
+				message: msg._id
+			}
+		}).fail(function() {
+			console.log("Error: Fail to update message status.");
+		});
+	}
+}
+
+function openOutBoxMessage(msg) {
+	$("#messageBoxOutbox").show();
+	$("#outboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
+	$("#outboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
+	$("#sentdate").text("date: "+msg.dateCreated);
+	$("#outboxContent").text(msg.content);
+}
 
 function readFile(input) {
       if (input.files && input.files[0]) {
@@ -653,11 +826,20 @@ function readFile2(input) {
       }
   }
 
+function updateMsgBadge() {
+	if (currentuser.newMsgNum == 0) {
+		$("#newMessage").text("");
+	} else {
+		$("#newMessage").text(currentuser.newMsgNum);
+	}
+}
+  
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #blueimp-gallery, #profilepage, #userbehaviourpage, #editlistingpage").hide();
+  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
 
+  updateMsgBadge();
 
   if (obj.displayname == "") {
     $("#profilelink").text(obj.email);
@@ -752,8 +934,26 @@ function moveToWelcome(obj) {
 
 }
 
+function moveToMessagePage() {
+	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
+	$("#messagePage").show();
+	$.ajax({
+		type: "PUT",
+		url: "/users/messages/updateStatus/newMsgNum",
+		data: {
+			user: currentuser._id
+		}
+	}).done(function(data){
+		currentuser = data;
+		updateMsgBadge();
+	}).fail(function() {
+		console.log("Error: Fail to update newMsgNum.");
+	});
+	refreshInbox();
+}
+
 function moveToProfile(user) {
-  $("#edituser, #blueimp-gallery, #editprofilepage, #listingpage, #editlistingpage").hide();
+  $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #listingpage, #editlistingpage").hide();
   $("#messageuser").hide();
   //$("#deleteuser").hide();
 
@@ -820,7 +1020,7 @@ function moveToEditPage(user, own) {
     viewing=currentuser;
   }
 
-  $("#homepage, #blueimp-gallery, #profilepage, #userbehaviourpage, #listingpage").hide();
+  $("#homepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #listingpage").hide();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
@@ -881,7 +1081,7 @@ function moveToHome() {
   $("#loginOrSignupScreen, #loginbutton, #signupbutton").show();
   $(".loggedInNav").hide();
 
-  $("#homepage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage, #editlistingpage, #listingpage").fadeOut();
+  $("#homepage, #messagePage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage, #editlistingpage, #listingpage").fadeOut();
   $("#rectangle").hide();
   $('#emailinput,#passwordinput,#cpasswordinput').val("");
   // $("#loginbutton, #signupbutton").fadeIn();
@@ -903,7 +1103,7 @@ function moveToHome() {
 
 //  home page is actually welcome page
 function moveToUserBehaviourPage() {
-  $("#homepage, #profilepage, #editprofilepage, #editlistingpage").fadeOut();
+  $("#homepage, #messagePage, #profilepage, #editprofilepage, #editlistingpage").fadeOut();
   setPageTitle("User Behaviour");
   $('#behaviourtable tbody').remove();
 
@@ -962,7 +1162,7 @@ function getGallery(user) {
 }
 
 function goToListingPage(listingid) {
-  $("#edituser, #blueimp-gallery, #editprofilepage, #profilepage, #editlistingpage").hide();
+  $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
   $("#deleteuser").hide();
 
   $("#homepage").fadeOut();
@@ -1000,7 +1200,7 @@ function goToListingPage(listingid) {
 }
 
 function goToEditListingPage() {
-  $("#edituser, #blueimp-gallery, #editprofilepage, #profilepage, #listingpage").hide();
+  $("#edituser, #blueimp-gallery, #editprofilepage, #messagePage, #profilepage, #listingpage").hide();
 
   $.ajax({
       type: "GET",
