@@ -94,9 +94,9 @@ ListingSchemas = new Schema ({
   morePictures: [String],
   owner: String, //User ID
   title: String,
-  profilepic: Number //1 if it is, 0 if not
-  comments: [CommentSchemas];
-  reviews: [ReviewSchemas];
+  profilepic: Number, //1 if it is, 0 if not
+  comments: [CommentSchemas],
+  reviews: [ReviewSchemas]
 });
 
 
