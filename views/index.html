@@ -13,6 +13,10 @@
       <link rel="stylesheet" href="./css/blueimp-gallery.min.css">
       <script src="./js/blueimp-gallery.min.js"></script>
 
+      <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+      <meta name="google-signin-client_id" content="982608279960-s4dmp05v6i98tqp0u2dr8gnuep1mda1m.apps.googleusercontent.com">
+
       <meta charset="utf-8">
       <title>A5</title>
     </head>
@@ -63,6 +67,7 @@
                   <button id="loginbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Login</button>
                   <button id="signupbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Signup</button>
               </p>
+              <div class="g-signin2" data-onsuccess="onSignIn"></div>
             </div>
           </div>
 
@@ -641,9 +646,7 @@
     <div id="searchScreen" class="container">
       <h1>Search Results</h1>
       <div class="col-md-6" id="userSearchResults"></div>
-
-      <div class="col-md-6" id="artSearchResults">
-        <h3>Artworks that match your search:</h3>
-      </div>
-    <body>
+      <div class="col-md-6" id="artSearchResults"></div>
+    </div>
+  <body>
 </html>
