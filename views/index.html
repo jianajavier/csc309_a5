@@ -35,7 +35,7 @@
                   <button type="submit" class="btn btn-default">Submit</button>
                 </form>
               </li>
-              <li class="loggedInNav"><a href="#">Messages</a></li>
+              <li id="navMessage" class="loggedInNav"><a href="#">Messages<span id="newMessage" class="badge badge-important"></span></a></li>
               <li class="loggedInNav">
                 <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Profile
                 <span class="caret"></span></button>
@@ -190,7 +190,7 @@
             <a class="close">×</a>
             <a class="play-pause"></a>
             <ol class="indicator"></ol>
-
+		
             <!-- The modal dialog, which will be used to wrap the lightbox content -->
             <div class="modal fade">
                 <div class="modal-dialog">
@@ -214,29 +214,6 @@
                 </div>
             </div>
           </div>
-
-
-      		<!--Message window (Moved this under the blue-imp gallery div -Jiana)-->
-      		<div class="modal fade" id="messageModal" tabindex="-1">
-      			<div class="modal-dialog">
-      				<div class="modal-content">
-      					<div class="modal-header">
-      						 <button type="button" class="close" data-dismiss="modal">&times;</button>
-      						 <h4 id="messageHeader" class="modal-title">New message</h4>
-      					</div>
-      					<div class="modal-body">
-      						<h5 id="recipient">To:</h5>
-      						<form id="messageForm">
-      							<div class="form-group">
-      								<label class="control-label" for="messageText">Message:</label>
-      								<textarea class="form-control" id="messageText"></textarea>
-      							</div>
-      							<button type="submit" class="btn btn-default">Send</button>
-      						</form>
-      					</div>
-      				</div>
-      			</div>
-      		</div>
 
 
         <style>
@@ -336,6 +313,29 @@
           </div>
       </div>
 
+	  <!--Message window-->
+		<div class="modal fade" id="messageModal" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						 <button type="button" class="close" data-dismiss="modal">&times;</button>
+						 <h4 id="messageHeader" class="modal-title">New message</h4>
+						 <h4 id="replyHeader" class="modal-title">Reply</h4>
+					</div>
+					<div class="modal-body">
+						<h5 id="recipient">To:</h5>
+						<form id="messageForm">
+							<div class="form-group">
+								<label class="control-label" for="messageText">Message:</label>
+								<textarea class="form-control" id="messageText"></textarea>
+							</div>
+							<button type="submit" class="btn btn-default">Send</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
       <div id = "editprofilepage" class="container">
         <div class="imageholder">
           <div class="" width= "100%">
@@ -428,7 +428,59 @@
           <label id="editmessage"></label>
         </div>
       </div>
-
+	  
+	<div id="messagePage" class="container">
+		<ul class="nav nav-tabs">
+			<li class="active"><a id="inboxTab" data-toggle="tab" href="#inbox">Inbox</a><li>
+			<li><a id="outboxTab" data-toggle="tab" href="#outbox">Outbox</a></li>
+		</ul>
+		<div class="tab-content">
+			<div id="inbox" class="tab-pane fade in active">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>From</th>
+							<th>Message</th>
+							<th>Received Date</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+				<div id="messageBoxInbox" width="100%">
+					<hr><button id="replyInbox" type="button" class="btn btn-primary" data-toggle="modal" data-target="#messageModal">Reply!</button>
+					<hr><div id="inboxFrom"></div><hr>
+					<div id="inboxTo"></div><hr>
+					<div id="receivedate"></div><hr>
+					<div id="inboxContent"></div>
+					
+				</div>
+				<div id="noMessageInbox">No message.</div>
+			</div>
+			<div id="outbox" class="tab-pane fade">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>To</th>
+							<th>Message</th>
+							<th>Sent Date</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+				<div id="messageBoxOutbox" width="100%">
+					<hr><div id="outboxFrom"></div><hr>
+					<div id="outboxTo"></div><hr>
+					<div id="sentdate"></div><hr>
+					<div id="outboxContent"></div>
+					
+				</div>
+				<div id="noMessageOutbox">No message.</div>
+			</div>
+		</div>
+	
+	</div>
+	
+	
       <div id="userbehaviourpage" class="container">
         <table id="behaviourtable">
           <tr>
