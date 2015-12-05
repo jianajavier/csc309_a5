@@ -47,6 +47,7 @@ var UserSchemas = new Schema();
 var CommentSchemas = new Schema();
 var ReplySchemas = new Schema();
 var ReviewSchemas = new Schema();
+var RatingSchemas = new Schema();
 var MessageSchemas = new Schema();
 
 SessionSchemas = new Schema({
@@ -55,6 +56,34 @@ SessionSchemas = new Schema({
   geolocation      : {lat: Number, lng: Number},
   useragent: String,
   viewingdevice: String
+});
+
+ReplySchemas = new Schema({
+	creater: String, //User ID
+	message: String,
+	dateCreated: Date,
+	likes: [String], // list of ID of Users that liked this reply to comment
+	links: [String]
+});
+
+CommentSchemas = new Schema({
+	creater: String, //User ID
+	message: String,
+	dateCreated: Date,
+	likes: [String], // list of ID of Users that liked this comment
+	links: [String],
+	replies: [ReplySchemas]
+});
+
+ReviewSchemas = new Schema({
+	creater: String, //User ID
+	content: String,
+	dateCreated: Date,
+	rating: Number, //It is a number in decimals between 0 and 10. Note this is a 100 point system.
+	likes: [String], // list of ID of Users that liked the review
+	links: [String],
+	shares: [String], // list of ID of Users that shared this review
+	comments: [CommentSchemas]
 });
 
 ListingSchemas = new Schema ({
@@ -66,14 +95,16 @@ ListingSchemas = new Schema ({
   owner: String, //User ID
   title: String,
   profilepic: Number //1 if it is, 0 if not
+  comments: [CommentSchemas];
+  reviews: [ReviewSchemas];
 });
 
 
 PostSchemas = new Schema({  //posts are posted to a group or user
-  userID: Number,
+  creater: String, //User ID
   message: String,
   dateCreated: Date,
-  likes: [UserSchemas],
+  likes: [String], // list of ID of Users that liked the review
   links: [String],
   shares: [UserSchemas],
   comments: [CommentSchemas],
@@ -113,36 +144,6 @@ UserSchemas = new Schema({
 	outbox: [MessageSchemas]
 });
 
-CommentSchemas = new Schema({
-	userID: Number,
-	message: String,
-	dateCreated: Date,
-	likes: [UserSchemas],
-	links: [String],
-	replies: [ReplySchemas]
-});
-
-ReplySchemas = new Schema({
-	userID: Number,
-	message: String,
-	dateCreated: Date,
-	likes: [UserSchemas],
-	links: [String]
-});
-
-ReviewSchemas = new Schema({
-	userID: Number,
-	content: String,
-	dateCreated: Date,
-	rating: Number, //It is a number in decimals between 0 and 10. Note this is a 100 point system.
-	likes: [UserSchemas],
-	links: [String],
-	shares: [UserSchemas],
-	comments: [CommentSchemas]
-});
-
-
-
 var UserModel = mongoose.model('UserSchema', UserSchemas);
 var ListingModel = mongoose.model('ListingSchema', ListingSchemas);
 var PostModel = mongoose.model('PostSchema', PostSchemas);
@@ -157,7 +158,7 @@ function createComment(currentUser, newMessage, target) {
 	target is either a post, review, or artwork
 	*/
 	var comment = new CommentModel({
-		//user: currentUser,
+		creater: currentUser._id,
 		message: newMessage,
 		dateCreated: Date.now()
 	});
@@ -170,7 +171,7 @@ function createComment(currentUser, newMessage, target) {
 
 function replyToComment(currentUser, newMessage, comment) {
 	var reply = new ReplyModel({
-		//user: currentUser,
+		creater: currentUser._id,
 		message: newMessage,
 		dateCreated: Date.now()
 	});
@@ -181,12 +182,16 @@ function replyToComment(currentUser, newMessage, comment) {
 	comment.replies.push(reply);
 }
 
-function likesCount(comment) {
-	return comment.likes.length;
+function likesCount(target) {
+	return target.likes.length;
 }
 
-function sharesCount(comment) {
-	return comment.shares.length;
+function sharesCount(target) {
+	return target.shares.length;
+}
+
+function commentCount(target) {
+	return target.comments.length;
 }
 
 function sortComments(condition, target) {
