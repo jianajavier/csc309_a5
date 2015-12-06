@@ -58,12 +58,12 @@ SessionSchemas = new Schema({
 });
 
 ListingSchemas = new Schema ({
-  _id: {type: String, required: true},
+  _id: {type: Schema.Types.ObjectId, required: true},
   datePosted: Date,
   description: String,
   mainPicture: String,
   morePictures: [String],
-  owner: String, //User ID
+  owner: Schema.Types.ObjectId, //User ID
   title: String,
   profilepic: Number //1 if it is, 0 if not
 });
@@ -412,15 +412,15 @@ app.put('/users/messages/send', function (req, res) {
 	console.log(">>>>>>>>>>>>>>");
 
 	//console.log(req.body.from[_id]);
-	UserModel.findOne({ _id: req.body.from}, function (err, senderUser) {
-		if (err) {
-			console.log(err);
-			return handleError(err);
+	UserModel.findOne({ _id: req.body.from}, function (err1, senderUser) {
+		if (err1) {
+			console.log(err1);
+			return handleError(err1);
 		}
-		UserModel.findOne({ _id: req.body.to}, function (err, receiverUser) {
-			if (err) {
-				console.log(err);
-				return handleError(err);
+		UserModel.findOne({ _id: req.body.to}, function (err2, receiverUser) {
+			if (err2) {
+				console.log(err2);
+				return handleError(err2);
 			}
 			var tempMessage = {
 				sender: {
@@ -462,21 +462,6 @@ app.put('/users/messages/send', function (req, res) {
 });
 
 app.get('/users/messages/:mailbox/:user_id', function (req, res) {
-	var mailbox = req.params.mailbox;
-	var projection = {};
-	projection[mailbox] = 1;
-	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
-		if (err) {
-			console.log(err);
-			return handleError(err);
-		}
-		console.log(data);
-		console.log(mailbox);
-		res.send(data[mailbox]);
-	});
-});
-
-app.get('/users/messages/:user_id', function (req, res) {
 	var mailbox = req.params.mailbox;
 	var projection = {};
 	projection[mailbox] = 1;

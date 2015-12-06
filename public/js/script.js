@@ -908,6 +908,7 @@ function moveToWelcome(obj) {
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
+	$("#inboxTab").tab("show");
 	$.ajax({
 		type: "PUT",
 		url: "/users/messages/updateStatus/newMsgNum",
