@@ -92,7 +92,7 @@ ListingSchemas = new Schema ({
   description: String,
   mainPicture: String,
   morePictures: [String],
-  owner: String, //User ID
+  owner: Schema.Types.ObjectId, //User ID
   title: String,
   profilepic: Number, //1 if it is, 0 if not
   comments: [CommentSchemas],
@@ -126,6 +126,16 @@ MessageSchemas = new Schema({
 	dateCreated: Date,
 	content: String,
 	request: Boolean,
+	item: {
+		offer: {
+			_id: String,
+			title: String
+		},
+		interest: {
+			_id: String,
+			title: String
+		},
+	},
 	reply: Boolean,
 	unread: Boolean
 });
@@ -160,7 +170,6 @@ var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
-//var MessageModel = mongoose.model('MessageSchema', MessageSchemas);
 
 function createComment(currentUser, newMessage, target) {
 	/*
@@ -421,17 +430,17 @@ app.post('/users/uploadprofile', function(req, res) {
 app.put('/users/messages/send', function (req, res) {
 	console.log(req.body);
 	console.log(">>>>>>>>>>>>>>");
-
+console.log(req.body["item[offer]"]);
 	//console.log(req.body.from[_id]);
-	UserModel.findOne({ _id: req.body.from}, function (err, senderUser) {
-		if (err) {
-			console.log(err);
-			return handleError(err);
+	UserModel.findOne({ _id: req.body.from}, function (err1, senderUser) {
+		if (err1) {
+			console.log(err1);
+			return handleError(err1);
 		}
-		UserModel.findOne({ _id: req.body.to}, function (err, receiverUser) {
-			if (err) {
-				console.log(err);
-				return handleError(err);
+		UserModel.findOne({ _id: req.body.to}, function (err2, receiverUser) {
+			if (err2) {
+				console.log(err2);
+				return handleError(err2);
 			}
 			var tempMessage = {
 				sender: {
@@ -447,6 +456,16 @@ app.put('/users/messages/send', function (req, res) {
 				dateCreated: new Date(),
 				content: req.body.content,
 				request: req.body.request,
+				item: {
+					offer: {
+						_id: req.body["item[offer][_id]"],
+						title: req.body["item[offer][title]"]
+					},
+					interest:{
+						_id: req.body["item[interest][_id]"],
+						title: req.body["item[interest][title]"]
+					}
+				},
 				reply: req.body.reply,
 				unread: true
 			}
@@ -472,33 +491,18 @@ app.put('/users/messages/send', function (req, res) {
 	res.sendStatus(200);
 });
 
-app.get('/users/messages/:mailbox/:user_id', function (req, res) {
-	var mailbox = req.params.mailbox;
+app.get('/users/messages/:dataField/:user_id', function (req, res) {
+	var dataField = req.params.dataField;
 	var projection = {};
-	projection[mailbox] = 1;
+	projection[dataField] = 1;
 	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
 		if (err) {
 			console.log(err);
 			return handleError(err);
 		}
 		console.log(data);
-		console.log(mailbox);
-		res.send(data[mailbox]);
-	});
-});
-
-app.get('/users/messages/:user_id', function (req, res) {
-	var mailbox = req.params.mailbox;
-	var projection = {};
-	projection[mailbox] = 1;
-	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
-		if (err) {
-			console.log(err);
-			return handleError(err);
-		}
-		console.log(data);
-		console.log(mailbox);
-		res.send(data[mailbox]);
+		console.log(dataField);
+		res.send(data[dataField]);
 	});
 });
 
@@ -850,10 +854,30 @@ app.post('/uploadimage', upload.single('file'), function (req, res) {
   return res.send(req.file);
 });
 
+// get a user by the listing id
+app.get('/listing/users/:id', function (req, res) {
+	ListingModel.findOne({ _id: req.params.id }, function (err1, listing) {
+		if (err1) {
+			console.log(err1);
+			return handleError(err1);
+		}
+		UserModel.findOne({ _id: listing.owner}, { password:0}, function(err2, user) {
+			if (err2) {
+				console.log(err2);
+				return handleError(err2);
+			}
+			res.send(user);
+		});
+	});	
+});
+
 //get listing
 app.get('/listing/:id', function (req, res){
   return ListingModel.findOne({ _id: req.params.id }, function (err, listing) {
-    if (!err) {
+    console.log("asdasdasdasdas");
+	console.log(req.params.id);
+	console.log(listing);
+	if (!err) {
       return res.send(listing);
     } else {
       return console.log(err);
@@ -938,15 +962,16 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
     if (req.body.title) listing.title = req.body.title;
     if (req.body.description) listing.description = req.body.description;
 
-    return listing.save(function (err) {
-      if (!err) {
-        console.log("updated listing info");
-      } else {
-        console.log(err);
-      }
+		return listing.save(function (err) {
+		  if (!err) {
+			console.log("updated listing info");
+		  } else {
+			console.log(err);
+		  }
+		});
       return res.send(listing);
     });
-  });
+
 });
 
 
