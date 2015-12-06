@@ -24,6 +24,7 @@ mongoose.connect('mongodb://bron:pizza*bagels1@ds053190.mongolab.com:53190/herok
 app.use(express.static(path.join(__dirname, '/public'), {
     index: false
 }));
+
 app.set('views', __dirname + '/views');
 app.engine('html', require('ejs').renderFile);
 
