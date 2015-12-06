@@ -60,29 +60,29 @@ SessionSchemas = new Schema({
 
 ReplySchemas = new Schema({
 	creater: String, //User ID
+	createrInfo: {}, //UserSchema
 	message: String,
 	dateCreated: Date,
-	likes: [String], // list of ID of Users that liked this reply to comment
-	links: [String]
+	likes: [{}], // Users that liked this reply to comment
 });
 
 CommentSchemas = new Schema({
 	creater: String, //User ID
+	createrInfo: {}, //UserSchema
 	message: String,
 	dateCreated: Date,
-	likes: [String], // list of ID of Users that liked this comment
-	links: [String],
+	likes: [{}], // list of Users that liked this comment
 	replies: [ReplySchemas]
 });
 
 ReviewSchemas = new Schema({
 	creater: String, //User ID
+	createrInfo: {}, //UserSchema
 	content: String,
 	dateCreated: Date,
 	rating: Number, //It is a number in decimals between 0 and 10. Note this is a 100 point system.
-	likes: [String], // list of ID of Users that liked the review
-	links: [String],
-	shares: [String], // list of ID of Users that shared this review
+	likes: [{}], // list of ID of Users that liked the review
+	shares: [{}], // list of ID of Users that shared this review
 	comments: [CommentSchemas]
 });
 
@@ -102,11 +102,11 @@ ListingSchemas = new Schema ({
 
 PostSchemas = new Schema({  //posts are posted to a group or user
   creater: String, //User ID
+  createrInfo: {}, //UserSchema
   message: String,
   dateCreated: Date,
-  likes: [String], // list of ID of Users that liked the review
-  links: [String],
-  shares: [UserSchemas],
+  likes: [{}], // list of ID of Users that liked the review
+  shares: [{}],
   comments: [CommentSchemas],
   tags: {}
 });
@@ -169,26 +169,21 @@ function createComment(currentUser, newMessage, target) {
 	*/
 	var comment = new CommentModel({
 		creater: currentUser._id,
+		createrInfo: currentUser,
 		message: newMessage,
 		dateCreated: Date.now()
 	});
-	var Links = /(https?:\/\/[^\s]+)/g.exec(comment.message);
-	for (i = 0; i < Links.length; i++) {
-		comment.links.push(Links[i]);
-	}
+	
 	target.comments.push(comment);
 }
 
 function replyToComment(currentUser, newMessage, comment) {
 	var reply = new ReplyModel({
 		creater: currentUser._id,
+		createrInfo: currentUser,
 		message: newMessage,
 		dateCreated: Date.now()
 	});
-	var Links = /(https?:\/\/[^\s]+)/g.exec(reply.message);
-	for (i = 0; i < Links.length; i++) {
-		reply.links.push(Links[i]);
-	}
 	comment.replies.push(reply);
 }
 

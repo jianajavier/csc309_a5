@@ -41,18 +41,41 @@ function sortComments(condition, target) {
 	for (i = 0; i < target.comments; i++){
 		newArray.push(target.comments[i]);
 	}
-	if (condition == "Newest") {
+	if (condition == "Newest First") {
 		return newArray;
 	}
-	else if (condition == "Oldest") {
+	else if (condition == "Oldest First") {
 		return newArray.reverse();
 	}
-	else if (condition == "Best") {
+	else {  //condition == "Top Comments"
 		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)});
 	}
+	/*
 	else { //condition == "Worst"
 		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)}).reverse();
 	}
+	*/
+}
+
+function displayComment(target, comment) {
+	
+	var m = "<p>" + comment.message + "</p>";
+	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+        return '<a href="' + url + '">' + url + '</a>';
+    });
+	var displayC = "<div class=\"comment\" ";
+	displayC += "id=\"" + comment._id + "\" >";
+		displayC += "<div class=\"col-sm-2\">";
+			displayC += "<img src=\"uploads/"; 
+			displayC += cumment.createrInfo.profileimage;
+			displayC += "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
+		displayC += "</div>";
+		displayC += "<div class=\"col-sm-10\" id=\"content" + comment._id + "\">";
+			displayC += "<p id=\"username" + comment._id +"\">" + cumment.createrInfo.displayname + "</p>";
+			displayC += m;
+		displayC += "</div>";
+	displayC += "</div>";
+	$(target).append(displayC);
 }
 
 //Comment Helper Functions end here
@@ -1315,7 +1338,7 @@ function goToListingPage(listingid) {
             } else {
               $("#requestlisting").show();
             }
-			$("#listingcommentsheading").html("<h3>All Comments (" + data.comments.length + ")</h3>");
+			$("#listingcommentsheading").html("<h3>All Comments (" + commentCount(data) + ")</h3>");
 			$("#userprofileimage").attr('src', "uploads/" + currentuser.profileimage);
 			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);}); 
 			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();}); 
