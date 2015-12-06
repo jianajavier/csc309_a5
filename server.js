@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 var mongoose   = require('mongoose');
-mongoose.connect(' mongodb://bron:pizza*bagels1@ds053190.mongolab.com:53190/heroku_b01vwltc');
+mongoose.connect('mongodb://bron:pizza*bagels1@ds053190.mongolab.com:53190/heroku_b01vwltc');
 
 /* Configuration settings */
 app.use(express.static(path.join(__dirname, '/public'), {
