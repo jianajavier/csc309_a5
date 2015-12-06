@@ -66,7 +66,6 @@ function onSignIn(googleUser) {
     console.log('Email: ' + profile.getEmail());
 }
 
->>>>>>> 1b499a3de3e2b91507fdf5b7c6fffe25e9c1eddc
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
@@ -1196,10 +1195,6 @@ function getGallery(user) {
     addListing(user.gallery[i]);
   }
 }
-var sortComments = "Newest";
-$("#oldestcomments").on("click",function() { sortComments = "Oldest";});
-$("#newestcomments").on("click",function() { sortComments = "Newest";});
-$("#topcomments").on("click",function() { sortComments = "Best"; });
 
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
@@ -1209,6 +1204,8 @@ function goToListingPage(listingid) {
   setPageTitle("Listing");
 
   listingview = listingid;
+  
+  $("#postcomment, #cancelcomment").hide();
 
   //getGallery(user);
 
@@ -1232,8 +1229,30 @@ function goToListingPage(listingid) {
             }
 			$("#listingcommentsheading").html("<h3>All Comments (" + data.comments.length + ")</h3>");
 			$("#userprofileimage").attr('src', "uploads/" + currentuser.profileimage);
-			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);});
-			$("#sortcomments").html("Sort Comments By " + sortComments + "<span class=\"caret\"></span>");
+			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);}); 
+			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();}); 
+			$("#cancelcomment").on("click",function() {  $("#addcomment").val(""); $("#postcomment, #cancelcomment").hide();}); 
+			
+			var sortComments = "Newest First";
+			var sortButtonHTML = "<span class=\"caret\"></span>";
+			if (sessionStorage.getItem("sortMethod") != null) {
+				sortComments = sessionStorage.getItem("sortMethod");
+			}
+			$("#sortcomments").html(sortComments + sortButtonHTML);
+			
+			$("#oldestcomments").on("click",function() { 
+				sessionStorage.setItem("sortMethod", "Oldest First");
+				$("#sortcomments").html("Oldest First" + sortButtonHTML);
+			});
+			$("#newestcomments").on("click",function() { 
+				sessionStorage.setItem("sortMethod", "Newest First");
+				$("#sortcomments").html("Newest First" + sortButtonHTML);
+			});
+			$("#topcomments").on("click",function() { 
+				sessionStorage.setItem("sortMethod", "Top Comments"); 
+				$("#sortcomments").html("Top Comments" + sortButtonHTML);			
+			});
+			
             $("#listingpage").fadeIn();
 
         }
