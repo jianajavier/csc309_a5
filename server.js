@@ -689,7 +689,7 @@ app.post('/uploadimage/:id', function (req, res) {
 
   //var target_path = __dirname + '/public/uploads/';
   return UserModel.findOne({ _id: req.params.id }, function (err, user) {
-
+    var list;
     var listing = {};
     listing._id = mongoose.Types.ObjectId();
     listing.datePosted = Date.now();
@@ -726,7 +726,7 @@ app.post('/uploadimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(user);
+      return res.send(list);
     });
   });
 });

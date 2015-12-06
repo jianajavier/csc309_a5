@@ -692,7 +692,7 @@
           </form>
 
           <h1 id="editgalleryheader">Add to Gallery</h1>
-          <div style="margin-bottom:100px;" id="dropzone">
+          <div style="margin-bottom:100px;" id="dropzone" data-toggle="modal" href="#form-content" >
               <form action="/uploadimage" class="dropzone dz-clickable" method = "post" enctype = "multipart/form-data" id="demo-upload">
                 <!-- <input id = "image-upload"  type = "file" name="file">
                 <input type = "file" name = "file">-->
@@ -700,6 +700,27 @@
                       <br> <span class="note"></span>
                   </div>
               </form>
+          </div>
+
+          <div id="listinginfo" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                  <h3 id="myModalLabel">Edit Listing</h3>
+                </div>
+                <div class="modal-body">
+                  <form id = "setinitiallistinginfo"class="form-horizontal col-sm-12">
+                    <div class="form-group"><label>Title</label><input id = "listingtitleinitialedit" class="form-control required" placeholder="Title of listing" data-placement="top" data-trigger="manual" data-content="Must be at least 3 characters long, and must only contain letters." type="text"></div>
+                    <div class="form-group"><label>Description</label><textarea id = "listingdescrinitialedit" class="form-control" placeholder="Description of listing" data-placement="top" data-trigger="manual"></textarea></div>
+                    <div class="form-group"><button type="submit" class="btn btn-success pull-right">Post It!</button> <p class="help-block pull-left text-danger hide" id="form-error">&nbsp; The form is not valid. </p></div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                </div>
+              </div>
+            </div>
           </div>
           <!--
           <form id="newProfilePic" enctype="multipart/form-data" action="/users/uploadprofile" method="post">

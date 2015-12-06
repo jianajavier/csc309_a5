@@ -629,6 +629,22 @@ $(document).ready(function(){
     goToEditListingPage();
   });
 
+  $("#setinitiallistinginfo").submit(function(e) {
+      e.preventDefault();
+      $.ajax({
+        type: "PUT",
+        url: "/listings/update/" + listingview +"/"+currentuser._id,
+        data: {
+          title : $("#listingtitleinitialedit").val(),
+          description : $("#listingdescrinitialedit").val()
+        },
+        success: function(data) {
+          //listingview = data._id;
+        }
+      });
+      $('#listinginfo').modal('toggle');
+    });
+
   var uploader = new Dropzone('#demo-upload');
 
   uploader.on('success', function (file, resp) {
@@ -642,7 +658,11 @@ $(document).ready(function(){
       type: 'POST',
       data: { name : resp.filename+"" },
       success: function(response) {
-        currentuser = response;
+        setCurrentUser();
+        //currentuser = response;
+        //set listingview
+        listingview = response._id;
+        $("#listinginfo").modal('toggle');
       }
     });
   });
@@ -1335,6 +1355,7 @@ function setCurrentUser() {
   $.ajax({
       type: "GET",
       url: "/users/verify-email/"+currentuser.email+"/none",
+      async: false,
       success: function(data){
         if (data) {
           currentuser = data;
