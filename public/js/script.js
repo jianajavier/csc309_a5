@@ -464,27 +464,10 @@ $(document).ready(function(){
 		success: function(data) {
 			var dropdownHTML = "";
 			$.each(data, function(index, listingArt) {
-				dropdownHTML += "<option class='littleHover' data-img='uploads/"+listingArt.mainPicture+"' value='"+listingArt._id+"'>"+listingArt.title+"</option>";
+				dropdownHTML += "<option data-img='uploads/"+listingArt.mainPicture+"' value='"+listingArt._id+"'>"+listingArt.title+"</option>";
 			});
 			dropdownHTML += "<option value='mystery'>Mystery trade</option>";
-			$("#tradeItem").html(dropdownHTML);
-			
-			$(document).on('change', '#tradeItem', function(){
-				console.log(this.value);
-			});
-					
-			$("#tradeItem").on("mouseover", "option", function(e) {
-				var target = $(e.target);
-					$("#tradeItem").popover("destroy");
-					$("#tradeItem").popover({
-						html: true,
-						trigger: "hover",
-						content: function () {
-							return "<img src='"+$(this).data("img")+"' />";
-						}
-					}).popover("show");
-			});
-			
+			$("#tradeItem").html(dropdownHTML);	
 		}
 	  });
 	  
