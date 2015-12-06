@@ -536,6 +536,7 @@
                 </div>
             </div>
         </div>
+		
         <style>
         /*For hovering over pictures in gallery. Move this later.*/
         .hovereffect {
@@ -619,9 +620,35 @@
             transform: translate3d(0,0,0);
           }
         </style>
+		<div class="row">
         <div id="listinglinks">
 
         </div> <!--Populated dynamically-->
+		</div>
+		<div id="listingcomments" class="container">
+		<div class="row"><div id ="listingcommentsheading"> </div></div>
+		<div class="row">
+			<div class="col-xs-1"><img src="" class="img-rounded" width="50" height="50" id="userprofileimage" /> </div>
+			<div class="col-lg-1"> 
+			  <input type="text" id="currentusercomment"></input>
+			</div>
+		</div>
+		<div class="row">
+			<div class="dropdown">
+				<button id="sortcomments" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+				Sort Comments By
+				<span class="caret"></span></button>
+				<ul class="dropdown-menu">
+				  <li id="oldestcomments"><a href="#">Oldest</a></li>
+                  <li id="newestcomments"><a href="#">Newest</a></li>
+                  <li id="topcomments"><a href="#">Best</a></li>
+				</ul>
+			</div>
+		</div>
+		 <div id="listingcommentlist">
+		 
+		 </div>
+		 </div>
       </div>
 
       <div id = "editlistingpage" class="container">

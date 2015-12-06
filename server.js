@@ -192,37 +192,6 @@ function replyToComment(currentUser, newMessage, comment) {
 	comment.replies.push(reply);
 }
 
-function likesCount(target) {
-	return target.likes.length;
-}
-
-function sharesCount(target) {
-	return target.shares.length;
-}
-
-function commentCount(target) {
-	return target.comments.length;
-}
-
-function sortComments(condition, target) {
-	var newArray = [];
-	for (i = 0; i < target.comments; i++){
-		newArray.push(target.comments[i]);
-	}
-	if (condition == "Newest") {
-		return newArray;
-	}
-	else if (condition == "Oldest") {
-		return newArray.reverse();
-	}
-	else if (condition == "Best") {
-		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)});
-	}
-	else { //condition == "Worst"
-		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)}).reverse();
-	}
-}
-
 //Add a new tag for searching purposes to a specified user
 function addNewTagToUser(tag, user) {
   user.tags[tag] = true;

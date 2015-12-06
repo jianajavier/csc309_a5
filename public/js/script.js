@@ -22,6 +22,41 @@ function showPosition(position) {
     loclng = position.coords.longitude;
 }
 
+//Comment Helper Functions begin here
+
+function likesCount(target) {
+	return target.likes.length;
+}
+
+function sharesCount(target) {
+	return target.shares.length;
+}
+
+function commentCount(target) {
+	return target.comments.length;
+}
+
+function sortComments(condition, target) {
+	var newArray = [];
+	for (i = 0; i < target.comments; i++){
+		newArray.push(target.comments[i]);
+	}
+	if (condition == "Newest") {
+		return newArray;
+	}
+	else if (condition == "Oldest") {
+		return newArray.reverse();
+	}
+	else if (condition == "Best") {
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)});
+	}
+	else { //condition == "Worst"
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)}).reverse();
+	}
+}
+
+//Comment Helper Functions end here
+
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
@@ -1131,6 +1166,10 @@ function getGallery(user) {
     addListing(user.gallery[i]);
   }
 }
+var sortComments = "Newest";
+$("#oldestcomments").on("click",function() { sortComments = "Oldest";});
+$("#newestcomments").on("click",function() { sortComments = "Newest";});
+$("#topcomments").on("click",function() { sortComments = "Best"; });
 
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
@@ -1161,7 +1200,10 @@ function goToListingPage(listingid) {
               console.log(pic);
               $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \"Listing\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\"Listing\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
             }
-
+			$("#listingcommentsheading").html("<h3>All Comments (" + data.comments.length + ")</h3>");
+			$("#userprofileimage").attr('src', "uploads/" + currentuser.profileimage);
+			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);});
+			$("#sortcomments").html("Sort Comments By " + sortComments + "<span class=\"caret\"></span>");
             $("#listingpage").fadeIn();
 
         }
