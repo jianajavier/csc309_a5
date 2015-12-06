@@ -3,14 +3,16 @@ path = require('path');
 var bodyParser  = require('body-parser');
 var express = require('express');
 var app = express();
-var formidable = require('formidable');
 var util = require('util');
 var fs = require('fs-extra');
 var multer = require('multer');
+var request = require('request');
 
 var upload = multer({
   dest: __dirname + '/public/uploads/'
 });
+
+var adminLogin = {'username': 'admin', 'password': 'admin'};
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -36,6 +38,10 @@ app.get('/', function(req, res) {
     res.render('index.html');
     console.log('root');
 });
+
+app.get('/admin', function(req, res) {
+    res.render('admin.html');
+})
 
 /* Creating the Schema */
 var Schema = mongoose.Schema;
@@ -282,6 +288,24 @@ app.get('/search/:tag', function (req, res) {
 
 
 /* CURD requests */
+// GET ALL USERS
+
+app.get('/admin/verifylogin/:username', function(req, res) {
+  if (req.params.username == adminLogin.username) {
+    res.send({'password': adminLogin.password});
+  }
+});
+
+app.get('/admin/all', function (req, res){
+  return UserModel.find(function (err, users) {
+    if (!err) {
+      return res.send(users);
+    } else {
+      return console.log(err);
+    }
+  });
+});
+
 
 // GET ALL USERS
 app.get('/users/all/:emailaddcount', function (req, res){
@@ -533,6 +557,41 @@ app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
 		});
 		res.send(user);
 	});
+});
+
+app.post('/users/googlelogin/:id/:email', function (req, res) {
+
+  request.get(
+    'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + req.params.id,
+    function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            UserModel.findOne({googleId: body.sub}, function (err, user) {
+              if (!err) {
+                if (user) {
+                  res.send(user);
+                } else {
+                  var newuser = new UserModel({
+                      email: req.params.email,
+                      password: "",
+                      description: "",
+                      displayname: "",
+                      type: "",
+                      profileimage: "default_profile_large.jpg",
+                      userbehaviour: { allcount: 0,
+                        specificcount: 0,
+                        deletecount: 0,
+                        addcount: 1,
+                        updatecount: 0,
+                        behaviourcount: 0
+                      },
+                      tags: { na:false }
+                  });
+                  req.send(newuser);
+                }
+              }
+            });
+        }
+    });
 });
 
 // VERIFY EMAIL LOGIN
