@@ -464,10 +464,27 @@ $(document).ready(function(){
 		success: function(data) {
 			var dropdownHTML = "";
 			$.each(data, function(index, listingArt) {
-				dropdownHTML += "<option value='"+listingArt._id+"'>"+listingArt.title+"</option>";
+				dropdownHTML += "<option class='littleHover' data-img='uploads/"+listingArt.mainPicture+"' value='"+listingArt._id+"'>"+listingArt.title+"</option>";
 			});
 			dropdownHTML += "<option value='mystery'>Mystery trade</option>";
 			$("#tradeItem").html(dropdownHTML);
+			
+			$(document).on('change', '#tradeItem', function(){
+				console.log(this.value);
+			});
+					
+			$("#tradeItem").on("mouseover", "option", function(e) {
+				var target = $(e.target);
+					$("#tradeItem").popover("destroy");
+					$("#tradeItem").popover({
+						html: true,
+						trigger: "hover",
+						content: function () {
+							return "<img src='"+$(this).data("img")+"' />";
+						}
+					}).popover("show");
+			});
+			
 		}
 	  });
 	  
@@ -738,47 +755,7 @@ function openInBoxMessage(msg) {
 	$("#inboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#receivedate").text("date: "+msg.dateCreated);
 	$("#inboxContent").text(msg.content);
-	if (msg.request) {	
-		var offerHTML;
-		if (msg.item.offer._id === 'mystery') {
-			offerHTML = "Offered <a href='#'>"+msg.item.offer.title+"</a>";
-		} else {
-			offerHTML = "Offered <a href='#' id='linktoOffer'>"+msg.item.offer.title+"</a>";
-		}
-		var interestHTML;
-		if (msg.item.interest._id === 'mystery') {
-			interestHTML = " to <a href='#'>"+msg.item.interest.title+"</a>";
-		} else {
-			interestHTML = " to <a href='#' id='linktoInterest'>"+msg.item.interest.title+"</a>";
-		}
-		
-		$("#inboxtradingInfo").html(offerHTML + interestHTML);
-		$("#linktoOffer").click(function(){
-			$.ajax({
-				type: "GET",
-				url: "/listing/users/"+msg.item.offer._id,
-				async: false,
-				success: function (data) {
-					viewing = data;
-				}
-			});
-			goToListingPage(msg.item.offer._id);
-		});
-		$("#linktoInterest").click(function(){
-			$.ajax({
-				type: "GET",
-				url: "/listing/users/"+msg.item.interest._id,
-				async: false,
-				success: function (data) {
-					viewing = data;
-				}
-			});
-			goToListingPage(msg.item.interest._id);
-		});
-		$("#inboxtradingInfo").show();
-	} else {
-		$("#inboxtradingInfo").hide();
-	}
+	printTradingInfo(msg, "#inboxtradingInfo");
 	$("#replyInbox").click(function() {
 		$("#messageHeader, #tradeSection").hide();
 		$("#replyHeader").show();
@@ -803,12 +780,59 @@ function openInBoxMessage(msg) {
 	}
 }
 
+// helper func to print the teading info in div that has id divID
+function printTradingInfo(msg, divID) {
+	if (msg.request) {	
+		var offerHTML;
+		if (msg.item.offer._id === 'mystery') {
+			offerHTML = "Offered <a href='#'>"+msg.item.offer.title+"</a>";
+		} else {
+			offerHTML = "Offered <a href='#' class='linktoOffer'>"+msg.item.offer.title+"</a>";
+		}
+		var interestHTML;
+		if (msg.item.interest._id === 'mystery') {
+			interestHTML = " to <a href='#'>"+msg.item.interest.title+"</a>";
+		} else {
+			interestHTML = " to <a href='#' class='linktoInterest'>"+msg.item.interest.title+"</a>";
+		}
+		
+		$(divID).html(offerHTML + interestHTML);
+		$(".linktoOffer").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.offer._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.offer._id);
+		});
+		$(".linktoInterest").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.interest._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.interest._id);
+		});
+		$(divID).show();
+	} else {
+		$(divID).hide();
+	}
+}
+
 function openOutBoxMessage(msg) {
 	$("#messageBoxOutbox").show();
 	$("#outboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
 	$("#outboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#sentdate").text("date: "+msg.dateCreated);
 	$("#outboxContent").text(msg.content);
+	
+	printTradingInfo(msg, "#outboxtradingInfo");
 }
 
 function readFile(input) {
