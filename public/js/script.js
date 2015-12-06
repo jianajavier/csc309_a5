@@ -1,11 +1,13 @@
 var login = 0; //0 if logging in, 1 if signing up
 var currentuser;
 var fromlogin = true;
-var re;
+var userReply;
+var userRequest;
 var viewing; //the persons profile being viewed
 var loclat = 0;
 var loclng = 0;
 var listingview; //id of listing being viewed
+var msgview;	// the message being viewed
 
 getLocation();
 
@@ -25,7 +27,7 @@ function showPosition(position) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
+  $("#tradeSection, #homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
 
 
   // LOGIN VIEW
@@ -259,10 +261,11 @@ $(document).ready(function(){
   
   $("#messageuser").click(function() {
 	  $("#messageHeader").show();
-	  $("#replyHeader").hide();
+	  $("#replyHeader, #tradeSection").hide();
 	  $("#recipient").text("To: " + viewing.displayname); 
 	  $("#messageText").val("");
-	  re = false;
+	  userReply = false;
+	  userRequest = false;
   });
   
   $("#changePasswordForm").submit(function (event) {
@@ -302,6 +305,35 @@ $(document).ready(function(){
   // MESSAGE USER
   $("#messageForm").submit(function(event) {
 	  event.preventDefault();
+	  
+	  
+	  var tempOfferID = "", tempOfferTitle = "";
+	  var tempInterestID = "", tempInterestTitle = "";
+	  
+	  if (!userReply) {
+		if (userRequest) {
+			var interestTitle;
+			  $.ajax({
+				type: "GET",
+				async: false,
+				url: "/listing/"+listingview,
+				success: function(data) {
+					interestTitle = data.title;
+				}
+			  });
+			tempOfferID = $("#tradeItem option:selected").attr("value");
+			tempOfferTitle = $("#tradeItem option:selected").text();
+			tempInterestID = listingview;
+			tempInterestTitle = interestTitle;
+		}
+	  } else {
+		  // When it is a reply, just copy the info from previous message
+		  tempOfferID = msgview.item.offer._id;
+		  tempOfferTitle = msgview.item.offer.title;
+		  tempInterestID = msgview.item.interest._id;
+		  tempInterestTitle = msgview.item.interest.title;
+	  }
+	  
 	  $.ajax({
 		type: "PUT",
 		url: "/users/messages/send",
@@ -309,8 +341,18 @@ $(document).ready(function(){
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
-			request: false,
-			reply: re
+			request: userRequest,
+			item: {
+				offer: {
+					_id: tempOfferID,
+					title: tempOfferTitle
+				},
+				interest: {
+					_id: tempInterestID,
+					title: tempInterestTitle
+				}
+			},
+			reply: userReply
 		}
 	  }).always(function() {
 		  console.log("run");
@@ -408,6 +450,37 @@ $(document).ready(function(){
     });
   });
 
+  $("#requestlisting").click(function () {
+	  console.log("requestListing");
+	  $("#messageHeader").show();
+	  $("#replyHeader").hide();
+	  $("#recipient").text("To: " + viewing.displayname); 
+	  $("#messageText").val("");
+	  userRequest = true;
+	  $("#tradeSection").show();
+	  $.ajax({
+		type: "GET",
+		url: "/users/messages/gallery/"+currentuser._id,
+		success: function(data) {
+			var dropdownHTML = "";
+			$.each(data, function(index, listingArt) {
+				dropdownHTML += "<option value='"+listingArt._id+"'>"+listingArt.title+"</option>";
+			});
+			dropdownHTML += "<option value='mystery'>Mystery trade</option>";
+			$("#tradeItem").html(dropdownHTML);
+		}
+	  });
+	  
+	  
+	  $.ajax({
+		type: "GET",
+		url: "/listing/"+listingview,
+		success: function(data) {
+			$("#targetListing").text(data.title);
+			$("#targetListing").attr("val", data._id);
+		}
+	  });
+  });
 
   $("#logout").click(function(){
     $("#viewbehaviour").fadeOut();
@@ -665,13 +738,56 @@ function openInBoxMessage(msg) {
 	$("#inboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#receivedate").text("date: "+msg.dateCreated);
 	$("#inboxContent").text(msg.content);
+	if (msg.request) {	
+		var offerHTML;
+		if (msg.item.offer._id === 'mystery') {
+			offerHTML = "Offered <a href='#'>"+msg.item.offer.title+"</a>";
+		} else {
+			offerHTML = "Offered <a href='#' id='linktoOffer'>"+msg.item.offer.title+"</a>";
+		}
+		var interestHTML;
+		if (msg.item.interest._id === 'mystery') {
+			interestHTML = " to <a href='#'>"+msg.item.interest.title+"</a>";
+		} else {
+			interestHTML = " to <a href='#' id='linktoInterest'>"+msg.item.interest.title+"</a>";
+		}
+		
+		$("#inboxtradingInfo").html(offerHTML + interestHTML);
+		$("#linktoOffer").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.offer._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.offer._id);
+		});
+		$("#linktoInterest").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.interest._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.interest._id);
+		});
+		$("#inboxtradingInfo").show();
+	} else {
+		$("#inboxtradingInfo").hide();
+	}
 	$("#replyInbox").click(function() {
-		$("#messageHeader").hide();
+		$("#messageHeader, #tradeSection").hide();
 		$("#replyHeader").show();
 		$("#recipient").text("To: "+ msg.sender.displayname);
 		$("#messageText").val("");
+		msgview = msg;
 		viewing = msg.sender;
-		re = true;
+		userReply = true;
+		userRequest = msg.request;
 	});
 	if (msg.unread) {
 		$.ajax({
@@ -1135,7 +1251,13 @@ function getGallery(user) {
 
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
-  $("#deleteuser").hide();
+  $("#editlisting, #deletelisting, #requestlisting").hide();
+  
+  if (currentuser.email === viewing.email) {
+	  $("#editlisting, #deletelisting").show();
+  } else {
+	  $("#requestlisting").show();
+  }
 
   $("#homepage").fadeOut();
   setPageTitle("Listing");

@@ -176,7 +176,7 @@
         <button id="deleteuser">Delete user</button>
         -->
 
-		<button id="messageuser" type="button" data-toggle="modal" data-target="#messageModal">Message user</button>
+		<button id="messageuser" class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#messageModal">Message user</button>
         <p style="margin-top:50px;" id="description"></p>
         <p id ="profileemail"></p>
         <h3 id ="gallery">Gallery</h3>
@@ -325,6 +325,13 @@
 					<div class="modal-body">
 						<h5 id="recipient">To:</h5>
 						<form id="messageForm">
+							<div id="tradeSection" class="form-group">
+								<label for="tradeItem">Select your offer art:</label>
+								<select class="form-control" id="tradeItem"></select>
+								<hr>
+								<h5><strong>Interested art: </strong><span id="targetListing"></span></h5>
+								<hr>
+							</div>
 							<div class="form-group">
 								<label class="control-label" for="messageText">Message:</label>
 								<textarea class="form-control" id="messageText"></textarea>
@@ -429,6 +436,7 @@
         </div>
       </div>
 	  
+	  <!--Message Page-->
 	<div id="messagePage" class="container">
 		<ul class="nav nav-tabs">
 			<li class="active"><a id="inboxTab" data-toggle="tab" href="#inbox">Inbox</a><li>
@@ -451,6 +459,7 @@
 					<hr><div id="inboxFrom"></div><hr>
 					<div id="inboxTo"></div><hr>
 					<div id="receivedate"></div><hr>
+					<div id="inboxtradingInfo"></div><hr>
 					<div id="inboxContent"></div>
 					
 				</div>
@@ -471,6 +480,7 @@
 					<hr><div id="outboxFrom"></div><hr>
 					<div id="outboxTo"></div><hr>
 					<div id="sentdate"></div><hr>
+					<div id="outboxtradingInfo"></div>
 					<div id="outboxContent"></div>
 					
 				</div>
@@ -498,7 +508,7 @@
         <h3 style="margin-bottom:50px;" id="listingtitle"></h3>
         <button class="btn btn-info btn-sm" id="editlisting">Edit Listing</button>
         <button class="btn btn-info btn-sm" id="deletelisting">Delete Listing</button>
-        <button class="btn btn-info btn-sm" id="requestlisting">Request Listing</button>
+        <button class="btn btn-info btn-sm" id="requestlisting" type="button" data-toggle="modal" data-target="#messageModal">Request Listing</button>
         <p style="margin-top:50px;" id="listingdescription"></p>
         <h3 id ="listinggallery">Listing Gallery</h3>
 
