@@ -66,7 +66,6 @@ function onSignIn(googleUser) {
     console.log('Email: ' + profile.getEmail());
 }
 
->>>>>>> 1b499a3de3e2b91507fdf5b7c6fffe25e9c1eddc
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
