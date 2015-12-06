@@ -22,12 +22,65 @@ function showPosition(position) {
     loclng = position.coords.longitude;
 }
 
+//Comment Helper Functions begin here
+
+function likesCount(target) {
+	return target.likes.length;
+}
+
+function sharesCount(target) {
+	return target.shares.length;
+}
+
+function commentCount(target) {
+	return target.comments.length;
+}
+
+function sortComments(condition, target) {
+	var newArray = [];
+	for (i = 0; i < target.comments; i++){
+		newArray.push(target.comments[i]);
+	}
+	if (condition == "Newest") {
+		return newArray;
+	}
+	else if (condition == "Oldest") {
+		return newArray.reverse();
+	}
+	else if (condition == "Best") {
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)});
+	}
+	else { //condition == "Worst"
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)}).reverse();
+	}
+}
+
+//Comment Helper Functions end here
+
+function onSignIn(googleUser) {
+    gapi.auth2.init();
+    var profile = googleUser.getBasicProfile();
+    console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+    console.log('Name: ' + profile.getName());
+    console.log('Image URL: ' + profile.getImageUrl());
+    console.log('Email: ' + profile.getEmail());
+}
+
+>>>>>>> 1b499a3de3e2b91507fdf5b7c6fffe25e9c1eddc
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
   $("#homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
 
-
+  function onSignIn(googleUser) {
+    alert("gothere");
+    gapi.auth2.init();
+    var profile = googleUser.getBasicProfile();
+    console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+    console.log('Name: ' + profile.getName());
+    console.log('Image URL: ' + profile.getImageUrl());
+    console.log('Email: ' + profile.getEmail());
+  }
   // LOGIN VIEW
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
@@ -163,15 +216,27 @@ $(document).ready(function(){
         success: function(data){
           if (data) {
             $("#userSearchResults").html("<h3>Users that match your search:</h3>");
-            for(var i = 0; i < data.length; i++){
+            for(var i = 0; i < data[0].length; i++){
               $("#userSearchResults").append(
                 "<div class='panel panel-primary'>"
                   + "<div class='panel-heading'>"
-                      + "<h3 class='panel-title'>" + data[i].email +"</h3>"
+                      + "<h3 class='panel-title'>" + data[0][i].email +"</h3>"
                   + "</div>"
                   + "<div class='panel-body'>"
-                      //+ "<img src='" + data[i].)
-                      + "<p>" + data[i].description + "</p>"
+                      + "<img src='" + data[0][i].profileimage + "'>"
+                      + "<p>" + data[0][i].description + "</p>"
+                  + "</div>"
+                + "</div>");
+            }
+            $("#artSearchResults").html("<h3>Artworks that match your search:</h3>");
+            for(var i = 0; i < data[1].length; i++){
+              $("#artSearchResults").append(
+                "<div class='panel panel-primary'>"
+                  + "<div class='panel-heading'>"
+                      + "<h3 class='panel-title'>" + data[1][i].title +"</h3>"
+                  + "</div>"
+                  + "<div class='panel-body'>"
+                      + "<img src='" + data[1][i].mainPicture +"'>"
                   + "</div>"
                 + "</div>");
             }
@@ -1186,6 +1251,10 @@ function getGallery(user) {
     addListing(user.gallery[i]);
   }
 }
+var sortComments = "Newest";
+$("#oldestcomments").on("click",function() { sortComments = "Oldest";});
+$("#newestcomments").on("click",function() { sortComments = "Newest";});
+$("#topcomments").on("click",function() { sortComments = "Best"; });
 
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
@@ -1229,7 +1298,10 @@ function goToListingPage(listingid) {
             } else {
               $("#requestlisting").show();
             }
-
+			$("#listingcommentsheading").html("<h3>All Comments (" + data.comments.length + ")</h3>");
+			$("#userprofileimage").attr('src', "uploads/" + currentuser.profileimage);
+			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);});
+			$("#sortcomments").html("Sort Comments By " + sortComments + "<span class=\"caret\"></span>");
             $("#listingpage").fadeIn();
 
         }
