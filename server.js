@@ -218,26 +218,31 @@ app.post('/test/addtag', function (req, res) {
   });
 });
 
-app.get('/search/:tag', function (req, res) {
-  var results = [];
-  return UserModel.find(function(err, users) {
-    console.log(users.length);
-    for(var i = 0; i < users.length; i++) {
 
-      if(users[i].tags[req.params.tag]) {
-        console.log(users[i].tags);
-        console.log(users[i].tags[req.params.tag]);
-        results.push(users[i]);
+app.get('/search/:tag', function (req, res) {
+  var userResults = [];
+  var postResults = [];
+  var tags = req.params.tag.split(" ");
+  return UserModel.find(function(err, users) {
+    for(var i = 0; i < users.length; i++) {
+      for(var j = 0; j < tags.length; j++) {
+        if(users[i].tags[tags[j]]) {
+          console.log(users[i].tags);
+          userResults.push(users[i]);
+          break;
+        }
       }
-      //for(var j = 0; j < users[i].posts.length; j++) {
-        //if(users[i].posts[j].tags.tag) {
-          //results.push(users[i].posts[j]);
-        //}
-      //}
+      for(var k = 0; k < users[i].posts.length; k++) {
+        for(var m = 0; m < tags.length; m++) {
+          if(users[i].posts[k].tags[tags[m]]) {
+            postResults.push(users[i].posts[k]);
+          }
+        }
+      }
     }
     if (!err) {
-      console.log(results);
-      return res.send(results);
+      console.log([userResults, postResults]);
+      return res.send([userResults, postResults]);
     } else {
       return console.log(err);
     }
