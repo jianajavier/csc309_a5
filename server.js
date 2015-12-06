@@ -116,12 +116,12 @@ MessageSchemas = new Schema({
 	sender: {
 		_id: Schema.Types.ObjectId,
 		displayname: String,
-		email: String 
+		email: String
 		},
 	receiver: {
 		_id: Schema.Types.ObjectId,
 		displayname: String,
-		email: String 
+		email: String
 		},
 	dateCreated: Date,
 	content: String,
@@ -134,7 +134,7 @@ UserSchemas = new Schema({
     email: String,
     password: String,
     description: String, default : "",
-    profileimage: String, default : "default_profile_large.jpg",
+    profileimage: ListingSchemas,
     gallery: [ListingSchemas],
     displayname: String, default: "",
     type: String, default: "",
@@ -359,13 +359,20 @@ app.post('/users', function (req, res){
     var user;
     console.log("POST: ");
 
+    listing = {};
+    listing.datePosted = Date.now();
+    listing.description = "";
+    listing.mainPicture = "default_profile_large.jpg";
+    //listing.owner = user._id,
+    listing.title ="Listing"
+
     user = new UserModel({
       email: req.body.email,
       password: req.body.password,
       description: "",
       displayname: "",
+      //profileimage: list,
       type: userType,
-      profileimage: "default_profile_large.jpg",
       userbehaviour: { allcount: 0,
         specificcount: 0,
         deletecount: 0,
@@ -376,6 +383,36 @@ app.post('/users', function (req, res){
       tags: { na:false }
     });
 
+    console.log("USER ID"+user._id);
+    listing = {};
+    listing.datePosted = Date.now();
+    listing.description = "";
+    listing.mainPicture = "default_profile_large.jpg";
+    listing.owner = user._id;
+    listing.title ="Listing";
+    listing.profilepic = 1;
+    listing._id =mongoose.Types.ObjectId();
+
+
+    list = new ListingModel({
+      datePosted: listing.datePosted,
+      description: listing.description,
+      mainPicture: listing.mainPicture,
+      owner: user._id,
+      title: listing.title,
+      profilepic: listing.profilepic,
+      _id: listing._id
+    });
+    list.save(function (err){
+      if (err) {
+        console.log("listing" + err);
+      } else {
+        console.log("created");
+      }
+    });
+
+    user.gallery.push(listing);
+    user.profileimage = listing;
     user.userbehaviour.sessioninfo.push(session);
 
     user.save(function (err) {
@@ -727,6 +764,23 @@ app.post('/uploadlistingimage/:id', function (req, res) {
   //var target_path = __dirname + '/public/uploads/';
   return ListingModel.findOne({ _id: req.params.id }, function (err, listing) {
 
+    UserModel.findOne({ _id: listing.owner }, function (err, user) {
+
+      for (var i = 0; i < user.gallery.length; i++) {
+        if (user.gallery[i]._id === listing._id) {
+          user.gallery[i].morePictures.push(req.body.name +"");
+        }
+      }
+
+      user.save(function (err) {
+        if (!err) {
+          console.log("USER UPDATE MORE PICTURES:" + user);
+        } else {
+          console.log(err);
+        }
+      });
+    });
+
     var filelistingname = req.body.name;
 
     listing.morePictures.push(filelistingname);
@@ -754,7 +808,9 @@ app.post('/uploadmainlistingimage/:id', function (req, res) {
 
       for (var i = 0; i < user.gallery.length; i++) {
         if (user.gallery[i]._id === listing._id) {
-          user.gallery[i].mainPicture = req.body.name
+          user.gallery[i].mainPicture = req.body.name;
+        } if (user.gallery[i].profilepic === 1){
+          user.profileimage.mainPicture = req.body.name;
         }
       }
 
@@ -787,27 +843,27 @@ app.post('/uploadprofileimage/:id', function (req, res) {
   return UserModel.findOne({ _id: req.params.id }, function (err, user) {
 
   //it will add to listingmodel without deleting tho
-    list = new ListingModel({
-      datePosted: Date.now(),
-      description: "",
-      mainPicture: req.body.name,
-      owner: user._id,
-      title: "Listing",
-      profilepic: 1,
-      _id: mongoose.Types.ObjectId()
+  ListingModel.findOne({ _id: user.profileimage._id }, function (err, listing) {
+
+      listing.mainPicture = req.body.name;
+      listing.save(function (err) {
+        if (!err) {
+          console.log("updated main listing image");
+        } else {
+          console.log(err);
+        }
+        //res.send("found one!!");
+      });
     });
-    //console.log(list._id);
-    list.save(function (err) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("created listing");
+
+    for (var i = 0; i < user.gallery.length; i++){
+      if (user.gallery[i].profilepic === 1) {
+        user.gallery[i].mainPicture = req.body.name;
       }
-    });
+    }
+    user.profileimage.mainPicture = req.body.name;
 
-    user.profileimage = req.body.name;
-
-    return user.save(function (err) {
+    user.save(function (err) {
       if (!err) {
         console.log("updated profile image");
       } else {
@@ -816,7 +872,7 @@ app.post('/uploadprofileimage/:id', function (req, res) {
       return res.send(user);
     });
   });
-  return res.send("sent");
+  //return res.send("sent");
 });
 
 app.post('/uploadimage', upload.single('file'), function (req, res) {
@@ -860,7 +916,7 @@ app.delete('/listing/:id/:userid', function (req, res){
 
     user.save(function (err) {
       if (!err) {
-        console.log("updated gallery");
+        console.log("deleted from gallery");
       } else {
         console.log(err);
       }
@@ -880,7 +936,34 @@ app.delete('/listing/:id/:userid', function (req, res){
 });
 
 // UPDATE LISTING INFORMATION
-app.put('/listings/update/:listingid', function (req, res){
+app.put('/listings/update/:listingid/:userid', function (req, res){
+  UserModel.findOne({ _id: req.params.userid }, function (err, user) {
+
+    //Doesnt account for updating main profile listing
+    for (var i = 0; i < user.gallery.length; i++) {
+      if (user.gallery[i]._id === req.params.listingid) {
+        //delete listing
+        console.log("USER"+user.gallery[i]);
+        var person = user.gallery[i];
+        if (req.body.title) user.gallery[i].title = req.body.title;
+        if (req.body.description) user.gallery[i].description = req.body.description;
+      }
+      if (user.gallery[i].profilepic === 1){
+        if (req.body.title) user.profileimage.title = req.body.title;
+        if (req.body.description) user.profileimage.description = req.body.description;
+      }
+    }
+
+    user.save(function (err) {
+      if (!err) {
+        console.log("updated gallery listing infos");
+        console.log(person);
+      } else {
+        console.log(err);
+      }
+    });
+  });
+
   return ListingModel.findOne({ _id: req.params.listingid }, function (err, listing) {
 
     if (req.body.title) listing.title = req.body.title;
