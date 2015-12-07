@@ -1366,7 +1366,7 @@ function moveToEditPage(user, own) {
   $.ajax({
       type: "GET",
       async: false,
-      url: "/getusers/"+currentuser._id,
+      url: "/getuser/"+currentuser._id,
       success: function(data){
         if (data) {
           currentuser = data;
