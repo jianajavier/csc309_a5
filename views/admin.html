@@ -6,19 +6,15 @@
       <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/flatly/bootstrap.min.css" rel="stylesheet" integrity="sha256-sHwgyDk4CGNYom267UJX364ewnY4Bh55d53pxP5WDug= sha512-mkkeSf+MM3dyMWg3k9hcAttl7IVHe2BA1o/5xKLl4kBaP0bih7Mzz/DBy4y6cNZCHtE2tPgYBYH/KtEjOQYKxA==" crossorigin="anonymous">
 
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo= sha512-2e8qq0ETcfWRI4HJBzQiA3UoyFk6tbNyG+qSaIBZLyW9Xf3sWZHN/lxe9fTh1U45DpPf07yj94KsUHHWe4Yk1A==" crossorigin="anonymous"></script>
-      <script src="./js/script.js" type="text/javascript"></script>
+      <script src="./js/admin.js" type="text/javascript"></script>
       <link href="./css/dropzone.css" rel="stylesheet">
       <script src="./js/dropzone.js" type="text/javascript"></script>
 
       <link rel="stylesheet" href="./css/blueimp-gallery.min.css">
       <script src="./js/blueimp-gallery.min.js"></script>
 
-      <script src="https://apis.google.com/js/platform.js" async defer></script>
-
-      <meta name="google-signin-client_id" content="982608279960-s4dmp05v6i98tqp0u2dr8gnuep1mda1m.apps.googleusercontent.com">
-
       <meta charset="utf-8">
-      <title>A5</title>
+      <title>A5 Admin</title>
     </head>
 
     <body>
@@ -27,7 +23,7 @@
       <nav class="navbar navbar-default">
         <div class="container-fluid">
           <div class="navbar-header">
-            <a class="navbar-brand" id="logo" href="#">SketchSwap</a>
+            <a class="navbar-brand" href="#">SketchSwap</a>
           </div>
           <div>
             <ul class="nav navbar-nav nav-tabs navbar-right">
@@ -40,9 +36,9 @@
                 </form>
               </li>
               <li id="navMessage" class="loggedInNav"><a href="#">Messages<span id="newMessage" class="badge badge-important"></span></a></li>
-              <li class="loggedInNav dropdown open">
-                <a class="dropdown-toggle" type="button" data-toggle="dropdown">Profile
-                <span class="caret"></span></a>
+              <li class="loggedInNav">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Profile
+                <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li class="navprofile"><a href="#">Profile Page</a></li>
                   <li class="naveditprofile"><a href="#">Edit Profile</a></li>
@@ -56,54 +52,31 @@
       </nav>
 
       <div id="notSearch">
-      <!--Login or Signup Screen-->
-      <div class="container" id="loginOrSignupScreen">
+
+      <div class="container" id="adminLoginScreen">
         <div class="row">
           <div class="col-md-6">
-            <div class="jumbotron" style="height:450px">
-              <h1>Welcome to SketchSwap</h1>
-              <p>Create and trade with other artists - Share your art with the world!</p>
-              <p>
-                  <button id="loginbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Login</button>
-                  <button id="signupbutton" class="btn btn-lg btn-primary" type="button" data-toggle="modal" data-target="#loginOrSignupModal">Signup</button>
-              </p>
-              <div class="g-signin2" data-onsuccess="onSignIn"></div>
-            </div>
+            <form class="form-horizontal" role="form" id="adminLoginForm">
+                  <div class="form-group row">
+                    <div class="col-md-6">
+                      <label class="control-label" for="emailinput">Username:</label>
+                      <input type="text" class="form-control" id="usernameinput" placeholder="Username goes here">
+                    </div>
+                  </div>
+
+                  <div class="form-group row">
+                    <div class="col-md-6">
+                      <label class="control-label" for="passwordinput">Password:</label>
+                      <input type="password" class="form-control" id="passwordinput" placeholder="Password goes here">
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-default">Submit</button>
+                  <label id="errormessage"></label>
+                </form>
           </div>
 
-          <div class="col-md-6">
-            <div id="loginOrSignupPictures" class="carousel slide" data-ride="carousel">
-
-              <ol class="carousel-indicators">
-                <li data-target="#loginOrSignupPictures" data-slide-to="0" class="active"></li>
-                <li data-target="#loginOrSignupPictures" data-slide-to="1"></li>
-                <li data-target="#loginOrSignupPictures" data-slide-to="2"></li>
-              </ol>
-
-              <div class="carousel-inner" role="listbox" style="height:450px">
-                <div class="item active">
-                  <img src="./uploads/lionsSketch.jpg" alt="Sketch" style="height:500px; width:auto">
-                </div>
-
-                <div class="item">
-                  <img src="./uploads/bowlSculpture.jpg" alt="Sculpture" style="height:500px; width:auto">
-                </div>
-
-                <div class="item">
-                  <img src="./uploads/watercolour.jpg" alt="Painting" style="height:500px; width:auto">
-                </div>
-              </div>
-
-              <!-- Left and right controls -->
-              <a class="left carousel-control" href="#loginOrSignupPictures" role="button" data-slide="prev">
-                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-              </a>
-              <a class="right carousel-control" href="#loginOrSignupPictures" role="button" data-slide="next">
-                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-              </a>
-
-            </div>
-          </div>
+          
         </div>
       </div>
 
@@ -152,296 +125,17 @@
       </div>
 
 
-    <!--
-      <div id="homepageadmin" class="container">
-        <table id="usertable">
-          <tr>
-            <th>User e-mail</th>
-            <th>Display name</th>
-          </tr>
-        </table>
-      </div>
-    -->
-    <style>
-    .pre-scrollable {
-    max-height: 800px;
-    height: 800px;
-    overflow-y: scroll;
-    }
-    </style>
 
       <div id="homepage" class="container">
-        <div class="row">
-
-          <div class = "col-xs-6">
-            <h3 id ="recommendations">Recommendations</h3>
-              <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
-             <div class="pre-scrollable">
-            <div id="blueimp-gallery-home" class="blueimp-gallery blueimp-gallery-controls">
-                <div class="slides"></div>
-                <h3 class="title"></h3>
-                <a class="prev">‹</a>
-                <a class="next">›</a>
-                <a class="close">×</a>
-                <a class="play-pause"></a>
-                <ol class="indicator"></ol>
-
-                <!-- The modal dialog, which will be used to wrap the lightbox content -->
-                <div class="modal fade">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title"></h4>
-                            </div>
-                            <div class="modal-body next"></div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default pull-left prev">
-                                    <i class="glyphicon glyphicon-chevron-left"></i>
-                                    Previous
-                                </button>
-                                <button type="button" class="btn btn-primary next">
-                                    Next
-                                    <i class="glyphicon glyphicon-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-              </div>
-
-
-            <style>
-            /*For hovering over pictures in gallery. Move this later.*/
-            .hovereffect {
-                width: 100%;
-                height: 100%;
-                float: left;
-                overflow: hidden;
-                position: relative;
-                text-align: center;
-                cursor: default;
-              }
-
-              .hovereffect .overlay {
-                position: absolute;
-                overflow: hidden;
-                width: 80%;
-                height: 80%;
-                left: 10%;
-                top: 10%;
-                border-bottom: 1px solid #FFF;
-                border-top: 1px solid #FFF;
-                -webkit-transition: opacity 0.35s, -webkit-transform 0.35s;
-                transition: opacity 0.35s, transform 0.35s;
-                -webkit-transform: scale(0,1);
-                -ms-transform: scale(0,1);
-                transform: scale(0,1);
-              }
-
-              .hovereffect:hover .overlay {
-                opacity: 1;
-                filter: alpha(opacity=100);
-                -webkit-transform: scale(1);
-                -ms-transform: scale(1);
-                transform: scale(1);
-              }
-
-              .hovereffect img {
-                display: block;
-                position: relative;
-                -webkit-transition: all 0.35s;
-                transition: all 0.35s;
-              }
-
-              .hovereffect:hover img {
-                filter: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="filter"><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="linear" slope="0.6" /><feFuncG type="linear" slope="0.6" /><feFuncB type="linear" slope="0.6" /></feComponentTransfer></filter></svg>#filter');
-                filter: brightness(0.6);
-                -webkit-filter: brightness(0.6);
-              }
-
-              .hovereffect h2 {
-                text-transform: uppercase;
-                text-align: center;
-                position: relative;
-                font-size: 17px;
-                background-color: transparent;
-                color: #FFF;
-                padding: 1em 0;
-                opacity: 0;
-                filter: alpha(opacity=0);
-                -webkit-transition: opacity 0.35s, -webkit-transform 0.35s;
-                transition: opacity 0.35s, transform 0.35s;
-                -webkit-transform: translate3d(0,-100%,0);
-                transform: translate3d(0,-100%,0);
-              }
-
-              .hovereffect a, hovereffect p {
-                color: #FFF;
-                padding: 1em 0;
-                opacity: 0;
-                filter: alpha(opacity=0);
-                -webkit-transition: opacity 0.35s, -webkit-transform 0.35s;
-                transition: opacity 0.35s, transform 0.35s;
-                -webkit-transform: translate3d(0,100%,0);
-                transform: translate3d(0,100%,0);
-              }
-
-              .hovereffect:hover a, .hovereffect:hover p, .hovereffect:hover h2 {
-                opacity: 1;
-                filter: alpha(opacity=100);
-                -webkit-transform: translate3d(0,0,0);
-                transform: translate3d(0,0,0);
-              }
-            </style>
-
-            <div id="linkshome">
-              <!-- BRONWYNNE
-                <a href="images/banana.jpg" title="Banana">
-                    <img src="images/thumbnails/banana.jpg" alt="Banana">
-                </a>
-              -->
-            </div>
-          </div>
-        </div>
-        <div class="col-xs-6">
-          <h3 id ="Profile">Profile Gallery</h3>
-          <div class="pre-scrollable">
-              <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
-              <div id="blueimp-gallery-home-profile" class="blueimp-gallery blueimp-gallery-controls">
-                  <div class="slides"></div>
-                  <h3 class="title"></h3>
-                  <a class="prev">‹</a>
-                  <a class="next">›</a>
-                  <a class="close">×</a>
-                  <a class="play-pause"></a>
-                  <ol class="indicator"></ol>
-
-                  <!-- The modal dialog, which will be used to wrap the lightbox content -->
-                  <div class="modal fade">
-                      <div class="modal-dialog">
-                          <div class="modal-content">
-                              <div class="modal-header">
-                                  <button type="button" class="close" aria-hidden="true">&times;</button>
-                                  <h4 class="modal-title"></h4>
-                              </div>
-                              <div class="modal-body next"></div>
-                              <div class="modal-footer">
-                                  <button type="button" class="btn btn-default pull-left prev">
-                                      <i class="glyphicon glyphicon-chevron-left"></i>
-                                      Previous
-                                  </button>
-                                  <button type="button" class="btn btn-primary next">
-                                      Next
-                                      <i class="glyphicon glyphicon-chevron-right"></i>
-                                  </button>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-                </div>
-
-
-              <style>
-              /*For hovering over pictures in gallery. Move this later.*/
-              .hovereffect {
-                  width: 100%;
-                  height: 100%;
-                  float: left;
-                  overflow: hidden;
-                  position: relative;
-                  text-align: center;
-                  cursor: default;
-                }
-
-                .hovereffect .overlay {
-                  position: absolute;
-                  overflow: hidden;
-                  width: 80%;
-                  height: 80%;
-                  left: 10%;
-                  top: 10%;
-                  border-bottom: 1px solid #FFF;
-                  border-top: 1px solid #FFF;
-                  -webkit-transition: opacity 0.35s, -webkit-transform 0.35s;
-                  transition: opacity 0.35s, transform 0.35s;
-                  -webkit-transform: scale(0,1);
-                  -ms-transform: scale(0,1);
-                  transform: scale(0,1);
-                }
-
-                .hovereffect:hover .overlay {
-                  opacity: 1;
-                  filter: alpha(opacity=100);
-                  -webkit-transform: scale(1);
-                  -ms-transform: scale(1);
-                  transform: scale(1);
-                }
-
-                .hovereffect img {
-                  display: block;
-                  position: relative;
-                  -webkit-transition: all 0.35s;
-                  transition: all 0.35s;
-                }
-
-                .hovereffect:hover img {
-                  filter: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="filter"><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="linear" slope="0.6" /><feFuncG type="linear" slope="0.6" /><feFuncB type="linear" slope="0.6" /></feComponentTransfer></filter></svg>#filter');
-                  filter: brightness(0.6);
-                  -webkit-filter: brightness(0.6);
-                }
-
-                .hovereffect h2 {
-                  text-transform: uppercase;
-                  text-align: center;
-                  position: relative;
-                  font-size: 17px;
-                  background-color: transparent;
-                  color: #FFF;
-                  padding: 1em 0;
-                  opacity: 0;
-                  filter: alpha(opacity=0);
-                  -webkit-transition: opacity 0.35s, -webkit-transform 0.35s;
-                  transition: opacity 0.35s, transform 0.35s;
-                  -webkit-transform: translate3d(0,-100%,0);
-                  transform: translate3d(0,-100%,0);
-                }
-
-                .hovereffect a, hovereffect p {
-                  color: #FFF;
-                  padding: 1em 0;
-                  opacity: 0;
-                  filter: alpha(opacity=0);
-                  -webkit-transition: opacity 0.35s, -webkit-transform 0.35s;
-                  transition: opacity 0.35s, transform 0.35s;
-                  -webkit-transform: translate3d(0,100%,0);
-                  transform: translate3d(0,100%,0);
-                }
-
-                .hovereffect:hover a, .hovereffect:hover p, .hovereffect:hover h2 {
-                  opacity: 1;
-                  filter: alpha(opacity=100);
-                  -webkit-transform: translate3d(0,0,0);
-                  transform: translate3d(0,0,0);
-                }
-              </style>
-
-              <div id="linksownhome">
-
-
-                <!--
-                  <a href="images/banana.jpg" title="Banana">
-                      <img src="images/thumbnails/banana.jpg" alt="Banana">
-                  </a>
-                -->
-              </div>
-            </div>
-        </div>
+        <table class="table table-striped table-hover" id="usertable">
+          <thead>
+            <tr>
+              <th>User e-mail</th>
+              <th>Display name</th>
+            </tr>
+          </thead>
+        </table>
       </div>
-
-      </div>
-
-
 
       <div id="profilepage" class="container">
         <div class="" width= "100%">
@@ -462,7 +156,7 @@
         <button id="deleteuser">Delete user</button>
         -->
 
-		<button id="messageuser" class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#messageModal">Message user</button>
+		<button id="messageuser" type="button" data-toggle="modal" data-target="#messageModal">Message user</button>
         <p style="margin-top:50px;" id="description"></p>
         <p id ="profileemail"></p>
         <h3 id ="gallery">Gallery</h3>
@@ -476,7 +170,7 @@
             <a class="close">×</a>
             <a class="play-pause"></a>
             <ol class="indicator"></ol>
-
+		
             <!-- The modal dialog, which will be used to wrap the lightbox content -->
             <div class="modal fade">
                 <div class="modal-dialog">
@@ -595,6 +289,7 @@
                 <img src="images/thumbnails/apple.jpg" alt="Apple">
             </a>
           -->
+
           </div>
       </div>
 
@@ -610,13 +305,6 @@
 					<div class="modal-body">
 						<h5 id="recipient">To:</h5>
 						<form id="messageForm">
-							<div id="tradeSection" class="form-group">
-								<label for="tradeItem">Select your offer art:</label>
-								<select class="form-control" id="tradeItem"></select>
-								<hr>
-								<h5><strong>Interested art: </strong><span id="targetListing"></span></h5>
-								<hr>
-							</div>
 							<div class="form-group">
 								<label class="control-label" for="messageText">Message:</label>
 								<textarea class="form-control" id="messageText"></textarea>
@@ -659,12 +347,6 @@
             <label class="control-label" for="editdescription" id="deslabel">Description: </label>
             <textarea maxlength="500" rows="5" cols = "40" wrap="hard" id="editdescription" style="display:block;"></textarea>
           </div>
-          <h4 id="addtaglabel">Add Tags:</h3>
-          <div class="form-group">
-            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="taguser1" style="display:block;">
-            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="taguser2" style="display:block;">
-            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="taguser3" style="display:block;">
-          </div>
           <button type="submit" class="btn btn-info btn-sm" data-toggle="modal" data-target="#myModal"  id="updatebutton">Update Info</button>
           <!-- Modal -->
           <div class="modal fade" id="myModal" role="dialog">
@@ -705,7 +387,7 @@
           </form>
 
           <h1 id="editgalleryheader">Add to Gallery</h1>
-          <div style="margin-bottom:100px;" id="dropzone" data-toggle="modal" href="#form-content" >
+          <div style="margin-bottom:100px;" id="dropzone">
               <form action="/uploadimage" class="dropzone dz-clickable" method = "post" enctype = "multipart/form-data" id="demo-upload">
                 <!-- <input id = "image-upload"  type = "file" name="file">
                 <input type = "file" name = "file">-->
@@ -713,34 +395,6 @@
                       <br> <span class="note"></span>
                   </div>
               </form>
-          </div>
-
-          <div id="listinginfo" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                  <h3 id="myModalLabel">Edit Listing</h3>
-                </div>
-                <div class="modal-body">
-                  <form id = "setinitiallistinginfo"class="form-horizontal col-sm-12">
-                    <div class="form-group"><label>Title</label><input id = "listingtitleinitialedit" class="form-control required" placeholder="Title of listing" data-placement="top" data-trigger="manual" data-content="Must be at least 3 characters long, and must only contain letters." type="text"></div>
-                    <div class="form-group"><label>Description</label><textarea id = "listingdescrinitialedit" class="form-control" placeholder="Description of listing" data-placement="top" data-trigger="manual"></textarea></div>
-
-                    <div class="form-group">
-                      <h4 id="addtaglabel">Add Tags:</h3>
-                      <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tagmodal1" style="display:block;">
-                      <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tagmodal2" style="display:block;">
-                      <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tagmodal3" style="display:block;">
-                    </div>
-                    <div class="form-group"><button type="submit" class="btn btn-success pull-right">Post It!</button> <p class="help-block pull-left text-danger hide" id="form-error">&nbsp; The form is not valid. </p></div>
-                  </form>
-                </div>
-                <div class="modal-footer">
-                  <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-                </div>
-              </div>
-            </div>
           </div>
           <!--
           <form id="newProfilePic" enctype="multipart/form-data" action="/users/uploadprofile" method="post">
@@ -754,8 +408,7 @@
           <label id="editmessage"></label>
         </div>
       </div>
-
-	  <!--Message Page-->
+	  
 	<div id="messagePage" class="container">
 		<ul class="nav nav-tabs">
 			<li class="active"><a id="inboxTab" data-toggle="tab" href="#inbox">Inbox</a><li>
@@ -778,9 +431,8 @@
 					<hr><div id="inboxFrom"></div><hr>
 					<div id="inboxTo"></div><hr>
 					<div id="receivedate"></div><hr>
-					<div id="inboxtradingInfo"></div><hr>
 					<div id="inboxContent"></div>
-
+					
 				</div>
 				<div id="noMessageInbox">No message.</div>
 			</div>
@@ -799,17 +451,16 @@
 					<hr><div id="outboxFrom"></div><hr>
 					<div id="outboxTo"></div><hr>
 					<div id="sentdate"></div><hr>
-					<div id="outboxtradingInfo"></div><hr>
 					<div id="outboxContent"></div>
-
+					
 				</div>
 				<div id="noMessageOutbox">No message.</div>
 			</div>
 		</div>
-
+	
 	</div>
-
-
+	
+	
       <div id="userbehaviourpage" class="container">
         <table id="behaviourtable">
           <tr>
@@ -822,13 +473,12 @@
       <!--Listing page-->
       <div id="listingpage" class="container">
         <div class = "mainpicholder">
-          <img src="" class="img-rounded" width="100%" height="100%" id="mainlistingpic"/>
+          <img src="" class="img-rounded" width="100%" height="500" id="mainlistingpic"/>
         </div>
+        <h3 style="margin-bottom:50px;" id="listingtitle"></h3>
         <button class="btn btn-info btn-sm" id="editlisting">Edit Listing</button>
         <button class="btn btn-info btn-sm" id="deletelisting">Delete Listing</button>
-        <button class="btn btn-info btn-sm" id="gotolistingowner">Go To Listing Owner</button>
-        <button style="margin-bottom:50px;" class="btn btn-info btn-sm" id="requestlisting" type="button" data-toggle="modal" data-target="#messageModal">Request Listing</button>
-        <h3 style="margin-bottom:50px;" id="listingtitle"></h3>
+        <button class="btn btn-info btn-sm" id="requestlisting">Request Listing</button>
         <p style="margin-top:50px;" id="listingdescription"></p>
         <h3 id ="listinggallery">Listing Gallery</h3>
 
@@ -866,7 +516,6 @@
                 </div>
             </div>
         </div>
-
         <style>
         /*For hovering over pictures in gallery. Move this later.*/
         .hovereffect {
@@ -950,68 +599,9 @@
             transform: translate3d(0,0,0);
           }
         </style>
-		<div class="row">
         <div id="listinglinks">
 
         </div> <!--Populated dynamically-->
-		</div>
-		<div id="listingcomments" class="container">
-		<div class="row"><div id ="listingcommentsheading"> </div></div>
-
-		<form class="form-horizontal" role="form">
-			<div class="row">
-			<div class="form-group">
-			  <label class="control-label col-sm-2" for="comment">
-			  <img src="" class="img-rounded" width="60" height="60" id="userprofileimage" />
-			  </label>
-			  <div class="col-sm-10">
-				<textarea id="addcomment" class="form-control" rows="5"  placeholder="Add a comment"></textarea>
-			  </div>
-			</div>
-			</div>
-			<div class="row">
-			<div class="form-group">
-			  <div class="col-sm-offset-2">
-				<button id="postcomment" type="submit" class="btn btn-default">Post</button>
-				<button id="cancelcomment" type="button" class="btn">Cancel</button>
-			  </div>
-			</div>
-			</div>
-		 </form>
-
-		<div class="row">
-			<div class="dropdown">
-				<button id="sortcomments" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-				</button>
-				<ul class="dropdown-menu">
-				  <li><button id="newestcomments" class="sortbutton">Newest First</button></li>
-				  <li><button id="oldestcomments" class="sortbutton">Oldest First</button></li>
-                  <li><button id="topcomments" class="sortbutton">Top Comments</button></li>
-				</ul>
-			</div>
-		</div>
-		 <div id="listingcommentlist">
-		 </div>
-		 </div>
-		 <style>
-		 .sortbutton{
-			background-color: white;
-			border: white;
-			width: 100;
-		 }
-		 #sortcomments {
-			background-color: white;
-			color: black;
-		 }
-		 .commentinteractbutton {
-			background-color: white;
-			border: white;
-			color; gray;
-		 }
-		 .glyphicon-thumbs-up {
-			color: gray;
-		 }
-		 </style>
       </div>
 
       <div id = "editlistingpage" class="container">
@@ -1040,12 +630,6 @@
           <div class="form-group">
             <label class="control-label" for="editlistdescription" id="deslabel">Description: </label>
             <textarea maxlength="500" rows="5" cols = "40" wrap="hard" id="editlistdescription" style="display:block;"></textarea>
-          </div>
-          <h4 id="addtaglabel">Add Tags:</h3>
-          <div class="form-group">
-            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag1" style="display:block;">
-            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag2" style="display:block;">
-            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag3" style="display:block;">
           </div>
           <button type="submit" class="btn btn-info btn-sm" data-toggle="modal" data-target="#myModal2" id="updatelistingbutton">Update Info</button>
           <!-- Modal -->
