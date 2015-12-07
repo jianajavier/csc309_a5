@@ -139,6 +139,7 @@ MessageSchemas = new Schema({
 UserSchemas = new Schema({
     email: String,
     password: String,
+    googleId: String, 
     description: String, default : "",
     profileimage: String, default : "default_profile_large.jpg",
     gallery: [ListingSchemas],
@@ -391,6 +392,7 @@ app.post('/users', function (req, res){
     user = new UserModel({
       email: req.body.email,
       password: req.body.password,
+      googleId: "",
       description: "",
       displayname: "",
       type: userType,
@@ -564,14 +566,21 @@ app.post('/users/googlelogin/:id/:email', function (req, res) {
   request.get(
     'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + req.params.id,
     function (error, response, body) {
+        console.log(body);
+        jsonbody = JSON.parse(body);
         if (!error && response.statusCode == 200) {
-            UserModel.findOne({googleId: body.sub}, function (err, user) {
+            var id = jsonbody["sub"];
+            console.log(id);
+            UserModel.findOne({googleId: id}, function (err, user) {
               if (!err) {
                 if (user) {
+                  console.log("uh oh");
                   res.send(user);
                 } else {
+                  console.log("yes this is right");
                   var newuser = new UserModel({
                       email: req.params.email,
+                      googleId: id,
                       password: "",
                       description: "",
                       displayname: "",
@@ -586,7 +595,15 @@ app.post('/users/googlelogin/:id/:email', function (req, res) {
                       },
                       tags: { na:false }
                   });
-                  req.send(newuser);
+
+                  newuser.save(function (err) {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      console.log("created");
+                    }
+                  });
+                  res.send(newuser);
                 }
               }
             });
@@ -962,7 +979,8 @@ app.put('/listings/update/:listingid', function (req, res){
 });
 
 
-var server = app.listen(process.env.PORT, function () {
+var server = app.listen(3000, function () {
+  //process.env.PORT
   var host = server.address().address;
   var port = server.address().port;
 

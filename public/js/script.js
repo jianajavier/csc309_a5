@@ -30,13 +30,12 @@ function onSignIn(googleUser) {
     console.log('Image URL: ' + profile.getImageUrl());
     console.log('Email: ' + profile.getEmail());
     var id_token = googleUser.getAuthResponse().id_token;
+    var posturl = "/users/googlelogin/" + id_token + "/" + profile.getEmail();
     $.ajax({
         type: "POST",
-        url: "/users/googlelogin/" + id_token + "/" + profile.getEmail(),
+        url: posturl,
         success: function(data){
-          console.log("got here1");
           if (data) {
-            console.log("got here");
             currentuser = data;
               $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
