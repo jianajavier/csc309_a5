@@ -1298,7 +1298,7 @@ function moveToEditPage(user, own) {
       }
   });
 
-  $("#homepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #listingpage").hide();
+  $("#homepage,  #editlistingpage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #listingpage").hide();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
