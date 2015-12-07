@@ -3,20 +3,22 @@ path = require('path');
 var bodyParser  = require('body-parser');
 var express = require('express');
 var app = express();
-var formidable = require('formidable');
 var util = require('util');
 var fs = require('fs-extra');
 var multer = require('multer');
+var request = require('request');
 
 var upload = multer({
   dest: __dirname + '/public/uploads/'
 });
 
+var adminLogin = {'username': 'admin', 'password': 'admin'};
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 var mongoose   = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/test');
+mongoose.connect('mongodb://bron:pizza*bagels1@ds053190.mongolab.com:53190/heroku_b01vwltc');
 
 /* Configuration settings */
 app.use(express.static(path.join(__dirname, '/public'), {
@@ -36,6 +38,10 @@ app.get('/', function(req, res) {
     res.render('index.html');
     console.log('root');
 });
+
+app.get('/admin', function(req, res) {
+    res.render('admin.html');
+})
 
 /* Creating the Schema */
 var Schema = mongoose.Schema;
@@ -92,7 +98,7 @@ ListingSchemas = new Schema ({
   description: String,
   mainPicture: String,
   morePictures: [String],
-  owner: String, //User ID
+  owner: Schema.Types.ObjectId, //User ID
   title: String,
   profilepic: Number, //1 if it is, 0 if not
   comments: [CommentSchemas],
@@ -126,6 +132,16 @@ MessageSchemas = new Schema({
 	dateCreated: Date,
 	content: String,
 	request: Boolean,
+	item: {
+		offer: {
+			_id: String,
+			title: String
+		},
+		interest: {
+			_id: String,
+			title: String
+		},
+	},
 	reply: Boolean,
 	unread: Boolean
 });
@@ -133,6 +149,7 @@ MessageSchemas = new Schema({
 UserSchemas = new Schema({
     email: String,
     password: String,
+    googleId: String, 
     description: String, default : "",
     profileimage: ListingSchemas,
     gallery: [ListingSchemas],
@@ -160,7 +177,6 @@ var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
-//var MessageModel = mongoose.model('MessageSchema', MessageSchemas);
 
 function createComment(currentUser, newMessage, target) {
 	/*
@@ -173,7 +189,7 @@ function createComment(currentUser, newMessage, target) {
 		message: newMessage,
 		dateCreated: Date.now()
 	});
-	
+
 	target.comments.push(comment);
 }
 
@@ -246,6 +262,24 @@ app.get('/search/:tag', function (req, res) {
 
 
 /* CURD requests */
+// GET ALL USERS
+
+app.get('/admin/verifylogin/:username', function(req, res) {
+  if (req.params.username == adminLogin.username) {
+    res.send({'password': adminLogin.password});
+  }
+});
+
+app.get('/admin/all', function (req, res){
+  return UserModel.find(function (err, users) {
+    if (!err) {
+      return res.send(users);
+    } else {
+      return console.log(err);
+    }
+  });
+});
+
 
 // GET ALL USERS
 app.get('/users/all/:emailaddcount', function (req, res){
@@ -266,6 +300,18 @@ app.get('/users/all/:emailaddcount', function (req, res){
       return console.log(err);
     }
   });
+});
+//GET USER BY ID
+app.get('/getuser/:id', function (req, res){
+
+  UserModel.findOne({_id: req.params.id}, function (err, user) {
+    if (!err) {
+      return res.send(user);
+    } else {
+      return console.log(err);
+    }
+  });
+
 });
 
 app.get('/users/behaviour/:emailaddcount', function (req, res){
@@ -338,6 +384,7 @@ app.post('/users', function (req, res){
     user = new UserModel({
       email: req.body.email,
       password: req.body.password,
+      googleId: "",
       description: "",
       displayname: "",
       //profileimage: list,
@@ -421,17 +468,17 @@ app.post('/users/uploadprofile', function(req, res) {
 app.put('/users/messages/send', function (req, res) {
 	console.log(req.body);
 	console.log(">>>>>>>>>>>>>>");
-
+console.log(req.body["item[offer]"]);
 	//console.log(req.body.from[_id]);
-	UserModel.findOne({ _id: req.body.from}, function (err, senderUser) {
-		if (err) {
-			console.log(err);
-			return handleError(err);
+	UserModel.findOne({ _id: req.body.from}, function (err1, senderUser) {
+		if (err1) {
+			console.log(err1);
+			return handleError(err1);
 		}
-		UserModel.findOne({ _id: req.body.to}, function (err, receiverUser) {
-			if (err) {
-				console.log(err);
-				return handleError(err);
+		UserModel.findOne({ _id: req.body.to}, function (err2, receiverUser) {
+			if (err2) {
+				console.log(err2);
+				return handleError(err2);
 			}
 			var tempMessage = {
 				sender: {
@@ -447,6 +494,16 @@ app.put('/users/messages/send', function (req, res) {
 				dateCreated: new Date(),
 				content: req.body.content,
 				request: req.body.request,
+				item: {
+					offer: {
+						_id: req.body["item[offer][_id]"],
+						title: req.body["item[offer][title]"]
+					},
+					interest:{
+						_id: req.body["item[interest][_id]"],
+						title: req.body["item[interest][title]"]
+					}
+				},
 				reply: req.body.reply,
 				unread: true
 			}
@@ -472,33 +529,18 @@ app.put('/users/messages/send', function (req, res) {
 	res.sendStatus(200);
 });
 
-app.get('/users/messages/:mailbox/:user_id', function (req, res) {
-	var mailbox = req.params.mailbox;
+app.get('/users/messages/:dataField/:user_id', function (req, res) {
+	var dataField = req.params.dataField;
 	var projection = {};
-	projection[mailbox] = 1;
+	projection[dataField] = 1;
 	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
 		if (err) {
 			console.log(err);
 			return handleError(err);
 		}
 		console.log(data);
-		console.log(mailbox);
-		res.send(data[mailbox]);
-	});
-});
-
-app.get('/users/messages/:user_id', function (req, res) {
-	var mailbox = req.params.mailbox;
-	var projection = {};
-	projection[mailbox] = 1;
-	UserModel.findOne({_id: req.params.user_id}, projection, function (err, data){
-		if (err) {
-			console.log(err);
-			return handleError(err);
-		}
-		console.log(data);
-		console.log(mailbox);
-		res.send(data[mailbox]);
+		console.log(dataField);
+		res.send(data[dataField]);
 	});
 });
 
@@ -534,6 +576,56 @@ app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
 		});
 		res.send(user);
 	});
+});
+
+app.post('/users/googlelogin/:id/:email', function (req, res) {
+
+  request.get(
+    'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + req.params.id,
+    function (error, response, body) {
+        console.log(body);
+        jsonbody = JSON.parse(body);
+        if (!error && response.statusCode == 200) {
+            var id = jsonbody["sub"];
+            console.log(id);
+            UserModel.findOne({googleId: id}, function (err, user) {
+              if (!err) {
+                if (user) {
+                  console.log("uh oh");
+                  res.send(user);
+                } else {
+                  console.log("yes this is right");
+                  var newuser = new UserModel({
+                      email: req.params.email,
+                      googleId: id,
+                      password: "",
+                      description: "",
+                      displayname: "",
+                      type: "",
+                      profileimage: "default_profile_large.jpg",
+                      userbehaviour: { allcount: 0,
+                        specificcount: 0,
+                        deletecount: 0,
+                        addcount: 1,
+                        updatecount: 0,
+                        behaviourcount: 0
+                      },
+                      tags: { na:false }
+                  });
+
+                  newuser.save(function (err) {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      console.log("created");
+                    }
+                  });
+                  res.send(newuser);
+                }
+              }
+            });
+        }
+    });
 });
 
 // VERIFY EMAIL LOGIN
@@ -850,10 +942,30 @@ app.post('/uploadimage', upload.single('file'), function (req, res) {
   return res.send(req.file);
 });
 
+// get a user by the listing id
+app.get('/listing/users/:id', function (req, res) {
+	ListingModel.findOne({ _id: req.params.id }, function (err1, listing) {
+		if (err1) {
+			console.log(err1);
+			return handleError(err1);
+		}
+		UserModel.findOne({ _id: listing.owner}, { password:0}, function(err2, user) {
+			if (err2) {
+				console.log(err2);
+				return handleError(err2);
+			}
+			res.send(user);
+		});
+	});
+});
+
 //get listing
 app.get('/listing/:id', function (req, res){
   return ListingModel.findOne({ _id: req.params.id }, function (err, listing) {
-    if (!err) {
+    console.log("asdasdasdasdas");
+	console.log(req.params.id);
+	console.log(listing);
+	if (!err) {
       return res.send(listing);
     } else {
       return console.log(err);
@@ -938,19 +1050,21 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
     if (req.body.title) listing.title = req.body.title;
     if (req.body.description) listing.description = req.body.description;
 
-    return listing.save(function (err) {
-      if (!err) {
-        console.log("updated listing info");
-      } else {
-        console.log(err);
-      }
+		return listing.save(function (err) {
+		  if (!err) {
+			console.log("updated listing info");
+		  } else {
+			console.log(err);
+		  }
+		});
       return res.send(listing);
     });
-  });
+
 });
 
 
 var server = app.listen(3000, function () {
+  //process.env.PORT
   var host = server.address().address;
   var port = server.address().port;
 

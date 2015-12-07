@@ -1,11 +1,13 @@
 var login = 0; //0 if logging in, 1 if signing up
 var currentuser;
 var fromlogin = true;
-var re;
+var userReply;
+var userRequest;
 var viewing; //the persons profile being viewed
 var loclat = 0;
 var loclng = 0;
 var listingview; //id of listing being viewed
+var msgview;	// the message being viewed
 
 getLocation();
 
@@ -113,21 +115,69 @@ function displayComment(comment) {
 	$("#" + "replyform" + comment._id).hide();	
 }
 
+function displayComment(target, comment) {
+
+	var m = "<p>" + comment.message + "</p>";
+	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+        return '<a href="' + url + '">' + url + '</a>';
+    });
+	var displayC = "<div class=\"comment\" ";
+	displayC += "id=\"" + comment._id + "\" >";
+		displayC += "<div class=\"col-sm-2\">";
+			displayC += "<img src=\"uploads/";
+			displayC += cumment.createrInfo.profileimage;
+			displayC += "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
+		displayC += "</div>";
+		displayC += "<div class=\"col-sm-10\" id=\"content" + comment._id + "\">";
+			displayC += "<p id=\"username" + comment._id +"\">" + cumment.createrInfo.displayname + "</p>";
+			displayC += m;
+		displayC += "</div>";
+	displayC += "</div>";
+	$(target).append(displayC);
+>>>>>>> 792eddfaf24782e26d0618c5ab1b072efd93ad6f
+}
+
 //Comment Helper Functions end here
 
+>>>>>>> b569c56c2eeab29530f2490b2b230d258ee62974
 function onSignIn(googleUser) {
-    gapi.auth2.init();
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
     console.log('Name: ' + profile.getName());
     console.log('Image URL: ' + profile.getImageUrl());
     console.log('Email: ' + profile.getEmail());
+    var id_token = googleUser.getAuthResponse().id_token;
+    var posturl = "/users/googlelogin/" + id_token + "/" + profile.getEmail();
+    $.ajax({
+        type: "POST",
+        url: posturl,
+        success: function(data){
+          if (data) {
+            currentuser = data;
+              $("#loginOrSignupScreen").hide();
+              $(".loggedInNav").show();
+
+              // set profile picture
+              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
+
+              //$("#logout").fadeIn();
+              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
+                //$("#viewbehaviour").fadeIn();
+              //}
+
+              moveToWelcome(data);
+          } else {
+            console.log("google sign in error");
+          }
+        }
+      });
+
 }
 
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
+  $("#tradeSection, #homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
 
   function onSignIn(googleUser) {
     alert("gothere");
@@ -304,21 +354,6 @@ $(document).ready(function(){
   });
 
   /**
-  USER UPLOADS A NEW PROFILE PICTURE -- Don't have to do this anymore!! Already done!!
-  */
-  $("#newProfilePic").submit(function(event) {
-    $.ajax({
-        type: "GET",
-        url: "/"
-        //data: $("#newProfilePic").serialize(),
-        //success: function(data){
-          //if (data) {
-            //console.log(data);
-          //}
-    });
-  });
-
-  /**
   CLICKS ON A ROW IN THE USER TABLE
   */
   $('#usertable').on("click", "tr", function(){
@@ -354,14 +389,36 @@ $(document).ready(function(){
   /**
   CLICKS LOGO TO GO BACK TO WELCOME PAGE
   */
-  $("#logo, #cancelbutton").click(function(){
+  $("#logo").click(function(){
     if (currentuser) {
       moveToWelcome(JSON.parse(getUserByEmail(currentuser.email).responseText));
     } //will keep them at home page
   });
 
+  $("#cancelbutton").click(function(){
+    moveToProfile(currentuser);
+  });
+
   $("#cancellistingbutton").click(function(){
     goToListingPage(listingview);
+  });
+
+  $("#gotolistingowner").click(function(){
+    //Get listing owner from listingview
+    $.ajax({
+      type: "GET",
+      url: "/listing/"+listingview,
+      success: function(data) {
+        $.ajax({
+          type: "GET",
+          url: "/getuser/"+data.owner,
+          success: function(owner) {
+            moveToProfile(owner);
+          }
+        });
+      }
+    });
+
   });
 
   /**
@@ -387,10 +444,11 @@ $(document).ready(function(){
 
   $("#messageuser").click(function() {
 	  $("#messageHeader").show();
-	  $("#replyHeader").hide();
+	  $("#replyHeader, #tradeSection").hide();
 	  $("#recipient").text("To: " + viewing.displayname);
 	  $("#messageText").val("");
-	  re = false;
+	  userReply = false;
+	  userRequest = false;
   });
 
   $("#changePasswordForm").submit(function (event) {
@@ -430,6 +488,35 @@ $(document).ready(function(){
   // MESSAGE USER
   $("#messageForm").submit(function(event) {
 	  event.preventDefault();
+
+
+	  var tempOfferID = "", tempOfferTitle = "";
+	  var tempInterestID = "", tempInterestTitle = "";
+
+	  if (!userReply) {
+		if (userRequest) {
+			var interestTitle;
+			  $.ajax({
+				type: "GET",
+				async: false,
+				url: "/listing/"+listingview,
+				success: function(data) {
+					interestTitle = data.title;
+				}
+			  });
+			tempOfferID = $("#tradeItem option:selected").attr("value");
+			tempOfferTitle = $("#tradeItem option:selected").text();
+			tempInterestID = listingview;
+			tempInterestTitle = interestTitle;
+		}
+	  } else {
+		  // When it is a reply, just copy the info from previous message
+		  tempOfferID = msgview.item.offer._id;
+		  tempOfferTitle = msgview.item.offer.title;
+		  tempInterestID = msgview.item.interest._id;
+		  tempInterestTitle = msgview.item.interest.title;
+	  }
+
 	  $.ajax({
 		type: "PUT",
 		url: "/users/messages/send",
@@ -437,8 +524,18 @@ $(document).ready(function(){
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
-			request: false,
-			reply: re
+			request: userRequest,
+			item: {
+				offer: {
+					_id: tempOfferID,
+					title: tempOfferTitle
+				},
+				interest: {
+					_id: tempInterestID,
+					title: tempInterestTitle
+				}
+			},
+			reply: userReply
 		}
 	  }).always(function() {
 		  console.log("run");
@@ -536,6 +633,37 @@ $(document).ready(function(){
     });
   });
 
+  $("#requestlisting").click(function () {
+	  console.log("requestListing");
+	  $("#messageHeader").show();
+	  $("#replyHeader").hide();
+	  $("#recipient").text("To: " + viewing.displayname);
+	  $("#messageText").val("");
+	  userRequest = true;
+	  $("#tradeSection").show();
+	  $.ajax({
+		type: "GET",
+		url: "/users/messages/gallery/"+currentuser._id,
+		success: function(data) {
+			var dropdownHTML = "";
+			$.each(data, function(index, listingArt) {
+				dropdownHTML += "<option data-img='uploads/"+listingArt.mainPicture+"' value='"+listingArt._id+"'>"+listingArt.title+"</option>";
+			});
+			dropdownHTML += "<option value='mystery'>Mystery trade</option>";
+			$("#tradeItem").html(dropdownHTML);
+		}
+	  });
+
+
+	  $.ajax({
+		type: "GET",
+		url: "/listing/"+listingview,
+		success: function(data) {
+			$("#targetListing").text(data.title);
+			$("#targetListing").attr("val", data._id);
+		}
+	  });
+  });
 
   $("#logout").click(function(){
     $("#viewbehaviour").fadeOut();
@@ -877,13 +1005,16 @@ function openInBoxMessage(msg) {
 	$("#inboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#receivedate").text("date: "+msg.dateCreated);
 	$("#inboxContent").text(msg.content);
+	printTradingInfo(msg, "#inboxtradingInfo");
 	$("#replyInbox").click(function() {
-		$("#messageHeader").hide();
+		$("#messageHeader, #tradeSection").hide();
 		$("#replyHeader").show();
 		$("#recipient").text("To: "+ msg.sender.displayname);
 		$("#messageText").val("");
+		msgview = msg;
 		viewing = msg.sender;
-		re = true;
+		userReply = true;
+		userRequest = msg.request;
 	});
 	if (msg.unread) {
 		$.ajax({
@@ -899,12 +1030,59 @@ function openInBoxMessage(msg) {
 	}
 }
 
+// helper func to print the teading info in div that has id divID
+function printTradingInfo(msg, divID) {
+	if (msg.request) {
+		var offerHTML;
+		if (msg.item.offer._id === 'mystery') {
+			offerHTML = "Offered <a href='#'>"+msg.item.offer.title+"</a>";
+		} else {
+			offerHTML = "Offered <a href='#' class='linktoOffer'>"+msg.item.offer.title+"</a>";
+		}
+		var interestHTML;
+		if (msg.item.interest._id === 'mystery') {
+			interestHTML = " to <a href='#'>"+msg.item.interest.title+"</a>";
+		} else {
+			interestHTML = " to <a href='#' class='linktoInterest'>"+msg.item.interest.title+"</a>";
+		}
+
+		$(divID).html(offerHTML + interestHTML);
+		$(".linktoOffer").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.offer._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.offer._id);
+		});
+		$(".linktoInterest").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.interest._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.interest._id);
+		});
+		$(divID).show();
+	} else {
+		$(divID).hide();
+	}
+}
+
 function openOutBoxMessage(msg) {
 	$("#messageBoxOutbox").show();
 	$("#outboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
 	$("#outboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#sentdate").text("date: "+msg.dateCreated);
 	$("#outboxContent").text(msg.content);
+
+	printTradingInfo(msg, "#outboxtradingInfo");
 }
 
 function readFile(input) {
@@ -1093,6 +1271,7 @@ function moveToWelcome(obj) {
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
+	$("#inboxTab").tab("show");
 	$.ajax({
 		type: "PUT",
 		url: "/users/messages/updateStatus/newMsgNum",
@@ -1187,7 +1366,7 @@ function moveToEditPage(user, own) {
       }
   });
 
-  $("#homepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #listingpage").hide();
+  $("#homepage,  #editlistingpage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #listingpage").hide();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
@@ -1316,7 +1495,7 @@ function moveToUserBehaviourPage() {
 }
 
 function addListing(listing) {
-  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
+  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img style='width: 350px; height: 170px;' class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
 }
 
 function getGallery(user) {
@@ -1331,13 +1510,19 @@ function getGallery(user) {
 
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
-  $("#deleteuser").hide();
+  $("#editlisting, #deletelisting, #requestlisting").hide();
+
+  if (currentuser.email === viewing.email) {
+	  $("#editlisting, #deletelisting").show();
+  } else {
+	  $("#requestlisting").show();
+  }
 
   $("#homepage").fadeOut();
   setPageTitle("Listing");
 
   listingview = listingid;
-  
+
   $("#postcomment, #cancelcomment").hide();
 
   //getGallery(user);
@@ -1359,7 +1544,7 @@ function goToListingPage(listingid) {
             for (var i = 0; i < data.morePictures.length; i++) {
               var pic = data.morePictures[i];
               //console.log(pic);
-              $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \""+ data.title +"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\""+ data.title +"\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
+              $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \""+ data.title +"\"><img width='350' height='200' class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\""+ data.title +"\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
             }
 
             //Don't show delete button
@@ -1375,30 +1560,30 @@ function goToListingPage(listingid) {
             }
 			$("#listingcommentsheading").html("<h3>All Comments (" + commentCount(data) + ")</h3>");
 			$("#userprofileimage").attr('src', "uploads/" + currentuser.profileimage);
-			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);}); 
-			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();}); 
-			$("#cancelcomment").on("click",function() {  $("#addcomment").val(""); $("#postcomment, #cancelcomment").hide();}); 
-			
+			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);});
+			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();});
+			$("#cancelcomment").on("click",function() {  $("#addcomment").val(""); $("#postcomment, #cancelcomment").hide();});
+
 			var sortComments = "Newest First";
 			var sortButtonHTML = "<span class=\"caret\"></span>";
 			if (sessionStorage.getItem("sortMethod") != null) {
 				sortComments = sessionStorage.getItem("sortMethod");
 			}
 			$("#sortcomments").html(sortComments + sortButtonHTML);
-			
-			$("#oldestcomments").on("click",function() { 
+
+			$("#oldestcomments").on("click",function() {
 				sessionStorage.setItem("sortMethod", "Oldest First");
 				$("#sortcomments").html("Oldest First" + sortButtonHTML);
 			});
-			$("#newestcomments").on("click",function() { 
+			$("#newestcomments").on("click",function() {
 				sessionStorage.setItem("sortMethod", "Newest First");
 				$("#sortcomments").html("Newest First" + sortButtonHTML);
 			});
-			$("#topcomments").on("click",function() { 
-				sessionStorage.setItem("sortMethod", "Top Comments"); 
-				$("#sortcomments").html("Top Comments" + sortButtonHTML);			
+			$("#topcomments").on("click",function() {
+				sessionStorage.setItem("sortMethod", "Top Comments");
+				$("#sortcomments").html("Top Comments" + sortButtonHTML);
 			});
-			
+
             $("#listingpage").fadeIn();
 
         }

@@ -462,7 +462,7 @@
         <button id="deleteuser">Delete user</button>
         -->
 
-		<button id="messageuser" type="button" data-toggle="modal" data-target="#messageModal">Message user</button>
+		<button id="messageuser" class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#messageModal">Message user</button>
         <p style="margin-top:50px;" id="description"></p>
         <p id ="profileemail"></p>
         <h3 id ="gallery">Gallery</h3>
@@ -610,6 +610,13 @@
 					<div class="modal-body">
 						<h5 id="recipient">To:</h5>
 						<form id="messageForm">
+							<div id="tradeSection" class="form-group">
+								<label for="tradeItem">Select your offer art:</label>
+								<select class="form-control" id="tradeItem"></select>
+								<hr>
+								<h5><strong>Interested art: </strong><span id="targetListing"></span></h5>
+								<hr>
+							</div>
 							<div class="form-group">
 								<label class="control-label" for="messageText">Message:</label>
 								<textarea class="form-control" id="messageText"></textarea>
@@ -651,6 +658,12 @@
           <div class="form-group">
             <label class="control-label" for="editdescription" id="deslabel">Description: </label>
             <textarea maxlength="500" rows="5" cols = "40" wrap="hard" id="editdescription" style="display:block;"></textarea>
+          </div>
+          <h4 id="addtaglabel">Add Tags:</h3>
+          <div class="form-group">
+            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="taguser1" style="display:block;">
+            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="taguser2" style="display:block;">
+            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="taguser3" style="display:block;">
           </div>
           <button type="submit" class="btn btn-info btn-sm" data-toggle="modal" data-target="#myModal"  id="updatebutton">Update Info</button>
           <!-- Modal -->
@@ -713,6 +726,13 @@
                   <form id = "setinitiallistinginfo"class="form-horizontal col-sm-12">
                     <div class="form-group"><label>Title</label><input id = "listingtitleinitialedit" class="form-control required" placeholder="Title of listing" data-placement="top" data-trigger="manual" data-content="Must be at least 3 characters long, and must only contain letters." type="text"></div>
                     <div class="form-group"><label>Description</label><textarea id = "listingdescrinitialedit" class="form-control" placeholder="Description of listing" data-placement="top" data-trigger="manual"></textarea></div>
+
+                    <div class="form-group">
+                      <h4 id="addtaglabel">Add Tags:</h3>
+                      <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag1" style="display:block;">
+                      <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag2" style="display:block;">
+                      <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag3" style="display:block;">
+                    </div>
                     <div class="form-group"><button type="submit" class="btn btn-success pull-right">Post It!</button> <p class="help-block pull-left text-danger hide" id="form-error">&nbsp; The form is not valid. </p></div>
                   </form>
                 </div>
@@ -735,6 +755,7 @@
         </div>
       </div>
 
+	  <!--Message Page-->
 	<div id="messagePage" class="container">
 		<ul class="nav nav-tabs">
 			<li class="active"><a id="inboxTab" data-toggle="tab" href="#inbox">Inbox</a><li>
@@ -757,6 +778,7 @@
 					<hr><div id="inboxFrom"></div><hr>
 					<div id="inboxTo"></div><hr>
 					<div id="receivedate"></div><hr>
+					<div id="inboxtradingInfo"></div><hr>
 					<div id="inboxContent"></div>
 
 				</div>
@@ -777,6 +799,7 @@
 					<hr><div id="outboxFrom"></div><hr>
 					<div id="outboxTo"></div><hr>
 					<div id="sentdate"></div><hr>
+					<div id="outboxtradingInfo"></div><hr>
 					<div id="outboxContent"></div>
 
 				</div>
@@ -801,10 +824,11 @@
         <div class = "mainpicholder">
           <img src="" class="img-rounded" width="100%" height="500" id="mainlistingpic"/>
         </div>
-        <h3 style="margin-bottom:50px;" id="listingtitle"></h3>
         <button class="btn btn-info btn-sm" id="editlisting">Edit Listing</button>
         <button class="btn btn-info btn-sm" id="deletelisting">Delete Listing</button>
-        <button class="btn btn-info btn-sm" id="requestlisting">Request Listing</button>
+        <button class="btn btn-info btn-sm" id="gotolistingowner">Go To Listing Owner</button>
+        <button style="margin-bottom:50px;" class="btn btn-info btn-sm" id="requestlisting" type="button" data-toggle="modal" data-target="#messageModal">Request Listing</button>
+        <h3 style="margin-bottom:50px;" id="listingtitle"></h3>
         <p style="margin-top:50px;" id="listingdescription"></p>
         <h3 id ="listinggallery">Listing Gallery</h3>
 
@@ -938,15 +962,15 @@
 			<div class="row">
 			<div class="form-group">
 			  <label class="control-label col-sm-2" for="comment">
-			  <img src="" class="img-rounded" width="60" height="60" id="userprofileimage" /> 
+			  <img src="" class="img-rounded" width="60" height="60" id="userprofileimage" />
 			  </label>
-			  <div class="col-sm-10"> 
+			  <div class="col-sm-10">
 				<textarea id="addcomment" class="form-control" rows="5"  placeholder="Add a comment"></textarea>
 			  </div>
 			</div>
 			</div>
 			<div class="row">
-			<div class="form-group">      
+			<div class="form-group">
 			  <div class="col-sm-offset-2">
 				<button id="postcomment" type="submit" class="btn btn-default">Post</button>
 				<button id="cancelcomment" type="button" class="btn">Cancel</button>
@@ -1016,6 +1040,12 @@
           <div class="form-group">
             <label class="control-label" for="editlistdescription" id="deslabel">Description: </label>
             <textarea maxlength="500" rows="5" cols = "40" wrap="hard" id="editlistdescription" style="display:block;"></textarea>
+          </div>
+          <h4 id="addtaglabel">Add Tags:</h3>
+          <div class="form-group">
+            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag1" style="display:block;">
+            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag2" style="display:block;">
+            <input class = "col-xs-4 col-sm-4 col-md-4" type="text" id="tag3" style="display:block;">
           </div>
           <button type="submit" class="btn btn-info btn-sm" data-toggle="modal" data-target="#myModal2" id="updatelistingbutton">Update Info</button>
           <!-- Modal -->
