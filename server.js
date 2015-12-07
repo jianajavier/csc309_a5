@@ -1122,7 +1122,7 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
 });
 
 
-var server = app.listen(process.evn.PORT, function () {
+var server = app.listen(process.env.PORT, function () {
   //process.env.PORT
   var host = server.address().address;
   var port = server.address().port;
