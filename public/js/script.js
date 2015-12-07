@@ -864,8 +864,8 @@ $(document).ready(function(){
       url: '/uploadimage/'+currentuser._id,  //Server script to process data
       type: 'POST',
       data: {
-        name : resp.filename+"",
-        token : currenttoken
+        name : resp.filename+""
+        //token : currenttoken
       },
       success: function(response) {
         setCurrentUser();

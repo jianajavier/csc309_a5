@@ -233,23 +233,38 @@ app.get('/search/:tag', function (req, res) {
           break;
         }
       }
-      /*for(var k = 0; k < users[i].gallery.length; k++) {
-        for(var m = 0; m < tags.length; m++) {
-          if(users[i].gallery[k].tags[tags[m]]) {
-            postResults.push(users[i].gallery[k]);
+      // for(var k = 0; k < users[i].gallery.length; k++) {
+      //   for(var m = 0; m < tags.length; m++) {
+      //     console.log("HERE");
+      //     //console.log(users[i].gallery[k]);
+      //     if(users[i].gallery[k].tags[tags[m]]) {
+      //       postResults.push(users[i].gallery[k]);
+      //     }
+      //   }
+      // }
+    }
+    ListingModel.find(function(err2,listings) {
+      for (var i = 0; i < listings.length; i++) {
+        for(var j = 0; j < tags.length; j++) {
+          console.log("TAG: "+listings[i].tags[tags[j]]);
+          if (listings[i].tags[tags[j]]) {
+            console.log("GETTING HERE");
+            postResults.push(listings[i]);
           }
         }
-      }*/
-    }
-    if (!err) {
-      console.log([userResults, postResults]);
-      return res.send([userResults, postResults]);
-    } else {
-      return console.log(err);
-    }
+      }
+      if (!err && !err2) {
+        console.log([userResults, postResults]);
+        var result = [userResults, postResults];
+        res.send(result);
+      } else {
+        console.log(err);
+      }
+
+    });
+
   });
 });
-
 
 /* CURD requests */
 // GET ALL USERS
@@ -846,9 +861,9 @@ app.post('/uploadimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      if (req.body.token === token) {
+      //if (req.body.token === token) {
         return res.send(list);
-      }
+      //}
     });
   });
 });
@@ -887,9 +902,9 @@ app.post('/uploadlistingimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      if (req.body.token === token) {
+      //if (req.body.token === token) {
         return res.send(listing);
-      }
+      //}
 
     });
   });
@@ -929,9 +944,9 @@ app.post('/uploadmainlistingimage/:id', function (req, res) {
         console.log(err);
       }
 
-      if (req.body.token === token) {
+      //if (req.body.token === token) {
         return res.send(listing);
-      }
+      //}
     });
   });
   return res.send("sent");
@@ -971,9 +986,9 @@ app.post('/uploadprofileimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      if (req.body.token === token) {
+      //if (req.body.token === token) {
         return res.send(user);
-      }
+      //}
     });
   });
   //return res.send("sent");
@@ -997,9 +1012,9 @@ app.get('/listing/users/:id', function (req, res) {
 				console.log(err2);
 				return handleError(err2);
 			}
-      if (req.body.token === token) {
+      //if (req.body.token === token) {
         return res.send(user);
-      }
+      //}
 		});
 	});
 });
@@ -1092,7 +1107,7 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
         if (req.body.description) user.profileimage.description = req.body.description;
       }
     }
-    if (req.body.token === token) {
+    //if (req.body.token === token) {
       user.save(function (err) {
         if (!err) {
           console.log("updated gallery listing infos");
@@ -1101,13 +1116,27 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
           console.log(err);
         }
       });
-    }
+    //}
   });
 
   return ListingModel.findOne({ _id: req.params.listingid }, function (err, listing) {
 
     if (req.body.title) listing.title = req.body.title;
     if (req.body.description) listing.description = req.body.description;
+
+    if(req.body.tag1) {
+      listing.tags[req.body.tag1] = true;
+      console.log(req.body.tag1);
+    }
+    if(req.body.tag2) {
+      listing.tags[req.body.tag2] = true;
+      console.log(req.body.tag2);
+    }
+    if(req.body.tag3) {
+      listing.tags[req.body.tag3] = true;
+      console.log(req.body.tag3);
+    }
+    listing.markModified('tags');
 
 		return listing.save(function (err) {
 		  if (!err) {
@@ -1122,7 +1151,7 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
 });
 
 
-var server = app.listen(process.env.PORT, function () {
+var server = app.listen(3000, function () {
   //process.env.PORT
   var host = server.address().address;
   var port = server.address().port;
