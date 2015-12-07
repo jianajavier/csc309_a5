@@ -233,13 +233,13 @@ app.get('/search/:tag', function (req, res) {
           break;
         }
       }
-      for(var k = 0; k < users[i].gallery.length; k++) {
+      /*for(var k = 0; k < users[i].gallery.length; k++) {
         for(var m = 0; m < tags.length; m++) {
           if(users[i].gallery[k].tags[tags[m]]) {
             postResults.push(users[i].gallery[k]);
           }
         }
-      }
+      }*/
     }
     if (!err) {
       console.log([userResults, postResults]);
