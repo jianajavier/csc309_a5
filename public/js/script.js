@@ -60,7 +60,7 @@ function sortComments(condition, target) {
 }
 
 function displayComment(target, comment) {
-	
+
 	var m = "<p>" + comment.message + "</p>";
 	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
         return '<a href="' + url + '">' + url + '</a>';
@@ -68,7 +68,7 @@ function displayComment(target, comment) {
 	var displayC = "<div class=\"comment\" ";
 	displayC += "id=\"" + comment._id + "\" >";
 		displayC += "<div class=\"col-sm-2\">";
-			displayC += "<img src=\"uploads/"; 
+			displayC += "<img src=\"uploads/";
 			displayC += cumment.createrInfo.profileimage;
 			displayC += "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
 		displayC += "</div>";
@@ -321,14 +321,36 @@ $(document).ready(function(){
   /**
   CLICKS LOGO TO GO BACK TO WELCOME PAGE
   */
-  $("#logo, #cancelbutton").click(function(){
+  $("#logo").click(function(){
     if (currentuser) {
       moveToWelcome(JSON.parse(getUserByEmail(currentuser.email).responseText));
     } //will keep them at home page
   });
 
+  $("#cancelbutton").click(function(){
+    moveToProfile(currentuser);
+  });
+
   $("#cancellistingbutton").click(function(){
     goToListingPage(listingview);
+  });
+
+  $("#gotolistingowner").click(function(){
+    //Get listing owner from listingview
+    $.ajax({
+      type: "GET",
+      url: "/listing/"+listingview,
+      success: function(data) {
+        $.ajax({
+          type: "GET",
+          url: "/getuser/"+data.owner,
+          success: function(owner) {
+            moveToProfile(owner);
+          }
+        });
+      }
+    });
+
   });
 
   /**
@@ -355,7 +377,7 @@ $(document).ready(function(){
   $("#messageuser").click(function() {
 	  $("#messageHeader").show();
 	  $("#replyHeader, #tradeSection").hide();
-	  $("#recipient").text("To: " + viewing.displayname); 
+	  $("#recipient").text("To: " + viewing.displayname);
 	  $("#messageText").val("");
 	  userReply = false;
 	  userRequest = false;
@@ -398,11 +420,11 @@ $(document).ready(function(){
   // MESSAGE USER
   $("#messageForm").submit(function(event) {
 	  event.preventDefault();
-	  
-	  
+
+
 	  var tempOfferID = "", tempOfferTitle = "";
 	  var tempInterestID = "", tempInterestTitle = "";
-	  
+
 	  if (!userReply) {
 		if (userRequest) {
 			var interestTitle;
@@ -426,7 +448,7 @@ $(document).ready(function(){
 		  tempInterestID = msgview.item.interest._id;
 		  tempInterestTitle = msgview.item.interest.title;
 	  }
-	  
+
 	  $.ajax({
 		type: "PUT",
 		url: "/users/messages/send",
@@ -547,7 +569,7 @@ $(document).ready(function(){
 	  console.log("requestListing");
 	  $("#messageHeader").show();
 	  $("#replyHeader").hide();
-	  $("#recipient").text("To: " + viewing.displayname); 
+	  $("#recipient").text("To: " + viewing.displayname);
 	  $("#messageText").val("");
 	  userRequest = true;
 	  $("#tradeSection").show();
@@ -560,11 +582,11 @@ $(document).ready(function(){
 				dropdownHTML += "<option data-img='uploads/"+listingArt.mainPicture+"' value='"+listingArt._id+"'>"+listingArt.title+"</option>";
 			});
 			dropdownHTML += "<option value='mystery'>Mystery trade</option>";
-			$("#tradeItem").html(dropdownHTML);	
+			$("#tradeItem").html(dropdownHTML);
 		}
 	  });
-	  
-	  
+
+
 	  $.ajax({
 		type: "GET",
 		url: "/listing/"+listingview,
@@ -942,7 +964,7 @@ function openInBoxMessage(msg) {
 
 // helper func to print the teading info in div that has id divID
 function printTradingInfo(msg, divID) {
-	if (msg.request) {	
+	if (msg.request) {
 		var offerHTML;
 		if (msg.item.offer._id === 'mystery') {
 			offerHTML = "Offered <a href='#'>"+msg.item.offer.title+"</a>";
@@ -955,7 +977,7 @@ function printTradingInfo(msg, divID) {
 		} else {
 			interestHTML = " to <a href='#' class='linktoInterest'>"+msg.item.interest.title+"</a>";
 		}
-		
+
 		$(divID).html(offerHTML + interestHTML);
 		$(".linktoOffer").click(function(){
 			$.ajax({
@@ -991,7 +1013,7 @@ function openOutBoxMessage(msg) {
 	$("#outboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#sentdate").text("date: "+msg.dateCreated);
 	$("#outboxContent").text(msg.content);
-	
+
 	printTradingInfo(msg, "#outboxtradingInfo");
 }
 
@@ -1405,7 +1427,7 @@ function moveToUserBehaviourPage() {
 }
 
 function addListing(listing) {
-  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
+  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img style='width: 350px; height: 170px;' class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
 }
 
 function getGallery(user) {
@@ -1421,7 +1443,7 @@ function getGallery(user) {
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
   $("#editlisting, #deletelisting, #requestlisting").hide();
-  
+
   if (currentuser.email === viewing.email) {
 	  $("#editlisting, #deletelisting").show();
   } else {
@@ -1432,7 +1454,7 @@ function goToListingPage(listingid) {
   setPageTitle("Listing");
 
   listingview = listingid;
-  
+
   $("#postcomment, #cancelcomment").hide();
 
   //getGallery(user);
@@ -1454,7 +1476,7 @@ function goToListingPage(listingid) {
             for (var i = 0; i < data.morePictures.length; i++) {
               var pic = data.morePictures[i];
               //console.log(pic);
-              $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \""+ data.title +"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\""+ data.title +"\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
+              $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \""+ data.title +"\"><img width='350' height='200' class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\""+ data.title +"\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
             }
 
             //Don't show delete button
@@ -1470,30 +1492,30 @@ function goToListingPage(listingid) {
             }
 			$("#listingcommentsheading").html("<h3>All Comments (" + commentCount(data) + ")</h3>");
 			$("#userprofileimage").attr('src', "uploads/" + currentuser.profileimage);
-			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);}); 
-			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();}); 
-			$("#cancelcomment").on("click",function() {  $("#addcomment").val(""); $("#postcomment, #cancelcomment").hide();}); 
-			
+			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);});
+			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();});
+			$("#cancelcomment").on("click",function() {  $("#addcomment").val(""); $("#postcomment, #cancelcomment").hide();});
+
 			var sortComments = "Newest First";
 			var sortButtonHTML = "<span class=\"caret\"></span>";
 			if (sessionStorage.getItem("sortMethod") != null) {
 				sortComments = sessionStorage.getItem("sortMethod");
 			}
 			$("#sortcomments").html(sortComments + sortButtonHTML);
-			
-			$("#oldestcomments").on("click",function() { 
+
+			$("#oldestcomments").on("click",function() {
 				sessionStorage.setItem("sortMethod", "Oldest First");
 				$("#sortcomments").html("Oldest First" + sortButtonHTML);
 			});
-			$("#newestcomments").on("click",function() { 
+			$("#newestcomments").on("click",function() {
 				sessionStorage.setItem("sortMethod", "Newest First");
 				$("#sortcomments").html("Newest First" + sortButtonHTML);
 			});
-			$("#topcomments").on("click",function() { 
-				sessionStorage.setItem("sortMethod", "Top Comments"); 
-				$("#sortcomments").html("Top Comments" + sortButtonHTML);			
+			$("#topcomments").on("click",function() {
+				sessionStorage.setItem("sortMethod", "Top Comments");
+				$("#sortcomments").html("Top Comments" + sortButtonHTML);
 			});
-			
+
             $("#listingpage").fadeIn();
 
         }

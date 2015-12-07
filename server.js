@@ -182,7 +182,7 @@ function createComment(currentUser, newMessage, target) {
 		message: newMessage,
 		dateCreated: Date.now()
 	});
-	
+
 	target.comments.push(comment);
 }
 
@@ -275,6 +275,18 @@ app.get('/users/all/:emailaddcount', function (req, res){
       return console.log(err);
     }
   });
+});
+//GET USER BY ID
+app.get('/getuser/:id', function (req, res){
+
+  UserModel.findOne({_id: req.params.id}, function (err, user) {
+    if (!err) {
+      return res.send(user);
+    } else {
+      return console.log(err);
+    }
+  });
+
 });
 
 app.get('/users/behaviour/:emailaddcount', function (req, res){
@@ -868,7 +880,7 @@ app.get('/listing/users/:id', function (req, res) {
 			}
 			res.send(user);
 		});
-	});	
+	});
 });
 
 //get listing
