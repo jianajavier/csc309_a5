@@ -8,8 +8,10 @@ var loclat = 0;
 var loclng = 0;
 var listingview; //id of listing being viewed
 var msgview;	// the message being viewed
+var currenttoken;
 
 getLocation();
+
 
 function getLocation() {
     if (navigator.geolocation) {
@@ -59,6 +61,62 @@ function sortComments(condition, target) {
 	*/
 }
 
+function displayComment(comment) {
+	
+	var m = "<p id=\"message" + ">" + comment.message + "</p>";
+	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+        return '<a href="' + url + '">' + url + '</a>';
+    });
+	var displayC = "<div class=\"comment\" "+ "id=\"" + comment._id + "\" >"
+				 + "<div class=\"row\">"
+					 + "<div class=\"col-sm-1\">"
+					 + "</div>"
+					 + "<div class=\"col-sm-1\">"
+						+ "<img src=\"uploads/" + cumment.createrInfo.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
+					 + "</div>"
+					 + "<div class=\"col-sm-10\">"
+						 + "<p>" 
+						 + "<span id=\"username" + comment._id + "\">" + cumment.createrInfo.displayname + "</span>"
+						 + "<span id=\"date" + comment._id + "\">" + cumment.dateCreated + "</span>"
+						 + "</p>"
+						 + m
+						 + "<p>"
+						 + "<button id=\"like" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">"
+						 + "<span class=\"glyphicon glyphicon-thumbs-up\" aria-hidden=\"true\" id=\"up" + comment._id + "\"></span>"
+						 + "</button>"
+						 + "<button id=\"reply" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">Reply</button>"
+						 + "</p>"
+					 + "</div>"
+				 + "</div>"
+				 + "<div id=\"listingreplylist" + comment._id + "\" >"
+				 + "</div>"
+				 + "<form class=\"form-horizontal\" role=\"form\" id=\"replyform" + comment._id +"\" >"
+				 + "<div class=\"row\">"
+				 + "<div class=\"col-sm-4\">"
+				 + "</div>"
+				 + "<div class=\"form-group\">"
+					 + "<label class=\"control-label col-sm-2\" for=\"comment\">"
+					 + "<img src=\"uploads/" + currentuser.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id "\" />" 
+					 + "</label>"
+					 + "<div class=\"col-sm-10\">" 
+					 + "<textarea class=\"form-control\" rows=\"2\"  placeholder=\"Reply to this comment\"></textarea>"
+					 + "</div>"
+				 + "</div>"
+				 + "</div>"
+				 + "<div class=\"row\">"
+				 + "<div class=\"form-group\">"      
+					 + "<div class=\"col-sm-offset-2\">"
+						"<button id=\"postreply" + comment._id + "\" type=\"submit\" class=\"btn btn-default\">Post</button>"
+						"<button id=\"cancelreply" + comment._id + "\" type=\"button\" class=\"btn\">Cancel</button>"
+					 + "</div>"
+				 + "</div>"
+				 + "</div>"
+				+"</form>"
+				+ "</div>";
+	$("#listingcommentlist").prepend(displayC);
+	$("#" + "replyform" + comment._id).hide();	
+}
+
 function displayComment(target, comment) {
 
 	var m = "<p>" + comment.message + "</p>";
@@ -78,6 +136,7 @@ function displayComment(target, comment) {
 		displayC += "</div>";
 	displayC += "</div>";
 	$(target).append(displayC);
+>>>>>>> 792eddfaf24782e26d0618c5ab1b072efd93ad6f
 }
 
 //Comment Helper Functions end here
@@ -134,7 +193,7 @@ $(document).ready(function(){
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
     $("#cpasswordinput, #cpasslabel, #signupheader").hide();
-    $("#loginheader").show();
+    $("#loginheader, #rectangle").show();
     login = 0;
   });
 
@@ -163,13 +222,18 @@ $(document).ready(function(){
 
     // LOGGING IN
     if (login === 0) {
-      // Gets user information to log in. Check if password correct.
+      // Gets user information to log in. Check if password correct on server.
       $.ajax({
-        type: "GET",
-        url: "/users/verify-email/login/" + $("#emailinput").val() + "/" + loclat + "&" + loclng,
+        type: "POST",
+        url: "/users/validate/" + $("#emailinput").val(),
+        data: {
+          passwordinput: $("#passwordinput").val(),
+          token : currenttoken
+        },
         success: function(data){
           if (data) {
-            if (data.password === $("#passwordinput").val()) {
+            if (data.password === "true") {
+              currenttoken = data.token;
               currentuser = data;
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
@@ -177,11 +241,6 @@ $(document).ready(function(){
 
               // set profile picture
               $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
-
-              //$("#logout").fadeIn();
-              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                //$("#viewbehaviour").fadeIn();
-              //}
 
               moveToWelcome(data);
             } else {
@@ -192,6 +251,7 @@ $(document).ready(function(){
           }
         }
       });
+
 
     // SIGNING UP
     } else {
@@ -225,6 +285,7 @@ $(document).ready(function(){
           },
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
+              currenttoken = user.token;
               currentuser = user;
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
@@ -233,19 +294,10 @@ $(document).ready(function(){
               // set profile picture
               $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
-              //$("#logout").fadeIn();
-
-              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                //$("#viewbehaviour").fadeIn();
-              //}
-
               moveToWelcome(user);
-
             });
           }
-
         });
-
       }
     }
   });
@@ -369,6 +421,7 @@ $(document).ready(function(){
   $("#editProfileForm").submit(function (event) {
     event.preventDefault();
     var data = {
+      token : currenttoken,
       displayname : $("#editdisplayname").val(),
       description : $("#editdescription").val()
     }
@@ -415,6 +468,7 @@ $(document).ready(function(){
           type: "PUT",
           url: "/users/update/" + viewing.email + "/" + currentuser.email,
           data: {
+            token : currenttoken,
             password : $("#newpass").val()
           },
           success: function(data) {
@@ -475,6 +529,7 @@ $(document).ready(function(){
 		type: "PUT",
 		url: "/users/messages/send",
 		data: {
+      token : currenttoken,
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
@@ -521,6 +576,7 @@ $(document).ready(function(){
       type: "PUT",
       url: "/users/update/" + viewing.email+"/" +currentuser.email,
       data: {
+        token : currenttoken,
         type : newtype
       },
       success: function(data) {
@@ -560,7 +616,7 @@ $(document).ready(function(){
       success: function () {
         $.ajax({
             type: "GET",
-            url: "/users/verify-email/"+currentuser.email+"/none",
+            url: "/getuser/"+currentuser._id,
             success: function(data){
               if (data) {
                   currentuser = data;
@@ -578,6 +634,7 @@ $(document).ready(function(){
       type: "PUT",
       url: "/listings/update/" + listingview+"/"+viewing._id,
       data: {
+        token : currenttoken,
         title : $("#editlistingtitle").val(),
         description : $("#editlistdescription").val()
       },
@@ -637,7 +694,7 @@ $(document).ready(function(){
     $.ajax({
         type: "GET",
         async: false,
-        url: "/users/verify-email/"+currentuser.email+"/none",
+        url: "/getuser/"+currentuser._id,
         success: function(data){
           if (data) {
             currentuser = data;
@@ -772,6 +829,7 @@ $(document).ready(function(){
   $("#setinitiallistinginfo").submit(function(e) {
       e.preventDefault();
       var data = {
+          token : currenttoken,
           title : $("#listingtitleinitialedit").val(),
           description : $("#listingdescrinitialedit").val()
       }
@@ -807,7 +865,10 @@ $(document).ready(function(){
     $.ajax({
       url: '/uploadimage/'+currentuser._id,  //Server script to process data
       type: 'POST',
-      data: { name : resp.filename+"" },
+      data: {
+        name : resp.filename+"",
+        token : currenttoken
+      },
       success: function(response) {
         setCurrentUser();
         //currentuser = response;
@@ -834,7 +895,10 @@ $(document).ready(function(){
     $.ajax({
       url: '/uploadlistingimage/'+listingview,  //Server script to process data
       type: 'POST',
-      data: { name : resp.filename+"" },
+      data: {
+        name : resp.filename+"",
+        token : currenttoken
+      },
       success: function(response) {
         //listingview = response._id;
       }
@@ -986,6 +1050,7 @@ function openInBoxMessage(msg) {
 			type: "PUT",
 			url: "/users/messages/updateStatus",
 			data: {
+        token : currenttoken,
 				user: currentuser._id,
 				message: msg._id
 			}
@@ -1077,8 +1142,8 @@ function readFile(input) {
                 $.ajax({
                   url: '/uploadprofileimage/'+currentuser._id,  //Server script to process data
                   type: 'POST',
-                  data: { name : response.filename+""
-                          //oldpic :
+                  data: { name : response.filename+"",
+                          token : currenttoken
                         },
                   //$('form').serialize(),
                   success: function(resp) {
@@ -1129,7 +1194,10 @@ function readFile2(input) {
                 $.ajax({
                   url: '/uploadmainlistingimage/'+listingview,  //Server script to process data
                   type: 'POST',
-                  data: { name : response.filename+"" },
+                  data: {
+                    name : response.filename+"",
+                    token : currenttoken
+                  },
                   //$('form').serialize(),
                   success: function(resp) {
                     $('#editmainlistingpicture, #mainlistingpic').attr('src', "uploads/"+resp.mainPicture);
@@ -1164,7 +1232,7 @@ function updateMsgBadge() {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
+  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage, #listingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
   updateMsgBadge();
@@ -1241,6 +1309,7 @@ function moveToMessagePage() {
 		type: "PUT",
 		url: "/users/messages/updateStatus/newMsgNum",
 		data: {
+      token : currenttoken,
 			user: currentuser._id
 		}
 	}).done(function(data){
@@ -1322,7 +1391,7 @@ function moveToEditPage(user, own) {
   $.ajax({
       type: "GET",
       async: false,
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getusers/"+currentuser._id,
       success: function(data){
         if (data) {
           currentuser = data;
@@ -1411,6 +1480,7 @@ function moveToHome() {
 
   currentuser = undefined;
   viewing = undefined;
+  currenttoken = undefined;
 }
 
 //  home page is actually welcome page
@@ -1582,7 +1652,7 @@ function goToEditListingPage() {
 function setCurrentUser() {
   $.ajax({
       type: "GET",
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getuser/"+currentuser._id,
       async: false,
       success: function(data){
         if (data) {
@@ -1605,7 +1675,7 @@ function loadHomeProfileGallery () {
   $.ajax({
       type: "GET",
       async: false,
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getuser/"+currentuser._id,
       success: function(data){
         if (data) {
           currentuser = data;

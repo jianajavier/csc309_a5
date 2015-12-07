@@ -4,9 +4,10 @@ var bodyParser  = require('body-parser');
 var express = require('express');
 var app = express();
 var util = require('util');
-var fs = require('fs-extra');
 var multer = require('multer');
 var request = require('request');
+var passwordHash = require('password-hash');
+var crypto = require('crypto');
 
 var upload = multer({
   dest: __dirname + '/public/uploads/'
@@ -150,7 +151,7 @@ MessageSchemas = new Schema({
 UserSchemas = new Schema({
     email: String,
     password: String,
-    googleId: String, 
+    googleId: String,
     description: String, default : "",
     profileimage: ListingSchemas,
     gallery: [ListingSchemas],
@@ -178,6 +179,8 @@ var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
+
+var token;
 
 function createComment(currentUser, newMessage, target) {
 	/*
@@ -216,20 +219,6 @@ function addNewTagToArt(tag, art) {
   art.tags[tag] = true;
   art.markModified('tags');
 }
-
-app.post('/test/addtag', function (req, res) {
-  return UserModel.find(function (err, users) {
-    for(var i = 0; i < users.length; i++) {
-      addNewTagToUser("two", users[i]);
-      users[i].save();
-      //for(var j = 0; j < users.length; j++) {
-        //addNewTagToArt(i, users[i].posts[j]);
-      //}
-    }
-    return res.send(users[i-1].tags);
-  });
-});
-
 
 app.get('/search/:tag', function (req, res) {
   var userResults = [];
@@ -381,10 +370,16 @@ app.post('/users', function (req, res){
     listing.mainPicture = "default_profile_large.jpg";
     //listing.owner = user._id,
     listing.title ="Listing"
+<<<<<<< HEAD
     var displayname = req.body.email.split("@")[0];
+=======
+
+    var hashedPassword = passwordHash.generate(req.body.password);
+
+>>>>>>> 93bcdb3923af6e10ba9aa24fff4dbb6cfbac2b34
     user = new UserModel({
       email: req.body.email,
-      password: req.body.password,
+      password: hashedPassword,
       googleId: "",
       description: "",
       displayname: displayname,
@@ -442,30 +437,17 @@ app.post('/users', function (req, res){
         console.log("created");
       }
     });
+    //SET TOKEN TO PROTECT AGAINST CSRF
+    crypto.randomBytes(48, function(ex, buf) {
+      var gentoken = buf.toString('hex');
+      user.token = gentoken;
+      token = gentoken;
+    });
+
     return res.send(user);
 
   });
 
-});
-
-app.post('/users/uploadprofile', function(req, res) {
-  var form = new formidable.IncomingForm();
-  form.parse(req, function(err, fields, files) {
-    res.redirect("/");
-  });
-
-  form.on('end', function(fields, files) {
-    var temp_path = this.openedFiles[0].path;
-    var file_name = this.openedFiles[0].name;
-    var new_location = './uploads/';
-    fs.copy(temp_path, new_location + file_name, function(err) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("success!");
-      }
-    });
-  });
 });
 
 // Create (Send) a message
@@ -516,18 +498,20 @@ console.log(req.body["item[offer]"]);
 			console.log(receiverUser.displayname);
 			console.log(">>>>>>>>>>>>>>");
 			senderUser.outbox.unshift(tempMessage);
-			senderUser.save(function (err) {
-				if (err) {
-					console.log("Saving 'from' error: "+ err);
-				}
-			});
-			receiverUser.inbox.unshift(tempMessage);
-			receiverUser.newMsgNum += 1;
-			receiverUser.save(function (err) {
-				if (err) {
-					console.log("Saving 'to' error: "+ err);
-				}
-			});
+      if (req.body.token === token) {
+  			senderUser.save(function (err) {
+  				if (err) {
+  					console.log("Saving 'from' error: "+ err);
+  				}
+  			});
+  			receiverUser.inbox.unshift(tempMessage);
+  			receiverUser.newMsgNum += 1;
+  			receiverUser.save(function (err) {
+  				if (err) {
+  					console.log("Saving 'to' error: "+ err);
+  				}
+  			});
+      }
 		});
 	});
 	res.sendStatus(200);
@@ -556,11 +540,13 @@ app.put('/users/messages/updateStatus', function (req, res) {
 		}
 		user.inbox.id(req.body.message).unread = false;
 		console.log(user.inbox);
-		user.save(function (err) {
-			if (err) {
-				console.log("Update message status error.");
-			}
-		});
+    if (req.body.token === token) {
+  		user.save(function (err) {
+  			if (err) {
+  				console.log("Update message status error.");
+  			}
+  		});
+    }
 	});
 	res.sendStatus(200);
 });
@@ -573,12 +559,14 @@ app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
 		}
 		user.newMsgNum = 0;
 		console.log(user);
-		user.save(function (err) {
-			if (err) {
-				console.log("Update message status error.");
-			}
-		});
-		res.send(user);
+    if (req.body.token === token) {
+  		user.save(function (err) {
+  			if (err) {
+  				console.log("Update message status error.");
+  			}
+  		});
+  		res.send(user);
+    }
 	});
 });
 
@@ -671,11 +659,37 @@ app.get('/users/verify-email/login/:email/:loc', function (req, res){
         }
       });
     }
-
       return res.send(user);
     } else {
       return console.log(err);
     }
+  });
+});
+
+// validate log in
+app.post('/users/validate/:email', function (req, res) {
+  return UserModel.findOne({ email: req.params.email }, function (err, user) {
+    var hiddenuser = user;
+    if (passwordHash.verify(req.body.passwordinput, user.password)) {
+      hiddenuser.password = true;
+
+      //SET TOKEN TO PROTECT AGAINST CSRF
+      crypto.randomBytes(48, function(ex, buf) {
+        var gentoken = buf.toString('hex');
+        hiddenuser.token = gentoken;
+        token = gentoken;
+      });
+
+    } else {
+      hiddenuser.password = false;
+    }
+
+    if (!err) {
+      console.log("verified user exists");
+    } else {
+      console.log(err);
+    }
+    return res.send(hiddenuser);
   });
 });
 
@@ -717,7 +731,11 @@ app.put('/users/update/:email/:emailaddcount', function (req, res){
     });
 
     if (req.body.email) user.email = req.body.email;
-    if (req.body.password) user.password = req.body.password;
+    if (req.body.password)
+    {
+      var hashedPassword = passwordHash.generate(req.body.password);
+      user.password = hashedPassword;
+    }
     //if (req.body.profileimage) user.profileimage = req.body.profileimage.data;
     if (req.body.description) {
       user.description = req.body.description;
@@ -744,15 +762,16 @@ app.put('/users/update/:email/:emailaddcount', function (req, res){
       }
       user.markModified('tags');
 
-    return user.save(function (err) {
-      if (!err) {
-        console.log("updated");
-        console.log(user.tags);
-      } else {
-        console.log(err);
-      }
-      return res.send(user);
-    });
+    if (req.body.token === token) {
+      return user.save(function (err) {
+        if (!err) {
+          console.log("updated");
+        } else {
+          console.log(err);
+        }
+        return res.send(user);
+      });
+    }
   });
 });
 
@@ -830,7 +849,9 @@ app.post('/uploadimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(list);
+      if (req.body.token === token) {
+        return res.send(list);
+      }
     });
   });
 });
@@ -869,7 +890,10 @@ app.post('/uploadlistingimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(listing);
+      if (req.body.token === token) {
+        return res.send(listing);
+      }
+
     });
   });
 });
@@ -907,7 +931,10 @@ app.post('/uploadmainlistingimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(listing);
+
+      if (req.body.token === token) {
+        return res.send(listing);
+      }
     });
   });
   return res.send("sent");
@@ -947,7 +974,9 @@ app.post('/uploadprofileimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(user);
+      if (req.body.token === token) {
+        return res.send(user);
+      }
     });
   });
   //return res.send("sent");
@@ -971,7 +1000,9 @@ app.get('/listing/users/:id', function (req, res) {
 				console.log(err2);
 				return handleError(err2);
 			}
-			res.send(user);
+      if (req.body.token === token) {
+        return res.send(user);
+      }
 		});
 	});
 });
@@ -1064,15 +1095,16 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
         if (req.body.description) user.profileimage.description = req.body.description;
       }
     }
-
-    user.save(function (err) {
-      if (!err) {
-        console.log("updated gallery listing infos");
-        console.log(person);
-      } else {
-        console.log(err);
-      }
-    });
+    if (req.body.token === token) {
+      user.save(function (err) {
+        if (!err) {
+          console.log("updated gallery listing infos");
+          console.log(person);
+        } else {
+          console.log(err);
+        }
+      });
+    }
   });
 
   return ListingModel.findOne({ _id: req.params.listingid }, function (err, listing) {
