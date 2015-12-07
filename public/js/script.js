@@ -8,8 +8,10 @@ var loclat = 0;
 var loclng = 0;
 var listingview; //id of listing being viewed
 var msgview;	// the message being viewed
+var currenttoken;
 
 getLocation();
+
 
 function getLocation() {
     if (navigator.geolocation) {
@@ -59,9 +61,15 @@ function sortComments(condition, target) {
 	*/
 }
 
+<<<<<<< HEAD
 function displayComment(comment, target, listingCreater) {
 	
 	var m = comment.message;
+=======
+function displayComment(comment) {
+
+	var m = "<p id=\"message" + ">" + comment.message + "</p>";
+>>>>>>> 71333d3dd1eb61b9828a95d78acd2b8fc6697aaa
 	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
         return '<a href="' + url + '">' + url + '</a>';
     });
@@ -74,9 +82,15 @@ function displayComment(comment, target, listingCreater) {
 						+ "id=\"userprofileimage" + comment._id + "\" />"
 					 + "</div>"
 					 + "<div class=\"col-sm-10\">"
+<<<<<<< HEAD
 						 + "<p id=\"user" + comment._id + "\" >" 
 						 + "<span id=\"username" + comment._id + "\">" + comment.createrInfo.displayname + "</span>"
 						 + "<span id=\"date" + comment._id + "\">" + comment.dateCreated + "</span>"
+=======
+						 + "<p>"
+						 + "<span id=\"username" + comment._id + "\">" + cumment.createrInfo.displayname + "</span>"
+						 + "<span id=\"date" + comment._id + "\">" + cumment.dateCreated + "</span>"
+>>>>>>> 71333d3dd1eb61b9828a95d78acd2b8fc6697aaa
 						 + "</p>"
 						 + "<form class=\"form-horizontal\" role=\"form\" id=\"editcomment" + comment._id +"\" >"
 						 + "<p>"
@@ -117,13 +131,13 @@ function displayComment(comment, target, listingCreater) {
 					 + "<label class=\"control-label col-sm-2\" for=\"comment\">"
 					 + "<img src=\"uploads/" + currentuser.profileimage + "\" class=\"img-rounded\" width=\"40\" height=\"40\" id=\"userprofileimage" + comment._id + "\" />" 
 					 + "</label>"
-					 + "<div class=\"col-sm-10\">" 
+					 + "<div class=\"col-sm-10\">"
 					 + "<textarea class=\"form-control\" rows=\"2\"  placeholder=\"Reply to this comment\"></textarea>"
 					 + "</div>"
 				 + "</div>"
 				 + "</div>"
 				 + "<div class=\"row\">"
-				 + "<div class=\"form-group\">"      
+				 + "<div class=\"form-group\">"
 					 + "<div class=\"col-sm-offset-2\">"
 						"<button id=\"postreply" + comment._id + "\" type=\"submit\" class=\"btn btn-info btn-sm\">Post</button>"
 						"<button id=\"cancelreply" + comment._id + "\" type=\"button\" class=\"btn\">Cancel</button>"
@@ -144,6 +158,7 @@ function displayComment(comment, target, listingCreater) {
 					  + "</div>"
 					+ "</div>"
 				+ "</div>";
+
 	$("#" + target).prepend(displayC);
 	
 	$("#replyform" + comment._id).hide();
@@ -357,7 +372,6 @@ function displayReply(comment) {
 	
 }
 
-
 //Comment Helper Functions end here
 
 function onSignIn(googleUser) {
@@ -412,7 +426,7 @@ $(document).ready(function(){
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
     $("#cpasswordinput, #cpasslabel, #signupheader").hide();
-    $("#loginheader").show();
+    $("#loginheader, #rectangle").show();
     login = 0;
   });
 
@@ -441,13 +455,18 @@ $(document).ready(function(){
 
     // LOGGING IN
     if (login === 0) {
-      // Gets user information to log in. Check if password correct.
+      // Gets user information to log in. Check if password correct on server.
       $.ajax({
-        type: "GET",
-        url: "/users/verify-email/login/" + $("#emailinput").val() + "/" + loclat + "&" + loclng,
+        type: "POST",
+        url: "/users/validate/" + $("#emailinput").val(),
+        data: {
+          passwordinput: $("#passwordinput").val(),
+          token : currenttoken
+        },
         success: function(data){
           if (data) {
-            if (data.password === $("#passwordinput").val()) {
+            if (data.password === "true") {
+              currenttoken = data.token;
               currentuser = data;
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
@@ -455,11 +474,6 @@ $(document).ready(function(){
 
               // set profile picture
               $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
-
-              //$("#logout").fadeIn();
-              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                //$("#viewbehaviour").fadeIn();
-              //}
 
               moveToWelcome(data);
             } else {
@@ -470,6 +484,7 @@ $(document).ready(function(){
           }
         }
       });
+
 
     // SIGNING UP
     } else {
@@ -503,6 +518,7 @@ $(document).ready(function(){
           },
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
+              currenttoken = user.token;
               currentuser = user;
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
@@ -511,23 +527,13 @@ $(document).ready(function(){
               // set profile picture
               $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
-              //$("#logout").fadeIn();
-
-              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                //$("#viewbehaviour").fadeIn();
-              //}
-
               moveToWelcome(user);
-
             });
           }
-
         });
-
       }
     }
   });
-
 
   /**
   USER PERFORMS A SEARCH IN THE NAV BAR
@@ -545,12 +551,12 @@ $(document).ready(function(){
             $("#userSearchResults").html("<h3>Users that match your search:</h3>");
             for(var i = 0; i < data[0].length; i++){
               $("#userSearchResults").append(
-                "<div class='panel panel-primary'>"
+                "<div onclick = \"goToUser('"+data[0][i].email+"')\" class='panel panel-primary'>"
                   + "<div class='panel-heading'>"
                       + "<h3 class='panel-title'>" + data[0][i].email +"</h3>"
                   + "</div>"
                   + "<div class='panel-body'>"
-                      + "<img src='" + data[0][i].profileimage + "'>"
+                      + "<img style='max-width:100%;max-height:auto;' src='/uploads/" + data[0][i].profileimage.mainPicture + "'>"
                       + "<p>" + data[0][i].description + "</p>"
                   + "</div>"
                 + "</div>");
@@ -563,7 +569,7 @@ $(document).ready(function(){
                       + "<h3 class='panel-title'>" + data[1][i].title +"</h3>"
                   + "</div>"
                   + "<div class='panel-body'>"
-                      + "<img src='" + data[1][i].mainPicture +"'>"
+                      + "<img src='/uploads/" + data[1][i].mainPicture +"'>"
                   + "</div>"
                 + "</div>");
             }
@@ -646,15 +652,28 @@ $(document).ready(function(){
   */
   $("#editProfileForm").submit(function (event) {
     event.preventDefault();
+    var data = {
+      token : currenttoken,
+      displayname : $("#editdisplayname").val(),
+      description : $("#editdescription").val()
+    }
+    var tags = {}
+    if (!($("#taguser1").val()==null || $("#taguser1").val().trim()=="")) {
+      data.tag1 = $("#taguser1").val();
+    }
+    if (!($("#taguser2").val()==null || $("#taguser2").val().trim()=="")) {
+      data.tag2 = $("#taguser2").val();
+    }
+    if (!($("#taguser3").val()==null || $("#taguser3").val().trim()=="")) {
+      data.tag3 = $("#taguser3").val();
+    }
+    console.log(data);
     $.ajax({
       type: "PUT",
       url: "/users/update/" + viewing.email+ "/"+currentuser.email, // technically viewing should be current if they are looking at their own
-      data: {
-        displayname : $("#editdisplayname").val(),
-        description : $("#editdescription").val()
-      },
+      data: data,
       success: function(data) {
-        currentuser = JSON.parse(getUserByEmail(currentuser.email).responseText);
+        currentuser = data;
         viewing = data;
         editAlertPopup("Updated.");
       }
@@ -681,6 +700,7 @@ $(document).ready(function(){
           type: "PUT",
           url: "/users/update/" + viewing.email + "/" + currentuser.email,
           data: {
+            token : currenttoken,
             password : $("#newpass").val()
           },
           success: function(data) {
@@ -741,6 +761,7 @@ $(document).ready(function(){
 		type: "PUT",
 		url: "/users/messages/send",
 		data: {
+      token : currenttoken,
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
@@ -787,6 +808,7 @@ $(document).ready(function(){
       type: "PUT",
       url: "/users/update/" + viewing.email+"/" +currentuser.email,
       data: {
+        token : currenttoken,
         type : newtype
       },
       success: function(data) {
@@ -826,7 +848,7 @@ $(document).ready(function(){
       success: function () {
         $.ajax({
             type: "GET",
-            url: "/users/verify-email/"+currentuser.email+"/none",
+            url: "/getuser/"+currentuser._id,
             success: function(data){
               if (data) {
                   currentuser = data;
@@ -844,6 +866,7 @@ $(document).ready(function(){
       type: "PUT",
       url: "/listings/update/" + listingview+"/"+viewing._id,
       data: {
+        token : currenttoken,
         title : $("#editlistingtitle").val(),
         description : $("#editlistdescription").val()
       },
@@ -903,7 +926,7 @@ $(document).ready(function(){
     $.ajax({
         type: "GET",
         async: false,
-        url: "/users/verify-email/"+currentuser.email+"/none",
+        url: "/getuser/"+currentuser._id,
         success: function(data){
           if (data) {
             currentuser = data;
@@ -1037,13 +1060,25 @@ $(document).ready(function(){
 
   $("#setinitiallistinginfo").submit(function(e) {
       e.preventDefault();
+      var data = {
+          token : currenttoken,
+          title : $("#listingtitleinitialedit").val(),
+          description : $("#listingdescrinitialedit").val()
+      }
+      var tags = {}
+      if (!($("#tagmodal1").val()==null || $("#tagmodal1").val().trim()=="")) {
+        data.tag1 = $("#tagmodal1").val();
+      }
+      if (!($("#tagmodal2").val()==null || $("#tagmodal2").val().trim()=="")) {
+        data.tag2 = $("#tagmodal2").val();
+      }
+      if (!($("#tagmodal3").val()==null || $("#tagmodal3").val().trim()=="")) {
+        data.tag3 = $("#tagmodal3").val();
+      }
       $.ajax({
         type: "PUT",
         url: "/listings/update/" + listingview +"/"+currentuser._id,
-        data: {
-          title : $("#listingtitleinitialedit").val(),
-          description : $("#listingdescrinitialedit").val()
-        },
+        data: data,
         success: function(data) {
           //listingview = data._id;
         }
@@ -1062,7 +1097,10 @@ $(document).ready(function(){
     $.ajax({
       url: '/uploadimage/'+currentuser._id,  //Server script to process data
       type: 'POST',
-      data: { name : resp.filename+"" },
+      data: {
+        name : resp.filename+""
+        //token : currenttoken
+      },
       success: function(response) {
         setCurrentUser();
         //currentuser = response;
@@ -1089,7 +1127,10 @@ $(document).ready(function(){
     $.ajax({
       url: '/uploadlistingimage/'+listingview,  //Server script to process data
       type: 'POST',
-      data: { name : resp.filename+"" },
+      data: {
+        name : resp.filename+"",
+        token : currenttoken
+      },
       success: function(response) {
         //listingview = response._id;
       }
@@ -1241,6 +1282,7 @@ function openInBoxMessage(msg) {
 			type: "PUT",
 			url: "/users/messages/updateStatus",
 			data: {
+        token : currenttoken,
 				user: currentuser._id,
 				message: msg._id
 			}
@@ -1332,8 +1374,8 @@ function readFile(input) {
                 $.ajax({
                   url: '/uploadprofileimage/'+currentuser._id,  //Server script to process data
                   type: 'POST',
-                  data: { name : response.filename+""
-                          //oldpic :
+                  data: { name : response.filename+"",
+                          token : currenttoken
                         },
                   //$('form').serialize(),
                   success: function(resp) {
@@ -1384,7 +1426,10 @@ function readFile2(input) {
                 $.ajax({
                   url: '/uploadmainlistingimage/'+listingview,  //Server script to process data
                   type: 'POST',
-                  data: { name : response.filename+"" },
+                  data: {
+                    name : response.filename+"",
+                    token : currenttoken
+                  },
                   //$('form').serialize(),
                   success: function(resp) {
                     $('#editmainlistingpicture, #mainlistingpic').attr('src', "uploads/"+resp.mainPicture);
@@ -1419,8 +1464,9 @@ function updateMsgBadge() {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
+  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage, #listingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
+  $("#notSearch").show();
 
   updateMsgBadge();
 
@@ -1436,54 +1482,6 @@ function moveToWelcome(obj) {
   loadRecommendations();
   loadHomeProfileGallery();
 
-  // Gets all users to display in welcome screen --USE FOR ADMIN?
-    // $.ajax({
-    //   type: "get",
-    //   url: "/users/all/"+currentuser.email,
-    //   success: function(data){
-    //     var info = data;
-    //     for (var i = 0; i < data.length; i++) {
-    //       var displayname;
-    //
-    //       var ok = false;
-    //
-    //       var table = $("#usertable");
-    //       $("#usertable tr:not(:first)").each(function() {
-    //       //get the value of the table cell located in the first column
-    //
-    //       var valueOfCell = $(this).find("td:nth-child(1)").html();
-    //
-    //       $.when((getUserByEmail(valueOfCell)).done(function(user){
-    //         if (!user) {
-    //           $('#'+user._id).remove();
-    //         }
-    //       }));
-    //
-    //       if (valueOfCell == data[i].email){
-    //         if (data[i].displayname != "" && $(this).find("td:nth-child(2)").html() != data[i].displayname) {
-    //           $(this).find("td:nth-child(2)").html(data[i].displayname);
-    //         }
-    //         ok = true;
-    //       } else {
-    //
-    //       }
-    //       });
-    //
-    //       if (!ok) {
-    //         if (data[i].displayname === "") {
-    //           displayname = data[i].email;
-    //         } else {
-    //           displayname = data[i].displayname;
-    //         }
-    //
-    //         $('<tr id='+ data[i]._id +'><td>'+ data[i].email +'</td><td>'+displayname+'</td></tr>').appendTo('#usertable');
-    //
-    //
-    //       }
-    //     }
-    //   }
-    // });
-
     $("#loginbutton, #signupbutton").hide();
     $("#homepage").show();
 }
@@ -1491,11 +1489,13 @@ function moveToWelcome(obj) {
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
+  $("#notSearch").show();
 	$("#inboxTab").tab("show");
 	$.ajax({
 		type: "PUT",
 		url: "/users/messages/updateStatus/newMsgNum",
 		data: {
+      token : currenttoken,
 			user: currentuser._id
 		}
 	}).done(function(data){
@@ -1509,8 +1509,9 @@ function moveToMessagePage() {
 
 function moveToProfile(user) {
 
-  $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #listingpage, #editlistingpage").hide();
+  $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #listingpage, #editlistingpage, #searchScreen").hide();
   $("#messageuser").hide();
+  $("#notSearch").show();
 
   $("#homepage").hide();
   setPageTitle("Profile");
@@ -1577,7 +1578,7 @@ function moveToEditPage(user, own) {
   $.ajax({
       type: "GET",
       async: false,
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getuser/"+currentuser._id,
       success: function(data){
         if (data) {
           currentuser = data;
@@ -1666,6 +1667,7 @@ function moveToHome() {
 
   currentuser = undefined;
   viewing = undefined;
+  currenttoken = undefined;
 }
 
 //  home page is actually welcome page
@@ -1731,6 +1733,7 @@ function getGallery(user) {
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
   $("#editlisting, #deletelisting, #requestlisting").hide();
+  $("#notSearch").show();
 
   if (currentuser.email === viewing.email) {
 	  $("#editlisting, #deletelisting").show();
@@ -1852,7 +1855,7 @@ function goToListingPage(listingid) {
 				});
 			});
 
-            $("#listingpage").fadeIn();
+        $("#listingpage").fadeIn();
 
         }
       }
@@ -1862,6 +1865,7 @@ function goToListingPage(listingid) {
 
 function goToEditListingPage() {
   $("#edituser, #blueimp-gallery, #editprofilepage, #messagePage, #profilepage, #listingpage").hide();
+  $("#notSearch").show();
 
   $.ajax({
       type: "GET",
@@ -1885,7 +1889,7 @@ function goToEditListingPage() {
 function setCurrentUser() {
   $.ajax({
       type: "GET",
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getuser/"+currentuser._id,
       async: false,
       success: function(data){
         if (data) {
@@ -1908,7 +1912,7 @@ function loadHomeProfileGallery () {
   $.ajax({
       type: "GET",
       async: false,
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getuser/"+currentuser._id,
       success: function(data){
         if (data) {
           currentuser = data;
@@ -1972,4 +1976,11 @@ function loadHomeProfileGallery () {
   }
 
 
+}
+
+function goToUser(email) {
+  var testing = getUserByEmail(email);
+  console.log(JSON.parse(testing.responseText));
+
+  moveToProfile(JSON.parse(getUserByEmail(email).responseText));
 }

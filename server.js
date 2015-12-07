@@ -4,9 +4,10 @@ var bodyParser  = require('body-parser');
 var express = require('express');
 var app = express();
 var util = require('util');
-var fs = require('fs-extra');
 var multer = require('multer');
 var request = require('request');
+var passwordHash = require('password-hash');
+var crypto = require('crypto');
 
 var upload = multer({
   dest: __dirname + '/public/uploads/'
@@ -102,7 +103,8 @@ ListingSchemas = new Schema ({
   title: String,
   profilepic: Number, //1 if it is, 0 if not
   comments: [CommentSchemas],
-  reviews: [ReviewSchemas]
+  reviews: [ReviewSchemas],
+  tags: {}
 });
 
 
@@ -149,7 +151,7 @@ MessageSchemas = new Schema({
 UserSchemas = new Schema({
     email: String,
     password: String,
-    googleId: String, 
+    googleId: String,
     description: String, default : "",
     profileimage: ListingSchemas,
     gallery: [ListingSchemas],
@@ -177,6 +179,8 @@ var PostModel = mongoose.model('PostSchema', PostSchemas);
 var CommentModel = mongoose.model('CommentSchema', CommentSchemas);
 var ReplyModel = mongoose.model('ReplySchema', ReplySchemas);
 var ReviewModel = mongoose.model('ReviewSchema', ReviewSchemas);
+
+var token;
 
 function createComment(currentUser, newMessage, target) {
 	/*
@@ -230,20 +234,6 @@ function addNewTagToArt(tag, art) {
   art.markModified('tags');
 }
 
-app.post('/test/addtag', function (req, res) {
-  return UserModel.find(function (err, users) {
-    for(var i = 0; i < users.length; i++) {
-      addNewTagToUser("two", users[i]);
-      users[i].save();
-      //for(var j = 0; j < users.length; j++) {
-        //addNewTagToArt(i, users[i].posts[j]);
-      //}
-    }
-    return res.send(users[i-1].tags);
-  });
-});
-
-
 app.get('/search/:tag', function (req, res) {
   var userResults = [];
   var postResults = [];
@@ -257,23 +247,38 @@ app.get('/search/:tag', function (req, res) {
           break;
         }
       }
-      for(var k = 0; k < users[i].posts.length; k++) {
-        for(var m = 0; m < tags.length; m++) {
-          if(users[i].posts[k].tags[tags[m]]) {
-            postResults.push(users[i].posts[k]);
+      // for(var k = 0; k < users[i].gallery.length; k++) {
+      //   for(var m = 0; m < tags.length; m++) {
+      //     console.log("HERE");
+      //     //console.log(users[i].gallery[k]);
+      //     if(users[i].gallery[k].tags[tags[m]]) {
+      //       postResults.push(users[i].gallery[k]);
+      //     }
+      //   }
+      // }
+    }
+    ListingModel.find(function(err2,listings) {
+      for (var i = 0; i < listings.length; i++) {
+        for(var j = 0; j < tags.length; j++) {
+          console.log("TAG: "+listings[i].tags[tags[j]]);
+          if (listings[i].tags[tags[j]]) {
+            console.log("GETTING HERE");
+            postResults.push(listings[i]);
           }
         }
       }
-    }
-    if (!err) {
-      console.log([userResults, postResults]);
-      return res.send([userResults, postResults]);
-    } else {
-      return console.log(err);
-    }
+      if (!err && !err2) {
+        console.log([userResults, postResults]);
+        var result = [userResults, postResults];
+        res.send(result);
+      } else {
+        console.log(err);
+      }
+
+    });
+
   });
 });
-
 
 /* CURD requests */
 // GET ALL USERS
@@ -394,13 +399,16 @@ app.post('/users', function (req, res){
     listing.mainPicture = "default_profile_large.jpg";
     //listing.owner = user._id,
     listing.title ="Listing"
+    var displayname = req.body.email.split("@")[0];
+
+    var hashedPassword = passwordHash.generate(req.body.password);
 
     user = new UserModel({
       email: req.body.email,
-      password: req.body.password,
+      password: hashedPassword,
       googleId: "",
       description: "",
-      displayname: "",
+      displayname: displayname,
       //profileimage: list,
       type: userType,
       userbehaviour: { allcount: 0,
@@ -410,8 +418,10 @@ app.post('/users', function (req, res){
         updatecount: 0,
         behaviourcount: 0
       },
-      tags: { na:false }
+      tags: {}
     });
+
+    user.tags[displayname] = true;
 
     console.log("USER ID"+user._id);
     listing = {};
@@ -431,7 +441,8 @@ app.post('/users', function (req, res){
       owner: user._id,
       title: listing.title,
       profilepic: listing.profilepic,
-      _id: listing._id
+      _id: listing._id,
+      tags: { na: false }
     });
     list.save(function (err){
       if (err) {
@@ -452,30 +463,17 @@ app.post('/users', function (req, res){
         console.log("created");
       }
     });
+    //SET TOKEN TO PROTECT AGAINST CSRF
+    crypto.randomBytes(48, function(ex, buf) {
+      var gentoken = buf.toString('hex');
+      user.token = gentoken;
+      token = gentoken;
+    });
+
     return res.send(user);
 
   });
 
-});
-
-app.post('/users/uploadprofile', function(req, res) {
-  var form = new formidable.IncomingForm();
-  form.parse(req, function(err, fields, files) {
-    res.redirect("/");
-  });
-
-  form.on('end', function(fields, files) {
-    var temp_path = this.openedFiles[0].path;
-    var file_name = this.openedFiles[0].name;
-    var new_location = './uploads/';
-    fs.copy(temp_path, new_location + file_name, function(err) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("success!");
-      }
-    });
-  });
 });
 
 // Create (Send) a message
@@ -526,18 +524,20 @@ console.log(req.body["item[offer]"]);
 			console.log(receiverUser.displayname);
 			console.log(">>>>>>>>>>>>>>");
 			senderUser.outbox.unshift(tempMessage);
-			senderUser.save(function (err) {
-				if (err) {
-					console.log("Saving 'from' error: "+ err);
-				}
-			});
-			receiverUser.inbox.unshift(tempMessage);
-			receiverUser.newMsgNum += 1;
-			receiverUser.save(function (err) {
-				if (err) {
-					console.log("Saving 'to' error: "+ err);
-				}
-			});
+      if (req.body.token === token) {
+  			senderUser.save(function (err) {
+  				if (err) {
+  					console.log("Saving 'from' error: "+ err);
+  				}
+  			});
+  			receiverUser.inbox.unshift(tempMessage);
+  			receiverUser.newMsgNum += 1;
+  			receiverUser.save(function (err) {
+  				if (err) {
+  					console.log("Saving 'to' error: "+ err);
+  				}
+  			});
+      }
 		});
 	});
 	res.sendStatus(200);
@@ -566,11 +566,13 @@ app.put('/users/messages/updateStatus', function (req, res) {
 		}
 		user.inbox.id(req.body.message).unread = false;
 		console.log(user.inbox);
-		user.save(function (err) {
-			if (err) {
-				console.log("Update message status error.");
-			}
-		});
+    if (req.body.token === token) {
+  		user.save(function (err) {
+  			if (err) {
+  				console.log("Update message status error.");
+  			}
+  		});
+    }
 	});
 	res.sendStatus(200);
 });
@@ -583,12 +585,14 @@ app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
 		}
 		user.newMsgNum = 0;
 		console.log(user);
-		user.save(function (err) {
-			if (err) {
-				console.log("Update message status error.");
-			}
-		});
-		res.send(user);
+    if (req.body.token === token) {
+  		user.save(function (err) {
+  			if (err) {
+  				console.log("Update message status error.");
+  			}
+  		});
+  		res.send(user);
+    }
 	});
 });
 
@@ -605,16 +609,15 @@ app.post('/users/googlelogin/:id/:email', function (req, res) {
             UserModel.findOne({googleId: id}, function (err, user) {
               if (!err) {
                 if (user) {
-                  console.log("uh oh");
                   res.send(user);
                 } else {
-                  console.log("yes this is right");
+                  var displayname = req.params.email.split("@")[0];
                   var newuser = new UserModel({
                       email: req.params.email,
                       googleId: id,
                       password: "",
                       description: "",
-                      displayname: "",
+                      displayname: displayname,
                       type: "",
                       profileimage: "default_profile_large.jpg",
                       userbehaviour: { allcount: 0,
@@ -624,8 +627,10 @@ app.post('/users/googlelogin/:id/:email', function (req, res) {
                         updatecount: 0,
                         behaviourcount: 0
                       },
-                      tags: { na:false }
+                      tags: {}
                   });
+
+                  newuser.tags[displayname] = true;
 
                   newuser.save(function (err) {
                     if (err) {
@@ -680,11 +685,37 @@ app.get('/users/verify-email/login/:email/:loc', function (req, res){
         }
       });
     }
-
       return res.send(user);
     } else {
       return console.log(err);
     }
+  });
+});
+
+// validate log in
+app.post('/users/validate/:email', function (req, res) {
+  return UserModel.findOne({ email: req.params.email }, function (err, user) {
+    var hiddenuser = user;
+    if (passwordHash.verify(req.body.passwordinput, user.password)) {
+      hiddenuser.password = true;
+
+      //SET TOKEN TO PROTECT AGAINST CSRF
+      crypto.randomBytes(48, function(ex, buf) {
+        var gentoken = buf.toString('hex');
+        hiddenuser.token = gentoken;
+        token = gentoken;
+      });
+
+    } else {
+      hiddenuser.password = false;
+    }
+
+    if (!err) {
+      console.log("verified user exists");
+    } else {
+      console.log(err);
+    }
+    return res.send(hiddenuser);
   });
 });
 
@@ -698,12 +729,11 @@ app.get('/users/verify-email/:email/:emailaddcount', function (req, res){
           if (err) {
             console.log(err);
           } else {
-            console.log("added specificcount 1");
+            console.log("done");
           }
         });
       });
     }
-    console.log("DUDE"+user);
     if (!err) {
       return res.send(user);
     } else {
@@ -727,7 +757,11 @@ app.put('/users/update/:email/:emailaddcount', function (req, res){
     });
 
     if (req.body.email) user.email = req.body.email;
-    if (req.body.password) user.password = req.body.password;
+    if (req.body.password)
+    {
+      var hashedPassword = passwordHash.generate(req.body.password);
+      user.password = hashedPassword;
+    }
     //if (req.body.profileimage) user.profileimage = req.body.profileimage.data;
     if (req.body.description) {
       user.description = req.body.description;
@@ -739,19 +773,31 @@ app.put('/users/update/:email/:emailaddcount', function (req, res){
     } else {
       user.displayname = "";
     }
-
-    if (req.body.type) {
-      user.type = req.body.type;
-    }
-
-    return user.save(function (err) {
-      if (!err) {
-        console.log("updated");
-      } else {
-        console.log(err);
+    console.log(req.body.tag1);
+      if(req.body.tag1) {
+        user.tags[req.body.tag1] = true;
+        console.log(req.body.tag1);
       }
-      return res.send(user);
-    });
+      if(req.body.tag2) {
+        user.tags[req.body.tag2] = true;
+        console.log(req.body.tag2);
+      }
+      if(req.body.tag3) {
+        user.tags[req.body.tag3] = true;
+        console.log(req.body.tag3);
+      }
+      user.markModified('tags');
+
+    if (req.body.token === token) {
+      return user.save(function (err) {
+        if (!err) {
+          console.log("updated");
+        } else {
+          console.log(err);
+        }
+        return res.send(user);
+      });
+    }
   });
 });
 
@@ -799,6 +845,7 @@ app.post('/uploadimage/:id', function (req, res) {
     listing.owner = user._id;
     listing.title = "Listing";
     listing.profilepic = 0;
+    listing.tags = { na: false };
 
     user.gallery.push(listing);
 
@@ -813,7 +860,8 @@ app.post('/uploadimage/:id', function (req, res) {
           owner: listing.owner,
           title: listing.title,
           profilepic: listing.profilepic,
-          _id: listing._id
+          _id: listing._id,
+          tags: { na: false }
         });
         console.log(list._id);
         list.save(function (err) {
@@ -827,7 +875,9 @@ app.post('/uploadimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(list);
+      //if (req.body.token === token) {
+        return res.send(list);
+      //}
     });
   });
 });
@@ -866,7 +916,10 @@ app.post('/uploadlistingimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(listing);
+      //if (req.body.token === token) {
+        return res.send(listing);
+      //}
+
     });
   });
 });
@@ -904,7 +957,10 @@ app.post('/uploadmainlistingimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(listing);
+
+      //if (req.body.token === token) {
+        return res.send(listing);
+      //}
     });
   });
   return res.send("sent");
@@ -944,7 +1000,9 @@ app.post('/uploadprofileimage/:id', function (req, res) {
       } else {
         console.log(err);
       }
-      return res.send(user);
+      //if (req.body.token === token) {
+        return res.send(user);
+      //}
     });
   });
   //return res.send("sent");
@@ -968,7 +1026,9 @@ app.get('/listing/users/:id', function (req, res) {
 				console.log(err2);
 				return handleError(err2);
 			}
-			res.send(user);
+      //if (req.body.token === token) {
+        return res.send(user);
+      //}
 		});
 	});
 });
@@ -1159,31 +1219,59 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
     for (var i = 0; i < user.gallery.length; i++) {
       if (user.gallery[i]._id === req.params.listingid) {
         //delete listing
-        console.log("USER"+user.gallery[i]);
         var person = user.gallery[i];
         if (req.body.title) user.gallery[i].title = req.body.title;
         if (req.body.description) user.gallery[i].description = req.body.description;
+        console.log(user.gallery[i]);
+        if(req.body.tag1) {
+          user.gallery[i].tags[req.body.tag1] = true;
+          console.log(req.body.tag1);
+        }
+        if(req.body.tag2) {
+          user.gallery[i].tags[req.body.tag2] = true;
+          console.log(req.body.tag2);
+        }
+        if(req.body.tag3) {
+          user.gallery[i].tags[req.body.tag3] = true;
+          console.log(req.body.tag3);
+        }
+        user.gallery[i].markModified('tags');
       }
       if (user.gallery[i].profilepic === 1){
         if (req.body.title) user.profileimage.title = req.body.title;
         if (req.body.description) user.profileimage.description = req.body.description;
       }
     }
-
-    user.save(function (err) {
-      if (!err) {
-        console.log("updated gallery listing infos");
-        console.log(person);
-      } else {
-        console.log(err);
-      }
-    });
+    //if (req.body.token === token) {
+      user.save(function (err) {
+        if (!err) {
+          console.log("updated gallery listing infos");
+          console.log(person);
+        } else {
+          console.log(err);
+        }
+      });
+    //}
   });
 
   return ListingModel.findOne({ _id: req.params.listingid }, function (err, listing) {
 
     if (req.body.title) listing.title = req.body.title;
     if (req.body.description) listing.description = req.body.description;
+
+    if(req.body.tag1) {
+      listing.tags[req.body.tag1] = true;
+      console.log(req.body.tag1);
+    }
+    if(req.body.tag2) {
+      listing.tags[req.body.tag2] = true;
+      console.log(req.body.tag2);
+    }
+    if(req.body.tag3) {
+      listing.tags[req.body.tag3] = true;
+      console.log(req.body.tag3);
+    }
+    listing.markModified('tags');
 
 		return listing.save(function (err) {
 		  if (!err) {
