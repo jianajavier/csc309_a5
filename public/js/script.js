@@ -301,11 +301,6 @@ $(document).ready(function(){
     }
   });
 
-  $(".panel").click(function (){
-    //$(this).children('h3')[0];
-
-  });
-
   /**
   USER PERFORMS A SEARCH IN THE NAV BAR
   */
@@ -322,7 +317,7 @@ $(document).ready(function(){
             $("#userSearchResults").html("<h3>Users that match your search:</h3>");
             for(var i = 0; i < data[0].length; i++){
               $("#userSearchResults").append(
-                "<div class='panel panel-primary'>"
+                "<div onclick = \"goToUser('"+data[0][i].email+"')\" class='panel panel-primary'>"
                   + "<div class='panel-heading'>"
                       + "<h3 class='panel-title'>" + data[0][i].email +"</h3>"
                   + "</div>"
@@ -1742,4 +1737,8 @@ function loadHomeProfileGallery () {
   }
 
 
+}
+
+function goToUser(email) {
+  moveToProfile(JSON.parse(getUserByEmail(email).responseText));
 }
