@@ -57,25 +57,60 @@ function sortComments(condition, target) {
 	*/
 }
 
-function displayComment(target, comment) {
+function displayComment(comment) {
 	
-	var m = "<p>" + comment.message + "</p>";
+	var m = "<p id=\"message" + ">" + comment.message + "</p>";
 	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
         return '<a href="' + url + '">' + url + '</a>';
     });
-	var displayC = "<div class=\"comment\" ";
-	displayC += "id=\"" + comment._id + "\" >";
-		displayC += "<div class=\"col-sm-2\">";
-			displayC += "<img src=\"uploads/"; 
-			displayC += cumment.createrInfo.profileimage;
-			displayC += "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
-		displayC += "</div>";
-		displayC += "<div class=\"col-sm-10\" id=\"content" + comment._id + "\">";
-			displayC += "<p id=\"username" + comment._id +"\">" + cumment.createrInfo.displayname + "</p>";
-			displayC += m;
-		displayC += "</div>";
-	displayC += "</div>";
-	$(target).append(displayC);
+	var displayC = "<div class=\"comment\" "+ "id=\"" + comment._id + "\" >"
+				 + "<div class=\"row\">"
+					 + "<div class=\"col-sm-1\">"
+					 + "</div>"
+					 + "<div class=\"col-sm-1\">"
+						+ "<img src=\"uploads/" + cumment.createrInfo.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
+					 + "</div>"
+					 + "<div class=\"col-sm-10\">"
+						 + "<p>" 
+						 + "<span id=\"username" + comment._id + "\">" + cumment.createrInfo.displayname + "</span>"
+						 + "<span id=\"date" + comment._id + "\">" + cumment.dateCreated + "</span>"
+						 + "</p>"
+						 + m
+						 + "<p>"
+						 + "<button id=\"like" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">"
+						 + "<span class=\"glyphicon glyphicon-thumbs-up\" aria-hidden=\"true\" id=\"up" + comment._id + "\"></span>"
+						 + "</button>"
+						 + "<button id=\"reply" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">Reply</button>"
+						 + "</p>"
+					 + "</div>"
+				 + "</div>"
+				 + "<div id=\"listingreplylist" + comment._id + "\" >"
+				 + "</div>"
+				 + "<form class=\"form-horizontal\" role=\"form\" id=\"replyform" + comment._id +"\" >"
+				 + "<div class=\"row\">"
+				 + "<div class=\"col-sm-4\">"
+				 + "</div>"
+				 + "<div class=\"form-group\">"
+					 + "<label class=\"control-label col-sm-2\" for=\"comment\">"
+					 + "<img src=\"uploads/" + currentuser.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id "\" />" 
+					 + "</label>"
+					 + "<div class=\"col-sm-10\">" 
+					 + "<textarea class=\"form-control\" rows=\"2\"  placeholder=\"Reply to this comment\"></textarea>"
+					 + "</div>"
+				 + "</div>"
+				 + "</div>"
+				 + "<div class=\"row\">"
+				 + "<div class=\"form-group\">"      
+					 + "<div class=\"col-sm-offset-2\">"
+						"<button id=\"postreply" + comment._id + "\" type=\"submit\" class=\"btn btn-default\">Post</button>"
+						"<button id=\"cancelreply" + comment._id + "\" type=\"button\" class=\"btn\">Cancel</button>"
+					 + "</div>"
+				 + "</div>"
+				 + "</div>"
+				+"</form>"
+				+ "</div>";
+	$("#listingcommentlist").prepend(displayC);
+	$("#" + "replyform" + comment._id).hide();	
 }
 
 //Comment Helper Functions end here
