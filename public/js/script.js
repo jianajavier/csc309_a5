@@ -62,7 +62,7 @@ function sortComments(condition, target) {
 }
 
 function displayComment(comment) {
-	
+
 	var m = "<p id=\"message" + ">" + comment.message + "</p>";
 	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
         return '<a href="' + url + '">' + url + '</a>';
@@ -75,7 +75,7 @@ function displayComment(comment) {
 						+ "<img src=\"uploads/" + cumment.createrInfo.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
 					 + "</div>"
 					 + "<div class=\"col-sm-10\">"
-						 + "<p>" 
+						 + "<p>"
 						 + "<span id=\"username" + comment._id + "\">" + cumment.createrInfo.displayname + "</span>"
 						 + "<span id=\"date" + comment._id + "\">" + cumment.dateCreated + "</span>"
 						 + "</p>"
@@ -96,15 +96,15 @@ function displayComment(comment) {
 				 + "</div>"
 				 + "<div class=\"form-group\">"
 					 + "<label class=\"control-label col-sm-2\" for=\"comment\">"
-					 + "<img src=\"uploads/" + currentuser.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id "\" />" 
+					 + "<img src=\"uploads/" + currentuser.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id +"\" />"
 					 + "</label>"
-					 + "<div class=\"col-sm-10\">" 
+					 + "<div class=\"col-sm-10\">"
 					 + "<textarea class=\"form-control\" rows=\"2\"  placeholder=\"Reply to this comment\"></textarea>"
 					 + "</div>"
 				 + "</div>"
 				 + "</div>"
 				 + "<div class=\"row\">"
-				 + "<div class=\"form-group\">"      
+				 + "<div class=\"form-group\">"
 					 + "<div class=\"col-sm-offset-2\">"
 						"<button id=\"postreply" + comment._id + "\" type=\"submit\" class=\"btn btn-default\">Post</button>"
 						"<button id=\"cancelreply" + comment._id + "\" type=\"button\" class=\"btn\">Cancel</button>"
@@ -114,7 +114,7 @@ function displayComment(comment) {
 				+"</form>"
 				+ "</div>";
 	$("#listingcommentlist").prepend(displayC);
-	$("#" + "replyform" + comment._id).hide();	
+	$("#" + "replyform" + comment._id).hide();
 }
 
 function displayComment(target, comment) {
@@ -136,7 +136,6 @@ function displayComment(target, comment) {
 		displayC += "</div>";
 	displayC += "</div>";
 	$(target).append(displayC);
->>>>>>> 792eddfaf24782e26d0618c5ab1b072efd93ad6f
 }
 
 //Comment Helper Functions end here
@@ -302,6 +301,10 @@ $(document).ready(function(){
     }
   });
 
+  $(".panel").click(function (){
+    //$(this).children('h3')[0];
+
+  });
 
   /**
   USER PERFORMS A SEARCH IN THE NAV BAR
