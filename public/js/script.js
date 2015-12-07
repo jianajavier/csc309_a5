@@ -8,8 +8,10 @@ var loclat = 0;
 var loclng = 0;
 var listingview; //id of listing being viewed
 var msgview;	// the message being viewed
+var currenttoken;
 
 getLocation();
+
 
 function getLocation() {
     if (navigator.geolocation) {
@@ -82,7 +84,6 @@ function displayComment(target, comment) {
 
 //Comment Helper Functions end here
 
->>>>>>> b569c56c2eeab29530f2490b2b230d258ee62974
 function onSignIn(googleUser) {
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
@@ -135,7 +136,7 @@ $(document).ready(function(){
   $("#loginbutton").click(function(){
     toggleErrorMessage("", 0);
     $("#cpasswordinput, #cpasslabel, #signupheader").hide();
-    $("#loginheader").show();
+    $("#loginheader, #rectangle").show();
     login = 0;
   });
 
@@ -164,13 +165,18 @@ $(document).ready(function(){
 
     // LOGGING IN
     if (login === 0) {
-      // Gets user information to log in. Check if password correct.
+      // Gets user information to log in. Check if password correct on server.
       $.ajax({
-        type: "GET",
-        url: "/users/verify-email/login/" + $("#emailinput").val() + "/" + loclat + "&" + loclng,
+        type: "POST",
+        url: "/users/validate/" + $("#emailinput").val(),
+        data: {
+          passwordinput: $("#passwordinput").val(),
+          token : currenttoken
+        },
         success: function(data){
           if (data) {
-            if (data.password === $("#passwordinput").val()) {
+            if (data.password === "true") {
+              currenttoken = data.token;
               currentuser = data;
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
@@ -178,11 +184,6 @@ $(document).ready(function(){
 
               // set profile picture
               $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
-
-              //$("#logout").fadeIn();
-              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                //$("#viewbehaviour").fadeIn();
-              //}
 
               moveToWelcome(data);
             } else {
@@ -193,6 +194,7 @@ $(document).ready(function(){
           }
         }
       });
+
 
     // SIGNING UP
     } else {
@@ -226,6 +228,7 @@ $(document).ready(function(){
           },
           success: function() {
             $.when(getUserByEmail($("#emailinput").val())).done(function(user){
+              currenttoken = user.token;
               currentuser = user;
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
@@ -234,19 +237,10 @@ $(document).ready(function(){
               // set profile picture
               $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
-              //$("#logout").fadeIn();
-
-              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
-                //$("#viewbehaviour").fadeIn();
-              //}
-
               moveToWelcome(user);
-
             });
           }
-
         });
-
       }
     }
   });
@@ -373,6 +367,7 @@ $(document).ready(function(){
       type: "PUT",
       url: "/users/update/" + viewing.email+ "/"+currentuser.email, // technically viewing should be current if they are looking at their own
       data: {
+        token : currenttoken,
         displayname : $("#editdisplayname").val(),
         description : $("#editdescription").val()
       },
@@ -404,6 +399,7 @@ $(document).ready(function(){
           type: "PUT",
           url: "/users/update/" + viewing.email + "/" + currentuser.email,
           data: {
+            token : currenttoken,
             password : $("#newpass").val()
           },
           success: function(data) {
@@ -464,6 +460,7 @@ $(document).ready(function(){
 		type: "PUT",
 		url: "/users/messages/send",
 		data: {
+      token : currenttoken,
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
@@ -510,6 +507,7 @@ $(document).ready(function(){
       type: "PUT",
       url: "/users/update/" + viewing.email+"/" +currentuser.email,
       data: {
+        token : currenttoken,
         type : newtype
       },
       success: function(data) {
@@ -549,7 +547,7 @@ $(document).ready(function(){
       success: function () {
         $.ajax({
             type: "GET",
-            url: "/users/verify-email/"+currentuser.email+"/none",
+            url: "/getuser/"+currentuser._id,
             success: function(data){
               if (data) {
                   currentuser = data;
@@ -567,6 +565,7 @@ $(document).ready(function(){
       type: "PUT",
       url: "/listings/update/" + listingview+"/"+viewing._id,
       data: {
+        token : currenttoken,
         title : $("#editlistingtitle").val(),
         description : $("#editlistdescription").val()
       },
@@ -626,7 +625,7 @@ $(document).ready(function(){
     $.ajax({
         type: "GET",
         async: false,
-        url: "/users/verify-email/"+currentuser.email+"/none",
+        url: "/getuser/"+currentuser._id,
         success: function(data){
           if (data) {
             currentuser = data;
@@ -764,6 +763,7 @@ $(document).ready(function(){
         type: "PUT",
         url: "/listings/update/" + listingview +"/"+currentuser._id,
         data: {
+          token : currenttoken,
           title : $("#listingtitleinitialedit").val(),
           description : $("#listingdescrinitialedit").val()
         },
@@ -785,7 +785,10 @@ $(document).ready(function(){
     $.ajax({
       url: '/uploadimage/'+currentuser._id,  //Server script to process data
       type: 'POST',
-      data: { name : resp.filename+"" },
+      data: {
+        name : resp.filename+"",
+        token : currenttoken
+      },
       success: function(response) {
         setCurrentUser();
         //currentuser = response;
@@ -812,7 +815,10 @@ $(document).ready(function(){
     $.ajax({
       url: '/uploadlistingimage/'+listingview,  //Server script to process data
       type: 'POST',
-      data: { name : resp.filename+"" },
+      data: {
+        name : resp.filename+"",
+        token : currenttoken
+      },
       success: function(response) {
         //listingview = response._id;
       }
@@ -964,6 +970,7 @@ function openInBoxMessage(msg) {
 			type: "PUT",
 			url: "/users/messages/updateStatus",
 			data: {
+        token : currenttoken,
 				user: currentuser._id,
 				message: msg._id
 			}
@@ -1055,8 +1062,8 @@ function readFile(input) {
                 $.ajax({
                   url: '/uploadprofileimage/'+currentuser._id,  //Server script to process data
                   type: 'POST',
-                  data: { name : response.filename+""
-                          //oldpic :
+                  data: { name : response.filename+"",
+                          token : currenttoken
                         },
                   //$('form').serialize(),
                   success: function(resp) {
@@ -1107,7 +1114,10 @@ function readFile2(input) {
                 $.ajax({
                   url: '/uploadmainlistingimage/'+listingview,  //Server script to process data
                   type: 'POST',
-                  data: { name : response.filename+"" },
+                  data: {
+                    name : response.filename+"",
+                    token : currenttoken
+                  },
                   //$('form').serialize(),
                   success: function(resp) {
                     $('#editmainlistingpicture, #mainlistingpic').attr('src', "uploads/"+resp.mainPicture);
@@ -1142,7 +1152,7 @@ function updateMsgBadge() {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
+  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage, #listingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
   updateMsgBadge();
@@ -1219,6 +1229,7 @@ function moveToMessagePage() {
 		type: "PUT",
 		url: "/users/messages/updateStatus/newMsgNum",
 		data: {
+      token : currenttoken,
 			user: currentuser._id
 		}
 	}).done(function(data){
@@ -1300,7 +1311,7 @@ function moveToEditPage(user, own) {
   $.ajax({
       type: "GET",
       async: false,
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getusers/"+currentuser._id,
       success: function(data){
         if (data) {
           currentuser = data;
@@ -1389,6 +1400,7 @@ function moveToHome() {
 
   currentuser = undefined;
   viewing = undefined;
+  currenttoken = undefined;
 }
 
 //  home page is actually welcome page
@@ -1560,7 +1572,7 @@ function goToEditListingPage() {
 function setCurrentUser() {
   $.ajax({
       type: "GET",
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getuser/"+currentuser._id,
       async: false,
       success: function(data){
         if (data) {
@@ -1583,7 +1595,7 @@ function loadHomeProfileGallery () {
   $.ajax({
       type: "GET",
       async: false,
-      url: "/users/verify-email/"+currentuser.email+"/none",
+      url: "/getuser/"+currentuser._id,
       success: function(data){
         if (data) {
           currentuser = data;
