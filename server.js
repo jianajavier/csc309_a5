@@ -191,6 +191,7 @@ function createComment(currentUser, newMessage, target) {
 	});
 
 	target.comments.push(comment);
+	return comment;
 }
 
 function replyToComment(currentUser, newMessage, comment) {
@@ -201,6 +202,19 @@ function replyToComment(currentUser, newMessage, comment) {
 		dateCreated: Date.now()
 	});
 	comment.replies.push(reply);
+	return reply;
+}
+
+function likesCount(target) {
+	return target.likes.length;
+}
+
+function sharesCount(target) {
+	return target.shares.length;
+}
+
+function commentCount(target) {
+	return target.comments.length;
 }
 
 //Add a new tag for searching purposes to a specified user
@@ -971,6 +985,127 @@ app.get('/listing/:id', function (req, res){
       return console.log(err);
     }
   });
+});
+
+app.put('/listing/comment/:id', function (req, res) {
+	return ListingModel.findOne({ _id: req.params.id }, function (err1, listing) {
+		console.log(req.params.id);
+		console.log(listing);
+		console.log("Adding Comment");
+		if (err1) {
+		  return console.log(err1);
+		} 
+		return UserModel.findOne({ _id: req.body.user }, function (err2, user){
+			if (err2) {
+				return console.log(err2);
+			}
+			else {
+				var comment = createComment(user, req.body.message, listing);
+				listing.save(function (err3) {
+					  if (!err3) {
+						console.log("comment successfully added to listing");
+					  } else {
+						console.log(err3);
+					  }
+				});
+				return comment.save(function (err4) {
+					  if (!err4) {
+						console.log("comment successfully posted");
+					  } else {
+						return console.log(err4);
+					  }
+					  console.log(comment);
+					  return res.send(comment);
+				});
+			}
+		});	
+  });
+});
+
+app.put('/comment/edit/:id', function (req, res){
+	return CommentModel.findOne({ _id: req.params.id }, function (err1, comment) {
+		console.log(req.params.id);
+		console.log(comment);
+		console.log("Editing Comment");
+		if (err1) {
+			return console.log(err1);
+		}
+		else {
+			comment.message = req.body.message;
+			return comment.save(function (err2) {
+				if (err2) {
+					return console.log(err2);
+				}
+				else {
+					console.log("Comment Edited Successfully");
+					console.log(comment);
+					return res.send(comment);
+				}
+			});
+		}
+	});
+});
+
+app.put('/comment/unlike/:id', function (req, res){
+	return CommentModel.findOne({ _id: req.params.id }, function (err1, comment) {
+		console.log(req.params.id);
+		console.log(comment);
+		console.log("Updating Likes on Comment");
+		if (err1) {
+			return console.log(err1);
+		}
+		else {
+			for (var i = 0; i < likesCount(comment); i++) {
+				if (comment.likes[i]._id != req.body.user) {
+					comment.likes.splice(i, 1);
+				}
+			}
+			comment.likes = newArray;
+			return comment.save(function (err2) {
+				if (err2) {
+					return console.log(err2);
+				}
+				else {
+					console.log("The current user unliked this comment");
+					console.log(comment);
+					return res.send(comment);
+				}
+			});
+		}
+	});
+});
+
+app.put('/comment/like/:id', function (req, res){
+	return CommentModel.findOne({ _id: req.params.id }, function (err1, comment) {
+		console.log(req.params.id);
+		console.log(comment);
+		console.log("Updating Likes on Comment");
+		if (err1) {
+			return console.log(err1);
+		}
+		else {
+			return UserModel.findOne({ _id: req.body.user }, function (err2, user) {
+				if (err2) {
+					return console.log(err2);
+				}
+				else {
+					comment.likes.push(user);
+					return comment.save(function (err3) {
+						if (err3) {
+							return console.log(err3);
+						}
+						else {
+							console.log("The current user liked this comment");
+							console.log(comment);
+							return res.send(comment);
+						}
+					});
+				}
+				
+			});
+			
+		}
+	});
 });
 
 //get listing by filename

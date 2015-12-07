@@ -59,9 +59,9 @@ function sortComments(condition, target) {
 	*/
 }
 
-function displayComment(comment) {
+function displayComment(comment, target, listingCreater) {
 	
-	var m = "<p id=\"message" + ">" + comment.message + "</p>";
+	var m = comment.message;
 	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
         return '<a href="' + url + '">' + url + '</a>';
     });
@@ -70,19 +70,40 @@ function displayComment(comment) {
 					 + "<div class=\"col-sm-1\">"
 					 + "</div>"
 					 + "<div class=\"col-sm-1\">"
-						+ "<img src=\"uploads/" + cumment.createrInfo.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
+						+ "<img src=\"uploads/" + comment.createrInfo.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" " 
+						+ "id=\"userprofileimage" + comment._id + "\" />"
 					 + "</div>"
 					 + "<div class=\"col-sm-10\">"
-						 + "<p>" 
-						 + "<span id=\"username" + comment._id + "\">" + cumment.createrInfo.displayname + "</span>"
-						 + "<span id=\"date" + comment._id + "\">" + cumment.dateCreated + "</span>"
+						 + "<p id=\"user" + comment._id + "\" >" 
+						 + "<span id=\"username" + comment._id + "\">" + comment.createrInfo.displayname + "</span>"
+						 + "<span id=\"date" + comment._id + "\">" + comment.dateCreated + "</span>"
 						 + "</p>"
-						 + m
+						 + "<form class=\"form-horizontal\" role=\"form\" id=\"editcomment" + comment._id +"\" >"
 						 + "<p>"
+						 + "<div class=\"form-group\">"
+							 + "<textarea id=\"editcommentcontent" + comment._id + "\" class=\"form-control\" rows=\"5\" ></textarea>"
+						 + "</div>"
+						 + "</p>"
+						 + "<p>"
+						 + "<div class=\"form-group\">"      
+							 + "<div class=\"col-sm-offset-2\">"
+								+ "<button id=\"saveedit" + comment._id + "\" type=\"submit\" class=\"btn btn-info btn-sm\">Save</button>"
+								+ "<button id=\"canceledit" + comment._id + "\" type=\"button\" class=\"btn\">Cancel</button>"
+							 + "</div>"
+						 + "</div>"
+						 + "</p>"
+						 +"</form>"
+						 + "<p id=\"message" + comment._id + "\" >" + n  + "</p>"
+						 + "<p id=\"buttongroup" + comment._id + "\" >"
+						 + "<button id=\"reply" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">Reply</button>"
+						 + "<button id=\"wholikes" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\" data-toggle=\"modal\" " 
+						 + "data-target=\"#\"wholikesmodal" + comment._id + "\" >" + likesCount(comment).toString() 
+						 + "</button>"
 						 + "<button id=\"like" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">"
 						 + "<span class=\"glyphicon glyphicon-thumbs-up\" aria-hidden=\"true\" id=\"up" + comment._id + "\"></span>"
-						 + "</button>"
-						 + "<button id=\"reply" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">Reply</button>"
+						 + "</button>          "
+						 + "<button id=\"delete" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">Delete</button>"
+						 + "<button id=\"edit" + comment._id + "\" type=\"button\" class=\"commentinteractbutton\">Edit</button>"
 						 + "</p>"
 					 + "</div>"
 				 + "</div>"
@@ -94,7 +115,7 @@ function displayComment(comment) {
 				 + "</div>"
 				 + "<div class=\"form-group\">"
 					 + "<label class=\"control-label col-sm-2\" for=\"comment\">"
-					 + "<img src=\"uploads/" + currentuser.profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id "\" />" 
+					 + "<img src=\"uploads/" + currentuser.profileimage + "\" class=\"img-rounded\" width=\"40\" height=\"40\" id=\"userprofileimage" + comment._id + "\" />" 
 					 + "</label>"
 					 + "<div class=\"col-sm-10\">" 
 					 + "<textarea class=\"form-control\" rows=\"2\"  placeholder=\"Reply to this comment\"></textarea>"
@@ -104,42 +125,241 @@ function displayComment(comment) {
 				 + "<div class=\"row\">"
 				 + "<div class=\"form-group\">"      
 					 + "<div class=\"col-sm-offset-2\">"
-						"<button id=\"postreply" + comment._id + "\" type=\"submit\" class=\"btn btn-default\">Post</button>"
+						"<button id=\"postreply" + comment._id + "\" type=\"submit\" class=\"btn btn-info btn-sm\">Post</button>"
 						"<button id=\"cancelreply" + comment._id + "\" type=\"button\" class=\"btn\">Cancel</button>"
 					 + "</div>"
 				 + "</div>"
 				 + "</div>"
 				+"</form>"
+				+ "<div id=\"wholikesmodal" + comment._id + "\" class=\"modal fade\" role=\"dialog\">"
+					  + "<div class=\"modal-dialog\">"
+					  + "<div class=\"modal-content\">"
+						  + "<div class=\"modal-header\">"
+							+ "<button type=\"button\" class=\"close\" data-dismiss=\"modal\">&times;</button>"
+							+ "<h4 class=\"modal-title\">People who Liked this Comment.</h4>"
+						  + "</div>"
+						  +"<div id=\"wholikeslist" + comment._id +"\" class=\"modal-body\">"
+						  + "</div>"
+						+ "</div>"
+					  + "</div>"
+					+ "</div>"
 				+ "</div>";
-	$("#listingcommentlist").prepend(displayC);
-	$("#" + "replyform" + comment._id).hide();	
+	$("#" + target).prepend(displayC);
+	
+	$("#replyform" + comment._id).hide();
+	$("#delete" + comment._id).hide();
+	$("#editcomment" + comment._id).hide();
+	if (likesCount(comment) == 0) {
+		$("#wholikes" + comment._id).hide();
+	}
+	$("#wholikes" + comment._id).css("color", "blue");
+	
+	if (comment.likes.indexOf(currentuser) != -1) { //current user liked this comment
+		$("#up" + comment._id).css("color", "blue");
+	}
+	
+	for (var i = 0; i < comment.likes; i++) {
+		$("#wholikeslist" + comment._id).prepend(
+		"<div class=\"row\">"
+			+ "<div class=\"col-sm-1\">"
+				+ "<img src=\"uploads/" + comment.likes[i].profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\"" 
+				+ " id=\"userprofileimageu" + comment.likes[i]._id + "c" + comment._id + "\" />"
+			+ "</div>"
+			+ "<div class=\"col-sm-10\">"
+				+ "<p id=\"usernameu" + comment.likes[i]._id + "c"  + comment._id + "\">" + comment.likes[i].displayname + "</p>"
+			+ "</div>"
+		+ "</div>");
+		$("#userprofileimageu" + comment.likes[i]._id + "c" + comment._id).on("click",function() { moveToProfile(comment.likes[i]);});
+		$("#userprofilenameu" + comment.likes[i]._id + "c" + comment._id).on("click",function() { moveToProfile(comment.likes[i]);});
+	}
+	
+	if (comment.creater = currentuser._id) {
+		$("#" + comment._id).mouseenter(function(){
+			$("#delete" + comment._id).show();
+			$("#edit" + comment._id).show();
+		});
+		$("#" + comment._id).mouseleave(function(){
+			$("#delete" + comment._id).hide();
+			$("#edit" + comment._id).hide();
+		});		
+	};
+	
+	if (listingCreater = currentuser._id) {
+		$("#" + comment._id).mouseenter(function(){
+			$("#delete" + comment._id).show();
+		});
+		$("#" + comment._id).mouseleave(function(){
+			$("#delete" + comment._id).hide();
+		});		
+	};	
+	$("#userprofileimage" + comment._id).on("click",function() { moveToProfile(comment.createrInfo);});
+	$("#username" + comment._id).on("click",function() { moveToProfile(comment.createrInfo);});
+	
+	//effect on buttons as the mouse touches it
+	$("#reply" + comment._id).mouseenter( function() {
+		$("#reply" + comment._id).css("text-decoration", "underline");
+	});
+	$("#reply" + comment._id).mouseleave( function() {
+		$("#reply" + comment._id).css("text-decoration", "none");
+	});
+	$("#wholikes" + comment._id).mouseenter( function() {
+		$("#wholikes" + comment._id).css("text-decoration", "underline");
+	});
+	$("#wholikes" + comment._id).mouseleave( function() {
+		$("#wholikes" + comment._id).css("text-decoration", "none");
+	});
+	
+	$("#delete" + comment._id).mouseenter( function() {
+		$("#delete" + comment._id).css("text-decoration", "underline");
+	});
+	$("#delete" + comment._id).mouseleave( function() {
+		$("#delete" + comment._id).css("text-decoration", "none");
+	});
+	
+	$("#edit" + comment._id).mouseenter( function() {
+		$("#edit" + comment._id).css("text-decoration", "underline");
+	});
+	$("#edit" + comment._id).mouseleave( function() {
+		$("#edit" + comment._id).css("text-decoration", "none");
+	});
+	
+	$("#like" + comment._id).mouseenter( function() {
+		if ($("#up" + comment._id).css("color") == "gray") {
+			$("#up" + comment._id).css("color", "black");
+		}
+		else {
+			$("#up" + comment._id).css("color", "red");
+		}
+	});
+	$("#like" + comment._id).mouseleave( function() {
+		if ($("#up" + comment._id).css("color") == "black") {
+			$("#up" + comment._id).css("color", "gray");
+		}
+		else {
+			$("#up" + comment._id).css("color", "blue");
+		}
+	});
+	
+	//Like comment
+	$("#like" + comment._id).on("click",function() { 
+		if (comment.likes.indexOf(currentuser) == -1) {
+			$.ajax({
+			  type: "PUT",
+			  url: "/comment/like/" + comment._id,
+			  data: {
+				user: currentuser._id,
+			  },
+			  success: function(data) {
+				$("#up" + comment._id).css("color", "blue");
+				if (likesCount(comment) == 0) {
+					$("#wholikes" + comment._id).show();
+				}
+				$("#wholikes" + comment._id).text(likesCount(data).toString());
+				$("#wholikeslist" + comment._id).empty();
+				for (var j = 0; j < data.likes; j++) {
+					$("#wholikeslist" + comment._id).prepend(
+					"<div class=\"row\">"
+						+ "<div class=\"col-sm-1\">"
+							+ "<img src=\"uploads/" + data.likes[j].profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\"" 
+							+ " id=\"userprofileimageu" + data.likes[j]._id + "c" + data._id + "\" />"
+						+ "</div>"
+						+ "<div class=\"col-sm-10\">"
+							+ "<p id=\"usernameu" + data.likes[j]._id + "c"  + data._id + "\">" + data.likes[j].displayname + "</p>"
+						+ "</div>"
+					+ "</div>");
+					$("#userprofileimageu" + data.likes[j]._id + "c" + data._id).on("click",function() { moveToProfile(data.likes[j]);});
+					$("#userprofilenameu" + data.likes[j]._id + "c" + data._id).on("click",function() { moveToProfile(data.likes[j]);});
+				}
+			  }
+			}
+		}
+		else {
+			$.ajax({
+			  type: "PUT",
+			  url: "/comment/unlike/" + comment._id,
+			  data: {
+				user: currentuser._id,
+			  },
+			  success: function(data) {
+				$("#up" + comment._id).css("color", "blue");
+				$("#wholikes" + comment._id).text(likesCount(data).toString());
+				$("#wholikeslist" + comment._id).empty();
+				if (likesCount(data) == 0) {
+					$("#wholikes" + comment._id).hide();
+				}
+				else {
+					for (var k = 0; k < data.likes; k++) {
+					$("#wholikeslist" + comment._id).prepend(
+					"<div class=\"row\">"
+						+ "<div class=\"col-sm-1\">"
+							+ "<img src=\"uploads/" + data.likes[k].profileimage + "\" class=\"img-rounded\" width=\"60\" height=\"60\"" 
+							+ " id=\"userprofileimageu" + data.likes[k]._id + "c" + data._id + "\" />"
+						+ "</div>"
+						+ "<div class=\"col-sm-10\">"
+							+ "<p id=\"usernameu" + data.likes[k]._id + "c"  + data._id + "\">" + data.likes[k].displayname + "</p>"
+						+ "</div>"
+					+ "</div>");
+					$("#userprofileimageu" + data.likes[k]._id + "c" + data._id).on("click",function() { moveToProfile(data.likes[k]);});
+					$("#userprofilenameu" + data.likes[k]._id + "c" + data._id).on("click",function() { moveToProfile(data.likes[k]);});
+				}
+				}
+				
+			  }
+			}
+		}
+	});
+	
+	//Editing Comment
+	$("#edit" + comment._id).on("click",function() { 
+		$("#editcomment" + comment._id).show();
+		$("#user" + comment._id + ", #buttongroup" + comment._id + ", #message" + comment._id).hide();
+		$("#editcommentcontent").val(comment.message);
+	});
+	$("#canceledit" + comment._id).on("click",function() { 
+		$("#editcomment" + comment._id).hide();
+		$("#user" + comment._id + ", #buttongroup" + comment._id + ", #message" + comment._id).show();
+		$("#editcommentcontent").val("");
+	});
+	
+	$("#saveedit" + comment._id).submit(function(e){
+		e.preventDefault();
+		if (!$("#editcommentcontent" + comment._id).val()){
+			toggleErrorMessage("Please fill in a comment.", 1);
+			return ;
+		}
+		$.ajax({
+		  type: "PUT",
+		  url: "/comment/edit/" + comment._id,
+		  data: {
+			message: $("#editcommentcontent").val(),
+		  },
+		  success: function(data) {
+			 $("#editcommentcontent" + comment._id).val("");
+			 $("#editcomment" + comment._id).hide();
+			 m = data.message;
+			 n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+				return '<a href="' + url + '">' + url + '</a>';
+			 });
+			 $("#message" + comment._id).html(n);
+		  }
+		});
+	});
+	
+	//Delete Comment
+	//$("#delete" + comment._id).on("click",function(){});
+	
+	//Replying to comment
+	$("#reply" + comment._id).on("click",function() { $("#replyform" + comment._id).show();});
+	$("#cancelreply" + comment._id).on("click",function() { $("#replyform" + comment._id).hide();});
 }
 
-function displayComment(target, comment) {
-
-	var m = "<p>" + comment.message + "</p>";
-	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
-        return '<a href="' + url + '">' + url + '</a>';
-    });
-	var displayC = "<div class=\"comment\" ";
-	displayC += "id=\"" + comment._id + "\" >";
-		displayC += "<div class=\"col-sm-2\">";
-			displayC += "<img src=\"uploads/";
-			displayC += cumment.createrInfo.profileimage;
-			displayC += "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
-		displayC += "</div>";
-		displayC += "<div class=\"col-sm-10\" id=\"content" + comment._id + "\">";
-			displayC += "<p id=\"username" + comment._id +"\">" + cumment.createrInfo.displayname + "</p>";
-			displayC += m;
-		displayC += "</div>";
-	displayC += "</div>";
-	$(target).append(displayC);
->>>>>>> 792eddfaf24782e26d0618c5ab1b072efd93ad6f
+function displayReply(comment) {
+	
 }
+
 
 //Comment Helper Functions end here
 
->>>>>>> b569c56c2eeab29530f2490b2b230d258ee62974
 function onSignIn(googleUser) {
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
@@ -1564,24 +1784,72 @@ function goToListingPage(listingid) {
 			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();});
 			$("#cancelcomment").on("click",function() {  $("#addcomment").val(""); $("#postcomment, #cancelcomment").hide();});
 
-			var sortComments = "Newest First";
+			$(".sortbutton").mouseenter( function() {
+				$(".sortbutton").css("color", "white");
+				$(".sortbutton").css("background-color", "gray");
+			});
+			$(".sortbutton").mouseleave( function() {
+				$(".sortbutton").css("color", "black");
+				$(".sortbutton").css("background-color", "white");
+			});
+			var sortCommentS = "Newest First";
 			var sortButtonHTML = "<span class=\"caret\"></span>";
 			if (sessionStorage.getItem("sortMethod") != null) {
-				sortComments = sessionStorage.getItem("sortMethod");
+				sortCommentS = sessionStorage.getItem("sortMethod");
 			}
-			$("#sortcomments").html(sortComments + sortButtonHTML);
+			$("#sortcomments").html(sortCommentS + sortButtonHTML);
+			var comments = sortComments(sortCommentS, data);
+			$("#listingcommentlist").empty();
+			for (i = 0; i < commentCount(data)) {
+				displayComment(comments[i], "listingcommentlist", data.creater);
+			}
 
 			$("#oldestcomments").on("click",function() {
 				sessionStorage.setItem("sortMethod", "Oldest First");
 				$("#sortcomments").html("Oldest First" + sortButtonHTML);
+				comments = sortComments("Oldest First", data);
+				$("#listingcommentlist").empty();
+				for (i = 0; i < commentCount(data)) {
+					displayComment(comments[i], "listingcommentlist", data.creater);
+				}
 			});
 			$("#newestcomments").on("click",function() {
 				sessionStorage.setItem("sortMethod", "Newest First");
 				$("#sortcomments").html("Newest First" + sortButtonHTML);
+				comments = sortComments("Newest First", data);
+				$("#listingcommentlist").empty();
+				for (i = 0; i < commentCount(data)) {
+					displayComment(comments[i], "listingcommentlist", data.creater);
+				}
 			});
 			$("#topcomments").on("click",function() {
 				sessionStorage.setItem("sortMethod", "Top Comments");
 				$("#sortcomments").html("Top Comments" + sortButtonHTML);
+				comments = sortComments("Top Comments", data);
+				$("#listingcommentlist").empty();
+				for (var i = 0; i < commentCount(data)) {
+					displayComment(comments[i], "listingcommentlist", data.creater);
+				}
+			});
+			
+			$("#postcomment").submit(function(e){
+				e.preventDefault();
+				if (!$("#addcomment").val()){
+					toggleErrorMessage("Please fill in a comment.", 1);
+					return ;
+				}
+				$.ajax({
+				  type: "PUT",
+				  url: "/listing/comment/" + listingid,
+				  data: {
+					message: $("#addcomment").val(),
+					user: currentuser._id
+				  },
+				  success: function(data) {
+					$("#addcomment").val("");
+					displayComment(data, "listingcommentlist", data.creater);
+				  }
+				});
 			});
 
             $("#listingpage").fadeIn();
