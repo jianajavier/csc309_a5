@@ -370,13 +370,10 @@ app.post('/users', function (req, res){
     listing.mainPicture = "default_profile_large.jpg";
     //listing.owner = user._id,
     listing.title ="Listing"
-<<<<<<< HEAD
     var displayname = req.body.email.split("@")[0];
-=======
 
     var hashedPassword = passwordHash.generate(req.body.password);
 
->>>>>>> 93bcdb3923af6e10ba9aa24fff4dbb6cfbac2b34
     user = new UserModel({
       email: req.body.email,
       password: hashedPassword,
