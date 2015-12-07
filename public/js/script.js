@@ -1209,6 +1209,7 @@ function moveToWelcome(obj) {
   // Shows user profile in top right corner
   $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage, #listingpage").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
+  $("#notSearch").show();
 
   updateMsgBadge();
 
@@ -1224,54 +1225,6 @@ function moveToWelcome(obj) {
   loadRecommendations();
   loadHomeProfileGallery();
 
-  // Gets all users to display in welcome screen --USE FOR ADMIN?
-    // $.ajax({
-    //   type: "get",
-    //   url: "/users/all/"+currentuser.email,
-    //   success: function(data){
-    //     var info = data;
-    //     for (var i = 0; i < data.length; i++) {
-    //       var displayname;
-    //
-    //       var ok = false;
-    //
-    //       var table = $("#usertable");
-    //       $("#usertable tr:not(:first)").each(function() {
-    //       //get the value of the table cell located in the first column
-    //
-    //       var valueOfCell = $(this).find("td:nth-child(1)").html();
-    //
-    //       $.when((getUserByEmail(valueOfCell)).done(function(user){
-    //         if (!user) {
-    //           $('#'+user._id).remove();
-    //         }
-    //       }));
-    //
-    //       if (valueOfCell == data[i].email){
-    //         if (data[i].displayname != "" && $(this).find("td:nth-child(2)").html() != data[i].displayname) {
-    //           $(this).find("td:nth-child(2)").html(data[i].displayname);
-    //         }
-    //         ok = true;
-    //       } else {
-    //
-    //       }
-    //       });
-    //
-    //       if (!ok) {
-    //         if (data[i].displayname === "") {
-    //           displayname = data[i].email;
-    //         } else {
-    //           displayname = data[i].displayname;
-    //         }
-    //
-    //         $('<tr id='+ data[i]._id +'><td>'+ data[i].email +'</td><td>'+displayname+'</td></tr>').appendTo('#usertable');
-    //
-    //
-    //       }
-    //     }
-    //   }
-    // });
-
     $("#loginbutton, #signupbutton").hide();
     $("#homepage").show();
 }
@@ -1279,6 +1232,7 @@ function moveToWelcome(obj) {
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
+  $("#notSearch").show();
 	$("#inboxTab").tab("show");
 	$.ajax({
 		type: "PUT",
@@ -1298,8 +1252,9 @@ function moveToMessagePage() {
 
 function moveToProfile(user) {
 
-  $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #listingpage, #editlistingpage").hide();
+  $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #listingpage, #editlistingpage, #searchScreen").hide();
   $("#messageuser").hide();
+  $("#notSearch").show();
 
   $("#homepage").hide();
   setPageTitle("Profile");
@@ -1521,6 +1476,7 @@ function getGallery(user) {
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
   $("#editlisting, #deletelisting, #requestlisting").hide();
+  $("#notSearch").show();
 
   if (currentuser.email === viewing.email) {
 	  $("#editlisting, #deletelisting").show();
@@ -1594,7 +1550,7 @@ function goToListingPage(listingid) {
 				$("#sortcomments").html("Top Comments" + sortButtonHTML);
 			});
 
-            $("#listingpage").fadeIn();
+        $("#listingpage").fadeIn();
 
         }
       }
@@ -1604,6 +1560,7 @@ function goToListingPage(listingid) {
 
 function goToEditListingPage() {
   $("#edituser, #blueimp-gallery, #editprofilepage, #messagePage, #profilepage, #listingpage").hide();
+  $("#notSearch").show();
 
   $.ajax({
       type: "GET",
@@ -1717,5 +1674,8 @@ function loadHomeProfileGallery () {
 }
 
 function goToUser(email) {
+  var testing = getUserByEmail(email);
+  console.log(JSON.parse(testing.responseText));
+
   moveToProfile(JSON.parse(getUserByEmail(email).responseText));
 }
