@@ -1,11 +1,13 @@
 var login = 0; //0 if logging in, 1 if signing up
 var currentuser;
 var fromlogin = true;
-var re;
+var userReply;
+var userRequest;
 var viewing; //the persons profile being viewed
 var loclat = 0;
 var loclng = 0;
 var listingview; //id of listing being viewed
+var msgview;	// the message being viewed
 
 getLocation();
 
@@ -22,7 +24,65 @@ function showPosition(position) {
     loclng = position.coords.longitude;
 }
 
-//Third-party authentication through google
+//Comment Helper Functions begin here
+
+function likesCount(target) {
+	return target.likes.length;
+}
+
+function sharesCount(target) {
+	return target.shares.length;
+}
+
+function commentCount(target) {
+	return target.comments.length;
+}
+
+function sortComments(condition, target) {
+	var newArray = [];
+	for (i = 0; i < target.comments; i++){
+		newArray.push(target.comments[i]);
+	}
+	if (condition == "Newest First") {
+		return newArray;
+	}
+	else if (condition == "Oldest First") {
+		return newArray.reverse();
+	}
+	else {  //condition == "Top Comments"
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)});
+	}
+	/*
+	else { //condition == "Worst"
+		return newArray.sort(function(a, b){return likesCount(a) - likesCount(b)}).reverse();
+	}
+	*/
+}
+
+function displayComment(target, comment) {
+
+	var m = "<p>" + comment.message + "</p>";
+	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+        return '<a href="' + url + '">' + url + '</a>';
+    });
+	var displayC = "<div class=\"comment\" ";
+	displayC += "id=\"" + comment._id + "\" >";
+		displayC += "<div class=\"col-sm-2\">";
+			displayC += "<img src=\"uploads/";
+			displayC += cumment.createrInfo.profileimage;
+			displayC += "\" class=\"img-rounded\" width=\"60\" height=\"60\" id=\"userprofileimage" + comment._id + "\" />";
+		displayC += "</div>";
+		displayC += "<div class=\"col-sm-10\" id=\"content" + comment._id + "\">";
+			displayC += "<p id=\"username" + comment._id +"\">" + cumment.createrInfo.displayname + "</p>";
+			displayC += m;
+		displayC += "</div>";
+	displayC += "</div>";
+	$(target).append(displayC);
+}
+
+//Comment Helper Functions end here
+
+>>>>>>> b569c56c2eeab29530f2490b2b230d258ee62974
 function onSignIn(googleUser) {
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
@@ -60,7 +120,7 @@ function onSignIn(googleUser) {
 $(document).ready(function(){
   /* Hide things on startup */
   $("#loginheader, #signupheader, #errormessage, .loggedInNav").hide();
-  $("#homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
+  $("#tradeSection, #homepage, #messagePage, #listingpage, #searchScreen, #profilelink, #profilepage, .thumbnailholder, #editprofilepage, #messageuser, #editalert, #edituser, #deleteuser,#logout,#viewbehaviour, #userbehaviourpage, #editlistingpage").hide();
 
   function onSignIn(googleUser) {
     alert("gothere");
@@ -87,6 +147,12 @@ $(document).ready(function(){
     login = 1;
   });
 
+  $("#logo").click(function(){
+    if (currentuser) {
+      moveToWelcome(currentuser);
+    }
+  });
+
   // CLICK GO TO PROCEED
   $("#loginOrSubmitForm").submit(function(event){
     event.preventDefault();
@@ -111,7 +177,7 @@ $(document).ready(function(){
               $(".loggedInNav").show();
 
               // set profile picture
-              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
+              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
               //$("#logout").fadeIn();
               //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
@@ -166,7 +232,7 @@ $(document).ready(function(){
               $(".loggedInNav").show();
 
               // set profile picture
-              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
+              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
               //$("#logout").fadeIn();
 
@@ -238,7 +304,7 @@ $(document).ready(function(){
        return $(this).text();
    }).get();
 
-   console.log(tableData);
+   //console.log(tableData);
    if (tableData.length != 0) {
      moveToProfile(JSON.parse(getUserByEmail(tableData[0]).responseText));
    }
@@ -266,14 +332,36 @@ $(document).ready(function(){
   /**
   CLICKS LOGO TO GO BACK TO WELCOME PAGE
   */
-  $("#logo, #cancelbutton").click(function(){
+  $("#logo").click(function(){
     if (currentuser) {
       moveToWelcome(JSON.parse(getUserByEmail(currentuser.email).responseText));
     } //will keep them at home page
   });
 
+  $("#cancelbutton").click(function(){
+    moveToProfile(currentuser);
+  });
+
   $("#cancellistingbutton").click(function(){
     goToListingPage(listingview);
+  });
+
+  $("#gotolistingowner").click(function(){
+    //Get listing owner from listingview
+    $.ajax({
+      type: "GET",
+      url: "/listing/"+listingview,
+      success: function(data) {
+        $.ajax({
+          type: "GET",
+          url: "/getuser/"+data.owner,
+          success: function(owner) {
+            moveToProfile(owner);
+          }
+        });
+      }
+    });
+
   });
 
   /**
@@ -296,15 +384,16 @@ $(document).ready(function(){
     });
   });
 
-  
+
   $("#messageuser").click(function() {
 	  $("#messageHeader").show();
-	  $("#replyHeader").hide();
-	  $("#recipient").text("To: " + viewing.displayname); 
+	  $("#replyHeader, #tradeSection").hide();
+	  $("#recipient").text("To: " + viewing.displayname);
 	  $("#messageText").val("");
-	  re = false;
+	  userReply = false;
+	  userRequest = false;
   });
-  
+
   $("#changePasswordForm").submit(function (event) {
     event.preventDefault();
     //CHECK IF OLD PASSWORD IS correct
@@ -342,15 +431,54 @@ $(document).ready(function(){
   // MESSAGE USER
   $("#messageForm").submit(function(event) {
 	  event.preventDefault();
+
+
+	  var tempOfferID = "", tempOfferTitle = "";
+	  var tempInterestID = "", tempInterestTitle = "";
+
+	  if (!userReply) {
+		if (userRequest) {
+			var interestTitle;
+			  $.ajax({
+				type: "GET",
+				async: false,
+				url: "/listing/"+listingview,
+				success: function(data) {
+					interestTitle = data.title;
+				}
+			  });
+			tempOfferID = $("#tradeItem option:selected").attr("value");
+			tempOfferTitle = $("#tradeItem option:selected").text();
+			tempInterestID = listingview;
+			tempInterestTitle = interestTitle;
+		}
+	  } else {
+		  // When it is a reply, just copy the info from previous message
+		  tempOfferID = msgview.item.offer._id;
+		  tempOfferTitle = msgview.item.offer.title;
+		  tempInterestID = msgview.item.interest._id;
+		  tempInterestTitle = msgview.item.interest.title;
+	  }
+
 	  $.ajax({
 		type: "PUT",
 		url: "/users/messages/send",
-		data: { 
+		data: {
 			from: currentuser._id,
 			to: viewing._id,
 			content: $("#messageText").val(),
-			request: false,
-			reply: re
+			request: userRequest,
+			item: {
+				offer: {
+					_id: tempOfferID,
+					title: tempOfferTitle
+				},
+				interest: {
+					_id: tempInterestID,
+					title: tempInterestTitle
+				}
+			},
+			reply: userReply
 		}
 	  }).always(function() {
 		  console.log("run");
@@ -359,16 +487,16 @@ $(document).ready(function(){
 		  console.log("Error: message cannot be sent.");
 	  });
   });
-  
+
 	$("#inboxTab").click(function() {
 		refreshInbox();
 	});
-	
+
 	$("#outboxTab").click(function() {
 		refreshOutbox();
 	});
 
-	
+
   // TOGGLE ADMIN
   $("#toggleadmin").click(function() {
     var newtype;
@@ -437,7 +565,7 @@ $(document).ready(function(){
     event.preventDefault();
     $.ajax({
       type: "PUT",
-      url: "/listings/update/" + listingview,
+      url: "/listings/update/" + listingview+"/"+viewing._id,
       data: {
         title : $("#editlistingtitle").val(),
         description : $("#editlistdescription").val()
@@ -448,6 +576,37 @@ $(document).ready(function(){
     });
   });
 
+  $("#requestlisting").click(function () {
+	  console.log("requestListing");
+	  $("#messageHeader").show();
+	  $("#replyHeader").hide();
+	  $("#recipient").text("To: " + viewing.displayname);
+	  $("#messageText").val("");
+	  userRequest = true;
+	  $("#tradeSection").show();
+	  $.ajax({
+		type: "GET",
+		url: "/users/messages/gallery/"+currentuser._id,
+		success: function(data) {
+			var dropdownHTML = "";
+			$.each(data, function(index, listingArt) {
+				dropdownHTML += "<option data-img='uploads/"+listingArt.mainPicture+"' value='"+listingArt._id+"'>"+listingArt.title+"</option>";
+			});
+			dropdownHTML += "<option value='mystery'>Mystery trade</option>";
+			$("#tradeItem").html(dropdownHTML);
+		}
+	  });
+
+
+	  $.ajax({
+		type: "GET",
+		url: "/listing/"+listingview,
+		success: function(data) {
+			$("#targetListing").text(data.title);
+			$("#targetListing").attr("val", data._id);
+		}
+	  });
+  });
 
   $("#logout").click(function(){
     $("#viewbehaviour").fadeOut();
@@ -458,12 +617,23 @@ $(document).ready(function(){
   $("#viewbehaviour").click(function(){
     moveToUserBehaviourPage();
   });
-  
+
   $("#navMessage").click(function() {
-	 moveToMessagePage(); 
+	 moveToMessagePage();
   });
 
   $("li.navprofile").on("click",function() {
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: "/users/verify-email/"+currentuser.email+"/none",
+        success: function(data){
+          if (data) {
+            currentuser = data;
+            //return data;
+          }
+        }
+    });
     moveToProfile(currentuser);
   });
    $("li.naveditprofile").on("click",function() {
@@ -498,6 +668,59 @@ $(document).ready(function(){
       blueimp.Gallery(links, options);
     }
   };
+
+  document.getElementById('linkshome').onclick = function (event) {
+    event = event || window.event;
+
+    var target;
+    if ($(event.target).is("h2")) {
+      $(event.target).closest('.hovereffect').find('img').click();
+      return;
+      //target = $(event.target).closest('.hovereffect').find('img').target;
+    } else {
+      target = event.target || event.srcElement;
+    }
+
+    var link = target.src ? target.parentNode : target,
+        options = {index: link, event: event, container : '#blueimp-gallery-home'},
+        links = this.querySelectorAll('a.photo');
+
+    if ($(event.target).is("a.listinglink")) {
+      var id = $(event.target).parent().attr('id');
+      //Go to listing page
+      goToListingPage(id);
+
+    } else {
+      blueimp.Gallery(links, options);
+    }
+  };
+
+  document.getElementById('linksownhome').onclick = function (event) {
+    event = event || window.event;
+
+    var target;
+    if ($(event.target).is("h2")) {
+      $(event.target).closest('.hovereffect').find('img').click();
+      return;
+      //target = $(event.target).closest('.hovereffect').find('img').target;
+    } else {
+      target = event.target || event.srcElement;
+    }
+
+    var link = target.src ? target.parentNode : target,
+        options = {index: link, event: event, container : '#blueimp-gallery-home-profile'},
+        links = this.querySelectorAll('a.photo');
+
+    if ($(event.target).is("a.listinglink")) {
+      var id = $(event.target).parent().attr('id');
+      //Go to listing page
+      goToListingPage(id);
+
+    } else {
+      blueimp.Gallery(links, options);
+    }
+  };
+
 
   document.getElementById('listinglinks').onclick = function (event) {
     event = event || window.event;
@@ -535,20 +758,40 @@ $(document).ready(function(){
     goToEditListingPage();
   });
 
+  $("#setinitiallistinginfo").submit(function(e) {
+      e.preventDefault();
+      $.ajax({
+        type: "PUT",
+        url: "/listings/update/" + listingview +"/"+currentuser._id,
+        data: {
+          title : $("#listingtitleinitialedit").val(),
+          description : $("#listingdescrinitialedit").val()
+        },
+        success: function(data) {
+          //listingview = data._id;
+        }
+      });
+      $('#listinginfo').modal('toggle');
+    });
+
   var uploader = new Dropzone('#demo-upload');
 
   uploader.on('success', function (file, resp) {
 
     uploader.processQueue();
-    console.log(file);
-    console.log(resp);
+    //console.log(file);
+    //console.log(resp);
 
     $.ajax({
       url: '/uploadimage/'+currentuser._id,  //Server script to process data
       type: 'POST',
       data: { name : resp.filename+"" },
       success: function(response) {
-        currentuser = response;
+        setCurrentUser();
+        //currentuser = response;
+        //set listingview
+        listingview = response._id;
+        $("#listinginfo").modal('toggle');
       }
     });
   });
@@ -563,8 +806,8 @@ $(document).ready(function(){
   uploader2.on('success', function (file, resp) {
 
     uploader2.processQueue();
-    console.log(file);
-    console.log(resp);
+    //console.log(file);
+    //console.log(resp);
 
     $.ajax({
       url: '/uploadlistingimage/'+listingview,  //Server script to process data
@@ -575,8 +818,8 @@ $(document).ready(function(){
       }
     });
   });
-	
-	
+
+
 
 });
 
@@ -597,7 +840,7 @@ function refreshInbox() {
 				$.each(data, function(index, message) {
 					var messageHeader;
 					var temphtmlString = "";
-					
+
 					if (message.reply) {
 						// if it is a reply message
 						messageHeader = "You got a reply from "+message.sender.displayname+"!";
@@ -609,7 +852,7 @@ function refreshInbox() {
 							messageHeader = "New Message from "+message.sender.displayname+"!";
 						}
 					}
-					
+
 					if (message.unread) {
 						// if it is unread
 						temphtmlString += "<td><strong>"+message.sender.displayname+
@@ -620,7 +863,7 @@ function refreshInbox() {
 							"</td><td>"+messageHeader+"</td><td>"+
 							message.dateCreated+"</td>";
 					}
-					
+
 					if (message.request) {
 						temphtmlString = "<tr class='success'>"+temphtmlString+"</tr>";
 					} else {
@@ -629,7 +872,7 @@ function refreshInbox() {
 					htmlString += temphtmlString;
 				});
 				$("#inbox table tbody").html(htmlString);
-				
+
 				// Attach event handler to the table
 				$('#inbox tbody').on("click", "tr", function(){
 					console.log(this.rowIndex);
@@ -660,7 +903,7 @@ function refreshOutbox() {
 				$.each(data, function(index, message) {
 					var messageHeader;
 					var temphtmlString = "";
-					
+
 					if (message.reply) {
 						// if it is a reply message
 						messageHeader = "You replied to "+message.receiver.displayname+"!";
@@ -672,11 +915,11 @@ function refreshOutbox() {
 							messageHeader = "You sent a new message to "+message.receiver.displayname+"!";
 						}
 					}
-					
+
 					temphtmlString += "<td>"+message.receiver.displayname+
 						"</td><td>"+messageHeader+"</td><td>"+
 						message.dateCreated+"</td>";
-					
+
 					if (message.request) {
 						temphtmlString = "<tr class='success'>"+temphtmlString+"</tr>";
 					} else {
@@ -685,7 +928,7 @@ function refreshOutbox() {
 					htmlString += temphtmlString;
 				});
 				$("#outbox table tbody").html(htmlString);
-				
+
 				// Attach event handler to the table
 				$('#outbox tbody').on("click", "tr", function(){
 					console.log(this.rowIndex);
@@ -705,13 +948,16 @@ function openInBoxMessage(msg) {
 	$("#inboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#receivedate").text("date: "+msg.dateCreated);
 	$("#inboxContent").text(msg.content);
+	printTradingInfo(msg, "#inboxtradingInfo");
 	$("#replyInbox").click(function() {
-		$("#messageHeader").hide();
+		$("#messageHeader, #tradeSection").hide();
 		$("#replyHeader").show();
 		$("#recipient").text("To: "+ msg.sender.displayname);
 		$("#messageText").val("");
+		msgview = msg;
 		viewing = msg.sender;
-		re = true;
+		userReply = true;
+		userRequest = msg.request;
 	});
 	if (msg.unread) {
 		$.ajax({
@@ -727,17 +973,64 @@ function openInBoxMessage(msg) {
 	}
 }
 
+// helper func to print the teading info in div that has id divID
+function printTradingInfo(msg, divID) {
+	if (msg.request) {
+		var offerHTML;
+		if (msg.item.offer._id === 'mystery') {
+			offerHTML = "Offered <a href='#'>"+msg.item.offer.title+"</a>";
+		} else {
+			offerHTML = "Offered <a href='#' class='linktoOffer'>"+msg.item.offer.title+"</a>";
+		}
+		var interestHTML;
+		if (msg.item.interest._id === 'mystery') {
+			interestHTML = " to <a href='#'>"+msg.item.interest.title+"</a>";
+		} else {
+			interestHTML = " to <a href='#' class='linktoInterest'>"+msg.item.interest.title+"</a>";
+		}
+
+		$(divID).html(offerHTML + interestHTML);
+		$(".linktoOffer").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.offer._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.offer._id);
+		});
+		$(".linktoInterest").click(function(){
+			$.ajax({
+				type: "GET",
+				url: "/listing/users/"+msg.item.interest._id,
+				async: false,
+				success: function (data) {
+					viewing = data;
+				}
+			});
+			goToListingPage(msg.item.interest._id);
+		});
+		$(divID).show();
+	} else {
+		$(divID).hide();
+	}
+}
+
 function openOutBoxMessage(msg) {
 	$("#messageBoxOutbox").show();
 	$("#outboxFrom").text("from: "+msg.sender.displayname+" ("+msg.sender.email+")");
 	$("#outboxTo").text("to: "+msg.receiver.displayname+" ("+msg.receiver.email+")");
 	$("#sentdate").text("date: "+msg.dateCreated);
 	$("#outboxContent").text(msg.content);
+
+	printTradingInfo(msg, "#outboxtradingInfo");
 }
 
 function readFile(input) {
       if (input.files && input.files[0]) {
-          console.log("hello" +input.files[0]);
+          //console.log("hello" +input.files[0]);
 
           var reader = new FileReader();
           var formData = new FormData();
@@ -762,14 +1055,16 @@ function readFile(input) {
                 $.ajax({
                   url: '/uploadprofileimage/'+currentuser._id,  //Server script to process data
                   type: 'POST',
-                  data: { name : response.filename+"" },
+                  data: { name : response.filename+""
+                          //oldpic :
+                        },
                   //$('form').serialize(),
                   success: function(resp) {
-                    $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+resp.profileimage);
+                    $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+resp.profileimage.mainPicture);
 
                     $.ajax({
                         type: "GET",
-                        url: "/listingbyname/" + resp.profileimage,
+                        url: "/listingbyname/" + resp.profileimage.mainPicture,
                         success: function(data){
                           if (data) {
                             $('#mainlistinglink').attr('name', data._id);
@@ -787,7 +1082,7 @@ function readFile(input) {
 
 function readFile2(input) {
       if (input.files && input.files[0]) {
-          console.log("hello" +input.files[0]);
+          //console.log("hello" +input.files[0]);
 
           var reader = new FileReader();
           var formData = new FormData();
@@ -844,11 +1139,11 @@ function updateMsgBadge() {
 		$("#newMessage").text(currentuser.newMsgNum);
 	}
 }
-  
+
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
   $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage").hide();
-  $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
+  $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
 
   updateMsgBadge();
 
@@ -858,96 +1153,68 @@ function moveToWelcome(obj) {
     $("#profilelink").text(obj.displayname);
   }
 
-  //$("#profilelink").text(obj.email);
   $("#profilelink").show();
   $(".thumbnailholder").show();
 
-  // Gets all users to display in welcome screen
-    $.ajax({
-      type: "get",
-      url: "/users/all/"+currentuser.email,
-      success: function(data){
-        var info = data;
-        for (var i = 0; i < data.length; i++) {
-          var displayname;
+  loadRecommendations();
+  loadHomeProfileGallery();
 
-          var ok = false;
+  // Gets all users to display in welcome screen --USE FOR ADMIN?
+    // $.ajax({
+    //   type: "get",
+    //   url: "/users/all/"+currentuser.email,
+    //   success: function(data){
+    //     var info = data;
+    //     for (var i = 0; i < data.length; i++) {
+    //       var displayname;
+    //
+    //       var ok = false;
+    //
+    //       var table = $("#usertable");
+    //       $("#usertable tr:not(:first)").each(function() {
+    //       //get the value of the table cell located in the first column
+    //
+    //       var valueOfCell = $(this).find("td:nth-child(1)").html();
+    //
+    //       $.when((getUserByEmail(valueOfCell)).done(function(user){
+    //         if (!user) {
+    //           $('#'+user._id).remove();
+    //         }
+    //       }));
+    //
+    //       if (valueOfCell == data[i].email){
+    //         if (data[i].displayname != "" && $(this).find("td:nth-child(2)").html() != data[i].displayname) {
+    //           $(this).find("td:nth-child(2)").html(data[i].displayname);
+    //         }
+    //         ok = true;
+    //       } else {
+    //
+    //       }
+    //       });
+    //
+    //       if (!ok) {
+    //         if (data[i].displayname === "") {
+    //           displayname = data[i].email;
+    //         } else {
+    //           displayname = data[i].displayname;
+    //         }
+    //
+    //         $('<tr id='+ data[i]._id +'><td>'+ data[i].email +'</td><td>'+displayname+'</td></tr>').appendTo('#usertable');
+    //
+    //
+    //       }
+    //     }
+    //   }
+    // });
 
-          var table = $("#usertable");
-          $("#usertable tr:not(:first)").each(function() {
-          //get the value of the table cell located in the first column
-
-          var valueOfCell = $(this).find("td:nth-child(1)").html();
-
-          $.when((getUserByEmail(valueOfCell)).done(function(user){
-            if (!user) {
-              $('#'+user._id).remove();
-            }
-          }));
-
-          if (valueOfCell == data[i].email){
-            if (data[i].displayname != "" && $(this).find("td:nth-child(2)").html() != data[i].displayname) {
-              $(this).find("td:nth-child(2)").html(data[i].displayname);
-            }
-            ok = true;
-          } else {
-
-          }
-          });
-
-          if (!ok) {
-            if (data[i].displayname === "") {
-              displayname = data[i].email;
-            } else {
-              displayname = data[i].displayname;
-            }
-
-            $('<tr id='+ data[i]._id +'><td>'+ data[i].email +'</td><td>'+displayname+'</td></tr>').appendTo('#usertable');
-
-
-          }
-        }
-      }
-    });
-
-  //if (fromlogin) {
-
-    //var div =
     $("#loginbutton, #signupbutton").hide();
-
-    // Moves login out of the way and fades in homepage
-    //div.animate({'left': '1500px'}, 1300, function(){
-
-      var display;
-
-        if (obj.displayname == "") {
-          display = obj.email;
-        } else {
-          display = obj.displayname;
-        }
-
-        setPageTitle("Welcome " + display + "!");
-        $("#homepage").show();
-    //});
-    //fromlogin = false;
-  //} else {
-    //var display;
-
-      //if (obj.displayname == "") {
-        //display = obj.email;
-      //} else {
-        //display = obj.displayname;
-      //}
-
-      //setPageTitle("Welcome " + display + "!");
-      //$("#homepage").fadeIn();
-    //}
-
+    $("#homepage").show();
 }
 
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
+	$("#inboxTab").tab("show");
 	$.ajax({
 		type: "PUT",
 		url: "/users/messages/updateStatus/newMsgNum",
@@ -964,9 +1231,9 @@ function moveToMessagePage() {
 }
 
 function moveToProfile(user) {
+
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #listingpage, #editlistingpage").hide();
   $("#messageuser").hide();
-  //$("#deleteuser").hide();
 
   $("#homepage").hide();
   setPageTitle("Profile");
@@ -982,18 +1249,17 @@ function moveToProfile(user) {
 
   // Get profile image listing id and set its name
   $.ajax({
-      type: "GET",
-      url: "/listingbyname/" + user.profileimage,
-      success: function(data){
-        if (data) {
-          $('#mainlistinglink').attr('name', data._id);
-        }
+    type: "GET",
+    url: "/listing/" + user.profileimage._id,
+    success: function(data){
+      if (data) {
+        $('#profilepicture').attr('src', "/uploads/"+data.mainPicture);
+        $('#mainlistinglink').attr('name', data._id);
       }
+    }
   });
 
-
   //$('#mainlistinglink').attr('name', "uploads/"+user.profileimage);
-
 
   getGallery(user);
 
@@ -1031,10 +1297,23 @@ function moveToEditPage(user, own) {
     viewing=currentuser;
   }
 
+  $.ajax({
+      type: "GET",
+      async: false,
+      url: "/users/verify-email/"+currentuser.email+"/none",
+      success: function(data){
+        if (data) {
+          currentuser = data;
+          //return data;
+        }
+      }
+  });
+
   $("#homepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #listingpage").hide();
   setPageTitle("Edit Profile");
 
   $("#editemail").val(user.email);
+  $("#editprofilepicture").attr('src', '/uploads/'+currentuser.profileimage.mainPicture);
 
   // need a more efficient way to get user
   var getUser = JSON.parse(getUserByEmail(user.email).responseText);
@@ -1159,7 +1438,7 @@ function moveToUserBehaviourPage() {
 }
 
 function addListing(listing) {
-  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
+  $('#links').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img style='width: 350px; height: 170px;' class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
 }
 
 function getGallery(user) {
@@ -1167,19 +1446,27 @@ function getGallery(user) {
   $('#links').empty();
   //get users gallery photos to display
   for (var i = 0; i < user.gallery.length; i++) {
-    console.log(user.gallery[i]);
+    //console.log(user.gallery[i]);
     addListing(user.gallery[i]);
   }
 }
 
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
-  $("#deleteuser").hide();
+  $("#editlisting, #deletelisting, #requestlisting").hide();
+
+  if (currentuser.email === viewing.email) {
+	  $("#editlisting, #deletelisting").show();
+  } else {
+	  $("#requestlisting").show();
+  }
 
   $("#homepage").fadeOut();
   setPageTitle("Listing");
 
   listingview = listingid;
+
+  $("#postcomment, #cancelcomment").hide();
 
   //getGallery(user);
 
@@ -1188,6 +1475,7 @@ function goToListingPage(listingid) {
       url: "/listing/" + listingid,
       success: function(data){
         if (data) {
+
             $("#listingtitle").text(data.title);
             $("#listingdescription").text(data.description);
 
@@ -1198,9 +1486,46 @@ function goToListingPage(listingid) {
             //get users gallery photos to display
             for (var i = 0; i < data.morePictures.length; i++) {
               var pic = data.morePictures[i];
-              console.log(pic);
-              $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \"Listing\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\"Listing\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
+              //console.log(pic);
+              $('#listinglinks').append("<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\"><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ pic +"\" title= \""+ data.title +"\"><img width='350' height='200' class=\"img-responsive img-thumbnail\" src=\"./uploads/"+pic+"\" alt=\""+ data.title +"\"></a><div class=\"overlay\"><h2>Click to view larger</h2></div></div></div>");
             }
+
+            //Don't show delete button
+            if (data.profilepic === 1) {
+              $("#deletelisting").hide();
+            } else {
+              $("#deletelisting").show();
+            }
+            if (data.owner === currentuser._id) {
+              $("#requestlisting").hide();
+            } else {
+              $("#requestlisting").show();
+            }
+			$("#listingcommentsheading").html("<h3>All Comments (" + commentCount(data) + ")</h3>");
+			$("#userprofileimage").attr('src', "uploads/" + currentuser.profileimage);
+			$("#userprofileimage").on("click",function() { moveToProfile(currentuser);});
+			$("#addcomment").on("click",function() { $("#postcomment, #cancelcomment").show();});
+			$("#cancelcomment").on("click",function() {  $("#addcomment").val(""); $("#postcomment, #cancelcomment").hide();});
+
+			var sortComments = "Newest First";
+			var sortButtonHTML = "<span class=\"caret\"></span>";
+			if (sessionStorage.getItem("sortMethod") != null) {
+				sortComments = sessionStorage.getItem("sortMethod");
+			}
+			$("#sortcomments").html(sortComments + sortButtonHTML);
+
+			$("#oldestcomments").on("click",function() {
+				sessionStorage.setItem("sortMethod", "Oldest First");
+				$("#sortcomments").html("Oldest First" + sortButtonHTML);
+			});
+			$("#newestcomments").on("click",function() {
+				sessionStorage.setItem("sortMethod", "Newest First");
+				$("#sortcomments").html("Newest First" + sortButtonHTML);
+			});
+			$("#topcomments").on("click",function() {
+				sessionStorage.setItem("sortMethod", "Top Comments");
+				$("#sortcomments").html("Top Comments" + sortButtonHTML);
+			});
 
             $("#listingpage").fadeIn();
 
@@ -1219,8 +1544,8 @@ function goToEditListingPage() {
       success: function(data){
         if (data) {
             listingview = data._id;
-            $("#editlistingtitle").text(data.title);
-            $("#editlistdescription").text(data.description);
+            $("#editlistingtitle").val(data.title);
+            $("#editlistdescription").val(data.description);
 
             $('#editmainlistingpicture').attr('src', "uploads/"+data.mainPicture);
 
@@ -1236,6 +1561,7 @@ function setCurrentUser() {
   $.ajax({
       type: "GET",
       url: "/users/verify-email/"+currentuser.email+"/none",
+      async: false,
       success: function(data){
         if (data) {
           currentuser = data;
@@ -1243,5 +1569,82 @@ function setCurrentUser() {
         }
       }
   });
+}
+
+function loadRecommendations() {
+
+
+}
+
+function loadHomeProfileGallery () {
+  $('#linksownhome').empty();
+  //get users gallery photos to display
+  var otherPic;
+  $.ajax({
+      type: "GET",
+      async: false,
+      url: "/users/verify-email/"+currentuser.email+"/none",
+      success: function(data){
+        if (data) {
+          currentuser = data;
+          //return data;
+        }
+      }
+  });
+  for (var i = 0; i < currentuser.gallery.length; i++) {
+
+    if (currentuser.gallery[i].morePictures.length > 0) {
+      //More than one picture
+      $('#linksownhome').append(
+      "<div class = 'row'>"+
+        "<div class='col-xs-12 col-sm-6 col-lg-6'>"+
+          "<div class='hovereffect'>"+
+            "<a class='photo' href='./uploads/"+ currentuser.gallery[i].mainPicture +"' title='"+ currentuser.gallery[i].title +"'>"+
+              "<img class='img-responsive img-thumbnail' src='./uploads/"+ currentuser.gallery[i].mainPicture +"' alt='"+ currentuser.gallery[i].title +"'>"+
+            "</a>"+
+            "<div class='overlay'>"+
+              "<h2>Click to view larger</h2>"+
+            "</div>"+
+          "</div>"+
+          "<h4>"+ currentuser.gallery[i].title +"</h4>"+
+          "<p>"+ currentuser.gallery[i].description +"</p>"+
+        "</div>"+
+        "<div class='col-xs-12 col-sm-6 col-lg-6'>"+
+          "<div class='hovereffect'>"+
+            "<a class='photo' href='./uploads/"+ currentuser.gallery[i].morePictures[0] +"' title='"+ currentuser.gallery[i].title +"'>"+
+              "<img class='img-responsive img-thumbnail' src='./uploads/"+ currentuser.gallery[i].morePictures[0] +"' alt='"+ currentuser.gallery[i].title +"'>"+
+            "</a>"+
+            "<div class='overlay'>"+
+              "<h2>Click to view larger</h2>"+
+            "</div>"+
+          "</div>"+
+        "</div>"+
+      "</div>");
+    } else {
+      $('#linksownhome').append(
+      "<div class = 'row'>"+
+        "<div class='col-xs-12 col-sm-6 col-lg-6'>"+
+          "<div class='hovereffect'>"+
+            "<a class='photo' href='./uploads/"+ currentuser.gallery[i].mainPicture +"' title='"+ currentuser.gallery[i].title +"'>"+
+              "<img class='img-responsive img-thumbnail' src='./uploads/"+ currentuser.gallery[i].mainPicture +"' alt='"+ currentuser.gallery[i].title +"'>"+
+            "</a>"+
+            "<div class='overlay'>"+
+              "<h2>Click to view larger</h2>"+
+            "</div>"+
+          "</div>"+
+          "<h4>"+ currentuser.gallery[i].title +"</h4>"+
+          "<p>"+ currentuser.gallery[i].description +"</p>"+
+        "</div>"+
+        "<div class='col-xs-12 col-sm-6 col-lg-6'>"+
+
+        "</div>"+
+      "</div>");
+
+    }
+
+    //console.log(user.gallery[i]);
+    //$('#linksownhome').append('<div class=\'col-lg-3 col-md-4 col-sm-6 col-xs-12\'><div class=\"hovereffect\"><a class=\"photo\" href=\"./uploads/"+ listing.mainPicture +"\" title=\""+listing.title+"\"><img class=\"img-responsive img-thumbnail\" src=\"./uploads/"+listing.mainPicture+"\" alt=\""+listing.title+"\"></a><div class=\"overlay\"><h2>Click to view larger</h2><p><div id="+listing._id+"><a class=\"listinglink\">Listing Page</a></div></p></div></div></div>");
+  }
+
 
 }
