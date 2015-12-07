@@ -102,7 +102,8 @@ ListingSchemas = new Schema ({
   title: String,
   profilepic: Number, //1 if it is, 0 if not
   comments: [CommentSchemas],
-  reviews: [ReviewSchemas]
+  reviews: [ReviewSchemas],
+  tags: {}
 });
 
 
@@ -243,10 +244,10 @@ app.get('/search/:tag', function (req, res) {
           break;
         }
       }
-      for(var k = 0; k < users[i].posts.length; k++) {
+      for(var k = 0; k < users[i].gallery.length; k++) {
         for(var m = 0; m < tags.length; m++) {
-          if(users[i].posts[k].tags[tags[m]]) {
-            postResults.push(users[i].posts[k]);
+          if(users[i].gallery[k].tags[tags[m]]) {
+            postResults.push(users[i].gallery[k]);
           }
         }
       }
@@ -380,13 +381,13 @@ app.post('/users', function (req, res){
     listing.mainPicture = "default_profile_large.jpg";
     //listing.owner = user._id,
     listing.title ="Listing"
-
+    var displayname = req.body.email.split("@")[0];
     user = new UserModel({
       email: req.body.email,
       password: req.body.password,
       googleId: "",
       description: "",
-      displayname: "",
+      displayname: displayname,
       //profileimage: list,
       type: userType,
       userbehaviour: { allcount: 0,
@@ -396,8 +397,10 @@ app.post('/users', function (req, res){
         updatecount: 0,
         behaviourcount: 0
       },
-      tags: { na:false }
+      tags: {}
     });
+
+    user.tags[displayname] = true;
 
     console.log("USER ID"+user._id);
     listing = {};
@@ -417,7 +420,8 @@ app.post('/users', function (req, res){
       owner: user._id,
       title: listing.title,
       profilepic: listing.profilepic,
-      _id: listing._id
+      _id: listing._id,
+      tags: { na: false }
     });
     list.save(function (err){
       if (err) {
@@ -591,16 +595,15 @@ app.post('/users/googlelogin/:id/:email', function (req, res) {
             UserModel.findOne({googleId: id}, function (err, user) {
               if (!err) {
                 if (user) {
-                  console.log("uh oh");
                   res.send(user);
                 } else {
-                  console.log("yes this is right");
+                  var displayname = req.params.email.split("@")[0];
                   var newuser = new UserModel({
                       email: req.params.email,
                       googleId: id,
                       password: "",
                       description: "",
-                      displayname: "",
+                      displayname: displayname,
                       type: "",
                       profileimage: "default_profile_large.jpg",
                       userbehaviour: { allcount: 0,
@@ -610,8 +613,10 @@ app.post('/users/googlelogin/:id/:email', function (req, res) {
                         updatecount: 0,
                         behaviourcount: 0
                       },
-                      tags: { na:false }
+                      tags: {}
                   });
+
+                  newuser.tags[displayname] = true;
 
                   newuser.save(function (err) {
                     if (err) {
@@ -684,12 +689,11 @@ app.get('/users/verify-email/:email/:emailaddcount', function (req, res){
           if (err) {
             console.log(err);
           } else {
-            console.log("added specificcount 1");
+            console.log("done");
           }
         });
       });
     }
-    console.log("DUDE"+user);
     if (!err) {
       return res.send(user);
     } else {
@@ -725,14 +729,25 @@ app.put('/users/update/:email/:emailaddcount', function (req, res){
     } else {
       user.displayname = "";
     }
-
-    if (req.body.type) {
-      user.type = req.body.type;
-    }
+    console.log(req.body.tag1);
+      if(req.body.tag1) {
+        user.tags[req.body.tag1] = true;
+        console.log(req.body.tag1);
+      }
+      if(req.body.tag2) {
+        user.tags[req.body.tag2] = true;
+        console.log(req.body.tag2);
+      }
+      if(req.body.tag3) {
+        user.tags[req.body.tag3] = true;
+        console.log(req.body.tag3);
+      }
+      user.markModified('tags');
 
     return user.save(function (err) {
       if (!err) {
         console.log("updated");
+        console.log(user.tags);
       } else {
         console.log(err);
       }
@@ -785,6 +800,7 @@ app.post('/uploadimage/:id', function (req, res) {
     listing.owner = user._id;
     listing.title = "Listing";
     listing.profilepic = 0;
+    listing.tags = { na: false };
 
     user.gallery.push(listing);
 
@@ -799,7 +815,8 @@ app.post('/uploadimage/:id', function (req, res) {
           owner: listing.owner,
           title: listing.title,
           profilepic: listing.profilepic,
-          _id: listing._id
+          _id: listing._id,
+          tags: { na: false }
         });
         console.log(list._id);
         list.save(function (err) {
@@ -1024,10 +1041,23 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
     for (var i = 0; i < user.gallery.length; i++) {
       if (user.gallery[i]._id === req.params.listingid) {
         //delete listing
-        console.log("USER"+user.gallery[i]);
         var person = user.gallery[i];
         if (req.body.title) user.gallery[i].title = req.body.title;
         if (req.body.description) user.gallery[i].description = req.body.description;
+        console.log(user.gallery[i]);
+        if(req.body.tag1) {
+          user.gallery[i].tags[req.body.tag1] = true;
+          console.log(req.body.tag1);
+        }
+        if(req.body.tag2) {
+          user.gallery[i].tags[req.body.tag2] = true;
+          console.log(req.body.tag2);
+        }
+        if(req.body.tag3) {
+          user.gallery[i].tags[req.body.tag3] = true;
+          console.log(req.body.tag3);
+        }
+        user.gallery[i].markModified('tags');
       }
       if (user.gallery[i].profilepic === 1){
         if (req.body.title) user.profileimage.title = req.body.title;

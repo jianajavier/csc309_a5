@@ -82,7 +82,6 @@ function displayComment(target, comment) {
 
 //Comment Helper Functions end here
 
->>>>>>> b569c56c2eeab29530f2490b2b230d258ee62974
 function onSignIn(googleUser) {
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
@@ -273,7 +272,7 @@ $(document).ready(function(){
                       + "<h3 class='panel-title'>" + data[0][i].email +"</h3>"
                   + "</div>"
                   + "<div class='panel-body'>"
-                      + "<img src='" + data[0][i].profileimage + "'>"
+                      + "<img style='max-width:100%;max-height:auto;' src='/uploads/" + data[0][i].profileimage.mainPicture + "'>"
                       + "<p>" + data[0][i].description + "</p>"
                   + "</div>"
                 + "</div>");
@@ -286,7 +285,7 @@ $(document).ready(function(){
                       + "<h3 class='panel-title'>" + data[1][i].title +"</h3>"
                   + "</div>"
                   + "<div class='panel-body'>"
-                      + "<img src='" + data[1][i].mainPicture +"'>"
+                      + "<img src='/uploads/" + data[1][i].mainPicture +"'>"
                   + "</div>"
                 + "</div>");
             }
@@ -369,15 +368,27 @@ $(document).ready(function(){
   */
   $("#editProfileForm").submit(function (event) {
     event.preventDefault();
+    var data = {
+      displayname : $("#editdisplayname").val(),
+      description : $("#editdescription").val()
+    }
+    var tags = {}
+    if (!($("#taguser1").val()==null || $("#taguser1").val().trim()=="")) {
+      data.tag1 = $("#taguser1").val();
+    }
+    if (!($("#taguser2").val()==null || $("#taguser2").val().trim()=="")) {
+      data.tag2 = $("#taguser2").val();
+    }
+    if (!($("#taguser3").val()==null || $("#taguser3").val().trim()=="")) {
+      data.tag3 = $("#taguser3").val();
+    }
+    console.log(data);
     $.ajax({
       type: "PUT",
       url: "/users/update/" + viewing.email+ "/"+currentuser.email, // technically viewing should be current if they are looking at their own
-      data: {
-        displayname : $("#editdisplayname").val(),
-        description : $("#editdescription").val()
-      },
+      data: data,
       success: function(data) {
-        currentuser = JSON.parse(getUserByEmail(currentuser.email).responseText);
+        currentuser = data;
         viewing = data;
         editAlertPopup("Updated.");
       }
@@ -760,13 +771,24 @@ $(document).ready(function(){
 
   $("#setinitiallistinginfo").submit(function(e) {
       e.preventDefault();
+      var data = {
+          title : $("#listingtitleinitialedit").val(),
+          description : $("#listingdescrinitialedit").val()
+      }
+      var tags = {}
+      if (!($("#tagmodal1").val()==null || $("#tagmodal1").val().trim()=="")) {
+        data.tag1 = $("#tagmodal1").val();
+      }
+      if (!($("#tagmodal2").val()==null || $("#tagmodal2").val().trim()=="")) {
+        data.tag2 = $("#tagmodal2").val();
+      }
+      if (!($("#tagmodal3").val()==null || $("#tagmodal3").val().trim()=="")) {
+        data.tag3 = $("#tagmodal3").val();
+      }
       $.ajax({
         type: "PUT",
         url: "/listings/update/" + listingview +"/"+currentuser._id,
-        data: {
-          title : $("#listingtitleinitialedit").val(),
-          description : $("#listingdescrinitialedit").val()
-        },
+        data: data,
         success: function(data) {
           //listingview = data._id;
         }
