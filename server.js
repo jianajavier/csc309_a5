@@ -3,20 +3,22 @@ path = require('path');
 var bodyParser  = require('body-parser');
 var express = require('express');
 var app = express();
-var formidable = require('formidable');
 var util = require('util');
 var fs = require('fs-extra');
 var multer = require('multer');
+var request = require('request');
 
 var upload = multer({
   dest: __dirname + '/public/uploads/'
 });
 
+var adminLogin = {'username': 'admin', 'password': 'admin'};
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 var mongoose   = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/test');
+mongoose.connect('mongodb://bron:pizza*bagels1@ds053190.mongolab.com:53190/heroku_b01vwltc');
 
 /* Configuration settings */
 app.use(express.static(path.join(__dirname, '/public'), {
@@ -36,6 +38,10 @@ app.get('/', function(req, res) {
     res.render('index.html');
     console.log('root');
 });
+
+app.get('/admin', function(req, res) {
+    res.render('admin.html');
+})
 
 /* Creating the Schema */
 var Schema = mongoose.Schema;
@@ -143,6 +149,7 @@ MessageSchemas = new Schema({
 UserSchemas = new Schema({
     email: String,
     password: String,
+    googleId: String, 
     description: String, default : "",
     profileimage: ListingSchemas,
     gallery: [ListingSchemas],
@@ -255,6 +262,24 @@ app.get('/search/:tag', function (req, res) {
 
 
 /* CURD requests */
+// GET ALL USERS
+
+app.get('/admin/verifylogin/:username', function(req, res) {
+  if (req.params.username == adminLogin.username) {
+    res.send({'password': adminLogin.password});
+  }
+});
+
+app.get('/admin/all', function (req, res){
+  return UserModel.find(function (err, users) {
+    if (!err) {
+      return res.send(users);
+    } else {
+      return console.log(err);
+    }
+  });
+});
+
 
 // GET ALL USERS
 app.get('/users/all/:emailaddcount', function (req, res){
@@ -359,6 +384,7 @@ app.post('/users', function (req, res){
     user = new UserModel({
       email: req.body.email,
       password: req.body.password,
+      googleId: "",
       description: "",
       displayname: "",
       //profileimage: list,
@@ -550,6 +576,56 @@ app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
 		});
 		res.send(user);
 	});
+});
+
+app.post('/users/googlelogin/:id/:email', function (req, res) {
+
+  request.get(
+    'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + req.params.id,
+    function (error, response, body) {
+        console.log(body);
+        jsonbody = JSON.parse(body);
+        if (!error && response.statusCode == 200) {
+            var id = jsonbody["sub"];
+            console.log(id);
+            UserModel.findOne({googleId: id}, function (err, user) {
+              if (!err) {
+                if (user) {
+                  console.log("uh oh");
+                  res.send(user);
+                } else {
+                  console.log("yes this is right");
+                  var newuser = new UserModel({
+                      email: req.params.email,
+                      googleId: id,
+                      password: "",
+                      description: "",
+                      displayname: "",
+                      type: "",
+                      profileimage: "default_profile_large.jpg",
+                      userbehaviour: { allcount: 0,
+                        specificcount: 0,
+                        deletecount: 0,
+                        addcount: 1,
+                        updatecount: 0,
+                        behaviourcount: 0
+                      },
+                      tags: { na:false }
+                  });
+
+                  newuser.save(function (err) {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      console.log("created");
+                    }
+                  });
+                  res.send(newuser);
+                }
+              }
+            });
+        }
+    });
 });
 
 // VERIFY EMAIL LOGIN
@@ -988,6 +1064,7 @@ app.put('/listings/update/:listingid/:userid', function (req, res){
 
 
 var server = app.listen(3000, function () {
+  //process.env.PORT
   var host = server.address().address;
   var port = server.address().port;
 

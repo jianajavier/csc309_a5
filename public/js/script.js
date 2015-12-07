@@ -82,13 +82,39 @@ function displayComment(target, comment) {
 
 //Comment Helper Functions end here
 
+>>>>>>> b569c56c2eeab29530f2490b2b230d258ee62974
 function onSignIn(googleUser) {
-    gapi.auth2.init();
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
     console.log('Name: ' + profile.getName());
     console.log('Image URL: ' + profile.getImageUrl());
     console.log('Email: ' + profile.getEmail());
+    var id_token = googleUser.getAuthResponse().id_token;
+    var posturl = "/users/googlelogin/" + id_token + "/" + profile.getEmail();
+    $.ajax({
+        type: "POST",
+        url: posturl,
+        success: function(data){
+          if (data) {
+            currentuser = data;
+              $("#loginOrSignupScreen").hide();
+              $(".loggedInNav").show();
+
+              // set profile picture
+              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage);
+
+              //$("#logout").fadeIn();
+              //if (currentuser.type === "admin" || currentuser.type === "superadmin") {
+                //$("#viewbehaviour").fadeIn();
+              //}
+
+              moveToWelcome(data);
+          } else {
+            console.log("google sign in error");
+          }
+        }
+      });
+
 }
 
 $(document).ready(function(){
@@ -267,21 +293,6 @@ $(document).ready(function(){
             $("#searchScreen").show();
           }
         }
-    });
-  });
-
-  /**
-  USER UPLOADS A NEW PROFILE PICTURE -- Don't have to do this anymore!! Already done!!
-  */
-  $("#newProfilePic").submit(function(event) {
-    $.ajax({
-        type: "GET",
-        url: "/"
-        //data: $("#newProfilePic").serialize(),
-        //success: function(data){
-          //if (data) {
-            //console.log(data);
-          //}
     });
   });
 
