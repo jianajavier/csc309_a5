@@ -8,6 +8,9 @@ var multer = require('multer');
 var request = require('request');
 var passwordHash = require('password-hash');
 var crypto = require('crypto');
+var compress = require('compression');
+
+app.use(compress());  
 
 var upload = multer({
   dest: __dirname + '/public/uploads/'
