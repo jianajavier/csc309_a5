@@ -700,20 +700,21 @@ app.get('/users/verify-email/login/:email/:loc', function (req, res){
 app.post('/users/validate/:email', function (req, res) {
   return UserModel.findOne({ email: req.params.email }, function (err, user) {
     var hiddenuser = user;
-    if (passwordHash.verify(req.body.passwordinput, user.password)) {
-      hiddenuser.password = true;
+    if (user.googleId == ""){
+      if (passwordHash.verify(req.body.passwordinput, user.password)) {
+        hiddenuser.password = true;
 
-      //SET TOKEN TO PROTECT AGAINST CSRF
-      crypto.randomBytes(48, function(ex, buf) {
-        var gentoken = buf.toString('hex');
-        hiddenuser.token = gentoken;
-        token = gentoken;
-      });
+        //SET TOKEN TO PROTECT AGAINST CSRF
+        crypto.randomBytes(48, function(ex, buf) {
+          var gentoken = buf.toString('hex');
+          hiddenuser.token = gentoken;
+          token = gentoken;
+        });
 
-    } else {
-      hiddenuser.password = false;
+      } else {
+        hiddenuser.password = false;
+      }
     }
-
     if (!err) {
       console.log("verified user exists");
     } else {

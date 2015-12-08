@@ -1249,7 +1249,7 @@ function updateMsgBadge() {
 
 function moveToWelcome(obj) {
   // Shows user profile in top right corner
-  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage, #listingpage").hide();
+  $("#editprofilepage, #blueimp-gallery, #messagePage, #profilepage, #userbehaviourpage, #editlistingpage, #listingpage", "#searchScreen").hide();
   $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
   $("#notSearch").show();
 
@@ -1274,7 +1274,7 @@ function moveToWelcome(obj) {
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
-  $("#notSearch").hide();
+  //$("#notSearch").hide();
 	$("#inboxTab").tab("show");
 	$.ajax({
 		type: "PUT",
@@ -1442,7 +1442,7 @@ function moveToHome() {
   $("#loginOrSignupScreen, #loginbutton, #signupbutton").show();
   $(".loggedInNav").hide();
 
-  $("#homepage, #messagePage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage, #editlistingpage, #listingpage").fadeOut();
+  $("#homepage, #messagePage, #profilepage, #editprofilepage, #profilelink, #logout, .thumbnailholder, #pagetitle, #userbehaviourpage, #editlistingpage, #listingpage", "#searchScreen").fadeOut();
   $("#rectangle").hide();
   $('#emailinput,#passwordinput,#cpasswordinput').val("");
   // $("#loginbutton, #signupbutton").fadeIn();
