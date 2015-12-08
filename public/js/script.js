@@ -308,7 +308,15 @@ $(document).ready(function(){
     event.preventDefault();
     $("#notSearch").hide();
     //console.log()
-
+    $.ajax({
+        type: "POST",
+        url: "/users/prevsearch/" + currentuser.email + "/" + $("#searchinput").val(),
+        success: function(data){
+          if (data) {
+            currentuser = data;
+          }
+        }
+    });
     $.ajax({
         type: "GET",
         url: "/search/" + $("#searchinput").val(),
@@ -1623,8 +1631,23 @@ function setCurrentUser() {
 }
 
 function loadRecommendations() {
-
-
+    $.ajax({
+        type: "GET",
+        url: "/search/" + currentuser.lastsearch,
+        success: function(data){
+            for(var i = 0; i < data[1].length; i++){
+              $("#recommendationscontain").append(
+                "<div onclick = \"goToListingPage('"+data[1][i]._id+"')\" class='panel panel-primary'>"
+                  + "<div class='panel-heading'>"
+                      + "<h3 class='panel-title'>" + data[1][i].title +"</h3>"
+                  + "</div>"
+                  + "<div class='panel-body'>"
+                      + "<img  style='max-width:100%;max-height:auto;' src='/uploads/" + data[1][i].mainPicture +"'>"
+                  + "</div>"
+                + "</div>");
+            }
+        }
+    });
 }
 
 function loadHomeProfileGallery () {

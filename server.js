@@ -157,6 +157,7 @@ UserSchemas = new Schema({
     gallery: [ListingSchemas],
     displayname: String, default: "",
     type: String, default: "",
+    lastsearch: String,
     userbehaviour:
     { allcount: Number, default: 0,
       specificcount: Number, default: 0,
@@ -263,6 +264,20 @@ app.get('/search/:tag', function (req, res) {
 
     });
 
+  });
+});
+
+app.post('/users/prevsearch/:email/:searchterm', function(req, res) {
+  UserModel.findOne({email: req.params.email}, function (err, user)  {
+    if (!err) {
+      user.lastsearch = req.params.searchterm;
+      user.save(function (err) {
+        if (err) {
+          console.log(err);
+        }
+      });
+      res.send(user);
+    }
   });
 });
 
