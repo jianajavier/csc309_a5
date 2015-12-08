@@ -525,7 +525,7 @@ console.log(req.body["item[offer]"]);
 			console.log(receiverUser.displayname);
 			console.log(">>>>>>>>>>>>>>");
 			senderUser.outbox.unshift(tempMessage);
-      if (req.body.token === token) {
+      //if (req.body.token === token) {
   			senderUser.save(function (err) {
   				if (err) {
   					console.log("Saving 'from' error: "+ err);
@@ -538,7 +538,7 @@ console.log(req.body["item[offer]"]);
   					console.log("Saving 'to' error: "+ err);
   				}
   			});
-      }
+      //}
 		});
 	});
 	res.sendStatus(200);
@@ -567,13 +567,13 @@ app.put('/users/messages/updateStatus', function (req, res) {
 		}
 		user.inbox.id(req.body.message).unread = false;
 		console.log(user.inbox);
-    if (req.body.token === token) {
+    //if (req.body.token === token) {
   		user.save(function (err) {
   			if (err) {
   				console.log("Update message status error.");
   			}
   		});
-    }
+    //}
 	});
 	res.sendStatus(200);
 });
@@ -586,14 +586,14 @@ app.put('/users/messages/updateStatus/newMsgNum', function (req, res) {
 		}
 		user.newMsgNum = 0;
 		console.log(user);
-    if (req.body.token === token) {
+    //if (req.body.token === token) {
   		user.save(function (err) {
   			if (err) {
   				console.log("Update message status error.");
   			}
   		});
   		res.send(user);
-    }
+    //}
 	});
 });
 
@@ -789,7 +789,7 @@ app.put('/users/update/:email/:emailaddcount', function (req, res){
       }
       user.markModified('tags');
 
-    if (req.body.token === token) {
+    //if (req.body.token === token) {
       return user.save(function (err) {
         if (!err) {
           console.log("updated");
@@ -798,7 +798,7 @@ app.put('/users/update/:email/:emailaddcount', function (req, res){
         }
         return res.send(user);
       });
-    }
+    //}
   });
 });
 
