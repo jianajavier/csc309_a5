@@ -61,15 +61,9 @@ function sortComments(condition, target) {
 	*/
 }
 
-<<<<<<< HEAD
 function displayComment(comment, target, listingCreater) {
 	
 	var m = comment.message;
-=======
-function displayComment(comment) {
-
-	var m = "<p id=\"message" + ">" + comment.message + "</p>";
->>>>>>> 71333d3dd1eb61b9828a95d78acd2b8fc6697aaa
 	var n = m.replace(/(https?:\/\/[^\s]+)/g, function(url) {
         return '<a href="' + url + '">' + url + '</a>';
     });
@@ -82,15 +76,9 @@ function displayComment(comment) {
 						+ "id=\"userprofileimage" + comment._id + "\" />"
 					 + "</div>"
 					 + "<div class=\"col-sm-10\">"
-<<<<<<< HEAD
 						 + "<p id=\"user" + comment._id + "\" >" 
 						 + "<span id=\"username" + comment._id + "\">" + comment.createrInfo.displayname + "</span>"
 						 + "<span id=\"date" + comment._id + "\">" + comment.dateCreated + "</span>"
-=======
-						 + "<p>"
-						 + "<span id=\"username" + comment._id + "\">" + cumment.createrInfo.displayname + "</span>"
-						 + "<span id=\"date" + comment._id + "\">" + cumment.dateCreated + "</span>"
->>>>>>> 71333d3dd1eb61b9828a95d78acd2b8fc6697aaa
 						 + "</p>"
 						 + "<form class=\"form-horizontal\" role=\"form\" id=\"editcomment" + comment._id +"\" >"
 						 + "<p>"
