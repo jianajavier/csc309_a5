@@ -330,12 +330,12 @@ $(document).ready(function(){
             $("#artSearchResults").html("<h3>Artworks that match your search:</h3>");
             for(var i = 0; i < data[1].length; i++){
               $("#artSearchResults").append(
-                "<div class='panel panel-primary'>"
+                "<div onclick = \"goToListingPage('"+data[1][i]._id+"')\" class='panel panel-primary'>"
                   + "<div class='panel-heading'>"
                       + "<h3 class='panel-title'>" + data[1][i].title +"</h3>"
                   + "</div>"
                   + "<div class='panel-body'>"
-                      + "<img src='/uploads/" + data[1][i].mainPicture +"'>"
+                      + "<img  style='max-width:100%;max-height:auto;' src='/uploads/" + data[1][i].mainPicture +"'>"
                   + "</div>"
                 + "</div>");
             }
@@ -1255,7 +1255,7 @@ function moveToWelcome(obj) {
 function moveToMessagePage() {
 	$("#homepage, #profilepage, #userbehaviourpage, #listingpage, #edituser, #editprofilepage, #listingpage, #editlistingpage").hide();
 	$("#messagePage").show();
-  $("#notSearch").show();
+  $("#notSearch").hide();
 	$("#inboxTab").tab("show");
 	$.ajax({
 		type: "PUT",
@@ -1506,14 +1506,9 @@ function getGallery(user) {
 
 function goToListingPage(listingid) {
   $("#edituser, #blueimp-gallery, #messagePage, #editprofilepage, #profilepage, #editlistingpage").hide();
-  $("#editlisting, #deletelisting, #requestlisting").hide();
+  $("#editlisting, #deletelisting, #requestlisting, #searchScreen").hide();
   $("#notSearch").show();
 
-  if (currentuser.email === viewing.email) {
-	  $("#editlisting, #deletelisting").show();
-  } else {
-	  $("#requestlisting").show();
-  }
 
   $("#homepage").fadeOut();
   setPageTitle("Listing");
@@ -1551,8 +1546,10 @@ function goToListingPage(listingid) {
               $("#deletelisting").show();
             }
             if (data.owner === currentuser._id) {
+              $("#editlisting, #deletelisting").show();
               $("#requestlisting").hide();
             } else {
+              $("#editlisting, #deletelisting").hide();
               $("#requestlisting").show();
             }
 			$("#listingcommentsheading").html("<h3>All Comments (" + commentCount(data) + ")</h3>");
@@ -1582,7 +1579,6 @@ function goToListingPage(listingid) {
 			});
 
         $("#listingpage").fadeIn();
-
         }
       }
   });
