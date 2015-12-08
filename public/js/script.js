@@ -636,14 +636,25 @@ $(document).ready(function(){
 
   $("#editListingForm").submit(function (event) {
     event.preventDefault();
-    $.ajax({
-      type: "PUT",
-      url: "/listings/update/" + listingview+"/"+viewing._id,
-      data: {
+    var data =  {
         token : currenttoken,
         title : $("#editlistingtitle").val(),
         description : $("#editlistdescription").val()
-      },
+      }
+    var tags = {}
+      if (!($("#tag1").val()==null || $("#tag1").val().trim()=="")) {
+        data.tag1 = $("#tag1").val();
+      }
+      if (!($("#tag2").val()==null || $("#tag2").val().trim()=="")) {
+        data.tag2 = $("#tag2").val();
+      }
+      if (!($("#tag3").val()==null || $("#tag3").val().trim()=="")) {
+        data.tag3 = $("#tag3").val();
+      }
+    $.ajax({
+      type: "PUT",
+      url: "/listings/update/" + listingview+"/"+viewing._id,
+      data: data,
       success: function(data) {
         listingview = data._id;
       }
@@ -743,7 +754,7 @@ $(document).ready(function(){
     }
   };
 
-  document.getElementById('linkshome').onclick = function (event) {
+  /*document.getElementById('linkshome').onclick = function (event) {
     event = event || window.event;
 
     var target;
@@ -767,7 +778,7 @@ $(document).ready(function(){
     } else {
       blueimp.Gallery(links, options);
     }
-  };
+  };*/
 
   document.getElementById('linksownhome').onclick = function (event) {
     event = event || window.event;
