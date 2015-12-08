@@ -1,23 +1,19 @@
-var boot = require('../app').boot,
-      shutdown = require('../app').shutdown,
-      port = require('../app').port,
-      superagent = require('superagent'),
-      expect = require('expect.js');
-    describe('server', function () {
-      before(function () {
-        boot();
-      });
-    describe('homepage', function(){
-      it('should respond to GET',function(done){
-        superagent
-          .get('http://localhost:'+port)
-          .end(function(res){
-            expect(res.status).to.equal(200);
-            done()
-        })
-      })
-    });
-    after(function () {
-      shutdown();
-    });
-  });
+var config = require('./Config');
+var winston = require('winston');
+var mongoose = require('mongoose');
+var server = require('../Server');
+
+// We will log normal api operations into api.log
+console.log("starting logger...");
+winston.add(winston.transports.File, {
+  filename: config.logger.api
+});
+// We will log all uncaught exceptions into exceptions.log
+winston.handleExceptions(new winston.transports.File({
+	filename: config.logger.exception
+}));
+console.log("logger started. Connecting to MongoDB...");
+mongoose.connect(config.db.mongodb);
+console.log("Successfully connected to MongoDB. Starting web server...");
+server.start();
+console.log("Successfully started web server. Waiting for incoming connections...");

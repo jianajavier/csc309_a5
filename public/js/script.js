@@ -282,19 +282,19 @@ $(document).ready(function(){
             geolocationlat : loclat,
             geolocationlng: loclng
           },
-          success: function() {
-            $.when(getUserByEmail($("#emailinput").val())).done(function(user){
-              currenttoken = user.token;
-              currentuser = user;
+          success: function(data) {
+            //$.when(getUserByEmail($("#emailinput").val())).done(function(user){
+              currenttoken = data.token;
+              currentuser = data;
               $("#loginOrSignupModal").modal("hide");
               $("#loginOrSignupScreen").hide();
               $(".loggedInNav").show();
 
               // set profile picture
-              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+currentuser.profileimage.mainPicture);
+              $('#editprofilepicture, #profilepicture').attr('src', "uploads/"+data.profileimage.mainPicture);
 
-              moveToWelcome(user);
-            });
+              moveToWelcome(data);
+            //});
           }
         });
       }
@@ -1385,6 +1385,14 @@ function getUserByEmail(email) {
     type: "GET",
     async: false,
     url: "/users/verify-email/" + email + "/" + curruser
+  });
+}
+
+function getUserByID(ID) {
+  return $.ajax({
+    type: "GET",
+    async: false,
+    url: "/getuser/" + ID
   });
 }
 
